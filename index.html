@@ -1,0 +1,2276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Demédico">
+  <script src="app-config.js"></script>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F5F8F8">
+  <title>Demédico · Cabinet OS</title>
+
+  <style>
+    :root {
+      --bg: #F4F7F7;
+      --surface: #FFFFFF;
+      --surface-2: #F8FAFA;
+      --surface-3: #EEF4F3;
+      --text: #142226;
+      --text-2: #526268;
+      --text-3: #849095;
+      --line: #E4EAEA;
+      /* DEMÉDICO — couleurs exactes extraites des SVG originaux Illustrator */
+      --brand-ink: #133239;
+      --brand-ink-deep: #123139;
+      --brand-teal: #248780;
+      --brand-teal-end: #278881;
+      --brand-teal-alt: #268881;
+      --primary: #248780;
+      --primary-2: #133239;
+      --primary-soft: rgba(36, 135, 128, .10);
+      --success: #2F7A58;
+      --success-soft: #E7F4ED;
+      --warning: #A96D2D;
+      --warning-soft: #FAF0E4;
+      --danger: #B24F56;
+      --danger-soft: #FBEAEC;
+      --violet: #6659A8;
+      --violet-soft: #EFEDFA;
+      --shadow-sm: 0 1px 2px rgba(18, 34, 38, .04), 0 8px 22px rgba(18, 34, 38, .045);
+      --shadow-lg: 0 24px 80px rgba(18, 34, 38, .13);
+      --radius-sm: 10px;
+      --radius: 16px;
+      --radius-lg: 22px;
+      --sidebar: 248px;
+      --ease: cubic-bezier(.2,.8,.2,1);
+      --font: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .brand-logo-img { display:block; width:100%; height:auto; object-fit:contain; }
+    .brand { padding:7px 8px 24px !important; }
+    .brand .brand-logo-img { width:184px; max-width:100%; }
+    .onboarding-brand { display:grid; justify-items:center; gap:16px; text-align:center; }
+    .onboarding-brand .brand-stack-img { width:min(285px,70vw); height:auto; display:block; }
+    .brand-reverse-mark { position:absolute; right:26px; bottom:20px; width:78px; height:84px; opacity:.18; pointer-events:none; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); }
+    body { min-height: 100vh; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    [hidden] { display: none !important; }
+
+    .app-shell { min-height: 100vh; display: grid; grid-template-columns: var(--sidebar) minmax(0, 1fr); }
+    .sidebar {
+      position: sticky; top: 0; height: 100vh; padding: 18px 14px 16px;
+      border-right: 1px solid var(--line); background: rgba(248, 250, 250, .92);
+      backdrop-filter: blur(16px); display: flex; flex-direction: column; z-index: 20;
+    }
+
+    .brand { display: flex; align-items: center; gap: 11px; padding: 7px 9px 21px; }
+    .brand-mark {
+      width: 36px; height: 36px; border-radius: 12px; background: var(--text); color: white;
+      display: grid; place-items: center; box-shadow: var(--shadow-sm); font-weight: 800; letter-spacing: -.08em;
+    }
+    .brand-copy strong { display: block; font-size: 14px; letter-spacing: .08em; }
+    .brand-copy span { display: block; font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .mobile-brand { display:none; align-items:center; flex:0 0 auto; min-width:0; }
+    .mobile-brand .demedico-logo { display:block; width:100%; height:auto; max-height:100%; }
+
+
+    .nav { display: grid; gap: 5px; }
+    .nav-btn {
+      width: 100%; border: 0; background: transparent; color: var(--text-2); padding: 10px 11px;
+      border-radius: 12px; display: flex; align-items: center; gap: 11px; text-align: left;
+      transition: .18s var(--ease);
+    }
+    .nav-btn:hover { background: var(--surface-3); color: var(--text); }
+    .nav-btn.active { background: var(--text); color: white; }
+    .nav-btn svg { width: 18px; height: 18px; flex: 0 0 18px; stroke-width: 1.8; }
+    .nav-btn span { font-size: 13px; font-weight: 680; }
+
+    .sidebar-spacer { flex: 1; }
+    .side-card {
+      padding: 13px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+    .side-card .eyebrow { margin-bottom: 5px; }
+    .side-card p { margin: 0; color: var(--text-2); font-size: 12px; line-height: 1.45; }
+    .side-card button { margin-top: 12px; width: 100%; }
+
+    .main { min-width: 0; padding-bottom: 38px; }
+    .topbar {
+      min-height: 74px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 14px clamp(18px, 3vw, 36px); border-bottom: 1px solid rgba(228,234,234,.76);
+      background: rgba(244,247,247,.78); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 15;
+    }
+    .topbar-left { min-width: 0; }
+    .page-title { margin: 0; font-size: clamp(20px, 2.1vw, 27px); letter-spacing: -.04em; line-height: 1.05; }
+    .page-subtitle { margin-top: 4px; color: var(--text-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .top-actions { display: flex; align-items: center; gap: 9px; }
+
+    .search {
+      width: min(330px, 32vw); height: 42px; border: 1px solid var(--line); background: var(--surface);
+      border-radius: 12px; display: flex; align-items: center; gap: 8px; padding: 0 11px; box-shadow: 0 1px 1px rgba(20,34,38,.02);
+    }
+    .search svg { width: 17px; height: 17px; color: var(--text-3); }
+    .search input { flex: 1; border: 0; outline: 0; min-width: 0; color: var(--text); background: transparent; font-size: 13px; }
+    .kbd { border: 1px solid var(--line); background: var(--surface-2); color: var(--text-3); border-radius: 6px; font-size: 10px; padding: 2px 5px; }
+
+    .btn {
+      min-height: 40px; border: 1px solid var(--line); border-radius: 11px; padding: 0 13px;
+      background: var(--surface); color: var(--text); font-size: 12px; font-weight: 750;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      transition: transform .15s var(--ease), background .15s var(--ease), border .15s var(--ease);
+    }
+    .btn:hover { transform: translateY(-1px); border-color: #D3DDDC; }
+    .btn:active { transform: translateY(0); }
+    .btn svg { width: 16px; height: 16px; stroke-width: 1.9; }
+    .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-2); border-color: var(--primary-2); }
+    .btn-dark { background: var(--text); color: white; border-color: var(--text); }
+    .btn-ghost { background: transparent; }
+    .btn-danger { color: var(--danger); border-color: #EBCFD2; background: var(--danger-soft); }
+    .btn-sm { min-height: 34px; padding: 0 10px; font-size: 11px; border-radius: 9px; }
+    .icon-btn {
+      width: 40px; height: 40px; padding: 0; border: 1px solid var(--line); background: var(--surface);
+      display: grid; place-items: center; border-radius: 11px; color: var(--text-2);
+    }
+    .icon-btn svg { width: 17px; height: 17px; }
+
+    .content { padding: 26px clamp(18px, 3vw, 36px); }
+    .section { display: none; animation: fadeIn .2s var(--ease); }
+    .section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+    .hero {
+      display: grid; grid-template-columns: 1.25fr .75fr; gap: 18px; margin-bottom: 18px;
+    }
+    .hero-card {
+      min-height: 216px; background:
+        radial-gradient(circle at 92% 10%, rgba(255,255,255,.16), transparent 32%),
+        linear-gradient(135deg, #133B3B, #176B68 62%, #207B72);
+      color: white; border-radius: var(--radius-lg); padding: clamp(22px, 3vw, 32px); position: relative; overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .hero-card:after {
+      content: ""; position: absolute; width: 240px; height: 240px; right: -88px; bottom: -120px;
+      border: 1px solid rgba(255,255,255,.18); border-radius: 50%;
+      box-shadow: 0 0 0 38px rgba(255,255,255,.025), 0 0 0 78px rgba(255,255,255,.018);
+    }
+    .hero-kicker { color: rgba(255,255,255,.68); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .hero-card h2 { margin: 12px 0 8px; font-size: clamp(27px, 3.2vw, 40px); line-height: 1.02; letter-spacing: -.055em; max-width: 610px; }
+    .hero-card p { margin: 0; color: rgba(255,255,255,.74); max-width: 560px; font-size: 13px; line-height: 1.55; }
+    .hero-actions { display: flex; gap: 9px; margin-top: 24px; position: relative; z-index: 1; }
+    .hero-actions .btn { border-color: rgba(255,255,255,.16); }
+    .hero-actions .btn:first-child { background: white; color: var(--text); }
+    .hero-actions .btn:last-child { background: rgba(255,255,255,.08); color: white; }
+
+    .next-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-sm); }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .card-head h3 { margin: 0; font-size: 14px; letter-spacing: -.02em; }
+    .eyebrow { color: var(--text-3); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #63C698; box-shadow: 0 0 0 4px #E8F7EF; }
+    .next-time { font-size: 38px; font-weight: 780; letter-spacing: -.06em; line-height: 1; }
+    .next-name { font-size: 16px; font-weight: 760; margin-top: 11px; }
+    .next-meta { color: var(--text-2); font-size: 12px; margin-top: 4px; }
+    .next-foot { border-top: 1px solid var(--line); margin-top: 17px; padding-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .metric { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 17px; box-shadow: 0 1px 1px rgba(20,34,38,.015); }
+    .metric-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .metric-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: var(--primary-soft); color: var(--primary); }
+    .metric-icon svg { width: 16px; height: 16px; }
+    .metric-value { margin-top: 19px; font-size: 28px; font-weight: 800; letter-spacing: -.06em; }
+    .metric-label { margin-top: 3px; color: var(--text-3); font-size: 11px; }
+    .metric-badge { font-size: 10px; border-radius: 999px; padding: 4px 7px; background: var(--surface-3); color: var(--text-2); font-weight: 750; }
+
+    .grid-2 { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, .7fr); gap: 18px; }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 19px; box-shadow: 0 1px 1px rgba(20,34,38,.015); min-width: 0; }
+    .panel.flush { padding: 0; overflow: hidden; }
+    .panel-title { margin: 0; font-size: 14px; letter-spacing: -.02em; }
+    .panel-sub { margin: 4px 0 0; color: var(--text-3); font-size: 11px; }
+
+    .schedule { display: grid; gap: 1px; }
+    .appointment {
+      display: grid; grid-template-columns: 62px 4px minmax(0,1fr) auto; align-items: center; gap: 12px;
+      padding: 12px 2px; border-bottom: 1px solid var(--line); cursor: pointer;
+    }
+    .appointment:last-child { border-bottom: 0; }
+    .appt-time { font-size: 12px; font-weight: 800; color: var(--text); }
+    .appt-bar { height: 34px; border-radius: 999px; background: var(--primary); }
+    .appt-main { min-width: 0; }
+    .appt-name { font-size: 12px; font-weight: 760; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .appt-meta { margin-top: 3px; color: var(--text-3); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .tasks { display: grid; gap: 8px; }
+    .task {
+      display: grid; grid-template-columns: 28px minmax(0,1fr) auto; align-items: center; gap: 9px;
+      padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+    }
+    .task-check {
+      width: 25px; height: 25px; border: 1px solid var(--line); border-radius: 8px; display: grid; place-items: center; color: transparent;
+      background: var(--surface-2);
+    }
+    .task.done .task-check { color: white; background: var(--success); border-color: var(--success); }
+    .task.done .task-title { color: var(--text-3); text-decoration: line-through; }
+    .task-title { font-size: 12px; font-weight: 700; }
+    .task-meta { color: var(--text-3); font-size: 10px; margin-top: 2px; }
+
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 15px; }
+    .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .toolbar h2 { margin: 0; font-size: 18px; letter-spacing: -.035em; }
+    .segmented { display: inline-flex; padding: 3px; background: var(--surface-3); border-radius: 10px; }
+    .segmented button { border: 0; padding: 7px 10px; background: transparent; color: var(--text-3); font-size: 11px; font-weight: 750; border-radius: 8px; }
+    .segmented button.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(20,34,38,.07); }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 11px 16px; text-align: left; color: var(--text-3); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+    td { padding: 13px 16px; border-bottom: 1px solid var(--line); font-size: 12px; vertical-align: middle; }
+    tbody tr { cursor: pointer; transition: background .12s; }
+    tbody tr:hover { background: #FAFCFC; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .person { display: flex; align-items: center; gap: 10px; min-width: 180px; }
+    .avatar {
+      width: 34px; height: 34px; border-radius: 11px; background: var(--primary-soft); color: var(--primary);
+      display: grid; place-items: center; font-size: 11px; font-weight: 850; flex: 0 0 34px;
+    }
+    .person strong { display: block; font-size: 12px; }
+    .person span { display: block; color: var(--text-3); font-size: 10px; margin-top: 2px; }
+
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 999px; font-size: 10px; font-weight: 760; background: var(--surface-3); color: var(--text-2); }
+    .chip:before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .72; }
+    .chip.success { background: var(--success-soft); color: var(--success); }
+    .chip.warning { background: var(--warning-soft); color: var(--warning); }
+    .chip.danger { background: var(--danger-soft); color: var(--danger); }
+
+    .calendar-shell { display: grid; grid-template-columns: 68px repeat(5, minmax(130px,1fr)); min-width: 760px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+    .cal-cell { min-height: 62px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); position: relative; background: var(--surface); }
+    .cal-head { min-height: auto; padding: 11px; background: var(--surface-2); color: var(--text-3); font-size: 10px; font-weight: 780; text-align: center; }
+    .cal-time { padding: 8px; color: var(--text-3); font-size: 10px; text-align: right; background: var(--surface-2); }
+    .cal-event { margin: 5px; border-radius: 9px; padding: 7px; background: var(--primary-soft); border-left: 3px solid var(--primary); color: var(--primary-2); font-size: 10px; font-weight: 720; }
+
+    .empty {
+      min-height: 180px; display: grid; place-items: center; text-align: center; padding: 26px; color: var(--text-3);
+    }
+    .empty-icon { width: 46px; height: 46px; border-radius: 15px; display: grid; place-items: center; background: var(--surface-3); color: var(--text-2); margin: 0 auto 12px; }
+    .empty-icon svg { width: 20px; height: 20px; }
+    .empty strong { color: var(--text); font-size: 13px; }
+    .empty p { max-width: 320px; margin: 6px auto 0; font-size: 11px; line-height: 1.5; }
+
+    .drawer-backdrop, .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(14,25,28,.32); backdrop-filter: blur(3px); z-index: 90;
+      opacity: 0; pointer-events: none; transition: opacity .2s var(--ease);
+    }
+    .drawer-backdrop.open, .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+
+    .drawer {
+      position: fixed; top: 0; right: 0; width: min(560px, 100vw); height: 100vh; background: var(--surface); z-index: 100;
+      box-shadow: var(--shadow-lg); transform: translateX(102%); transition: transform .28s var(--ease); display: flex; flex-direction: column;
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer-head { padding: 18px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .drawer-title { margin: 0; font-size: 18px; letter-spacing: -.035em; }
+    .drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+    .drawer-footer { padding: 14px 20px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 9px; background: var(--surface); }
+
+    .modal {
+      position: fixed; left: 50%; top: 50%; transform: translate(-50%, -46%) scale(.98); width: min(640px, calc(100vw - 28px));
+      max-height: min(86vh, 760px); overflow: hidden; background: var(--surface); border-radius: 20px; box-shadow: var(--shadow-lg); z-index: 110;
+      opacity: 0; pointer-events: none; transition: .2s var(--ease); display: flex; flex-direction: column;
+    }
+    .modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+    .modal-head { padding: 18px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+    .modal-body { padding: 20px; overflow-y: auto; }
+    .modal-foot { padding: 14px 20px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 9px; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+    .field { display: grid; gap: 7px; }
+    .field.full { grid-column: 1 / -1; }
+    label { color: var(--text-2); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    input, textarea, select {
+      width: 100%; border: 1px solid var(--line); background: var(--surface); color: var(--text);
+      border-radius: 11px; outline: none; padding: 10px 11px; font-size: 12px; transition: border .14s, box-shadow .14s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: #8ABAB7; box-shadow: 0 0 0 3px rgba(23,107,104,.08); }
+    textarea { resize: vertical; min-height: 92px; line-height: 1.5; }
+    .help { color: var(--text-3); font-size: 10px; line-height: 1.45; }
+
+    .patient-hero { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+    .patient-hero .avatar { width: 52px; height: 52px; border-radius: 16px; flex-basis: 52px; font-size: 15px; }
+    .patient-hero h3 { margin: 2px 0 5px; font-size: 20px; letter-spacing: -.04em; }
+    .patient-hero p { margin: 0; color: var(--text-3); font-size: 11px; }
+    .tabs { display: flex; gap: 3px; padding-bottom: 10px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+    .tab { border: 0; background: transparent; color: var(--text-3); font-size: 11px; font-weight: 750; padding: 8px 9px; border-radius: 9px; white-space: nowrap; }
+    .tab.active { color: var(--primary); background: var(--primary-soft); }
+    .patient-section { display: none; padding-top: 17px; }
+    .patient-section.active { display: block; }
+
+    .info-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+    .info-box { padding: 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+    .info-box span { display: block; color: var(--text-3); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
+    .info-box strong { display: block; margin-top: 6px; font-size: 12px; }
+
+    .timeline { position: relative; display: grid; gap: 11px; }
+    .timeline:before { content:""; position:absolute; left:9px; top:10px; bottom:10px; width:1px; background:var(--line); }
+    .timeline-item { position:relative; display:grid; grid-template-columns:20px 1fr; gap:10px; }
+    .timeline-dot { width: 19px; height:19px; border-radius:50%; background:var(--surface); border:5px solid var(--primary-soft); box-shadow:inset 0 0 0 2px var(--primary); z-index:1; }
+    .timeline-card { padding: 12px; border:1px solid var(--line); border-radius:12px; }
+    .timeline-card strong { font-size:11px; }
+    .timeline-card p { margin:4px 0 0; color:var(--text-2); font-size:11px; line-height:1.45; }
+    .timeline-card small { display:block; color:var(--text-3); margin-top:7px; font-size:9px; }
+
+    .status-select {
+      width:auto; min-width:104px; max-width:128px; padding:7px 27px 7px 9px;
+      border:1px solid var(--line); border-radius:9px; background:var(--surface-2); color:var(--text-2);
+      font-size:10px; font-weight:760; cursor:pointer;
+    }
+    .status-select:focus { border-color:#8ABAB7; box-shadow:0 0 0 3px rgba(36,135,128,.08); }
+    .toast-wrap { position: fixed; right: 18px; bottom: 18px; z-index: 150; display: grid; gap: 8px; width: min(360px, calc(100vw - 36px)); }
+    .toast { padding: 12px 13px; background: #142226; color: white; border-radius: 12px; box-shadow: var(--shadow-lg); font-size: 11px; display:flex; align-items:flex-start; gap:9px; animation: toastIn .22s var(--ease); }
+    .toast.error { background: #8F3D45; }
+    @keyframes toastIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+    .loading-overlay { position: fixed; inset:0; z-index:200; background: rgba(244,247,247,.82); backdrop-filter: blur(6px); display:grid; place-items:center; }
+    .loader-card { text-align:center; }
+    .spinner { width:34px; height:34px; border:3px solid #D7E3E2; border-top-color:var(--primary); border-radius:50%; animation:spin .75s linear infinite; margin:0 auto 12px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .loader-card strong { font-size:12px; }
+    .loader-card p { margin:4px 0 0; color:var(--text-3); font-size:10px; }
+
+    .onboarding {
+      position: fixed; inset:0; z-index:180; background:
+        radial-gradient(circle at 20% 20%, rgba(23,107,104,.14), transparent 25%),
+        radial-gradient(circle at 80% 10%, rgba(102,89,168,.12), transparent 22%),
+        #F4F7F7;
+      display:grid; place-items:center; padding:20px;
+    }
+    .onboarding-card { width:min(720px,100%); background:var(--surface); border:1px solid var(--line); border-radius:28px; padding:clamp(26px,5vw,48px); box-shadow:var(--shadow-lg); }
+    .onboarding-logo { width:48px; height:48px; border-radius:15px; background:var(--text); color:white; display:grid; place-items:center; font-weight:850; letter-spacing:-.08em; }
+    .onboarding-card h1 { margin:25px 0 10px; font-size:clamp(32px,6vw,54px); letter-spacing:-.065em; line-height:.98; }
+    .onboarding-card > p { color:var(--text-2); max-width:580px; line-height:1.6; font-size:13px; }
+    .onboarding-points { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:24px 0; }
+    .onboarding-point { padding:14px; background:var(--surface-2); border:1px solid var(--line); border-radius:14px; }
+    .onboarding-point strong { display:block; font-size:11px; }
+    .onboarding-point span { display:block; color:var(--text-3); font-size:10px; line-height:1.45; margin-top:4px; }
+
+
+    .integration-hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(290px,.9fr);gap:16px;margin-bottom:16px}.integration-hero .panel:first-child{background:linear-gradient(145deg,#153E3D,#1C5D58);color:#fff;border-color:transparent;position:relative;overflow:hidden}.integration-hero h2{margin:10px 0 8px;font-size:clamp(25px,3vw,38px);letter-spacing:-.05em;line-height:1.04}.integration-hero p{margin:0;font-size:12px;line-height:1.6;opacity:.76;max-width:650px}.integration-principles{display:grid;gap:9px}.integration-principle{display:flex;gap:10px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}.integration-principle strong{display:block;font-size:11px}.integration-principle span{display:block;margin-top:3px;color:var(--text-3);font-size:10px;line-height:1.45}.integration-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.integration-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;min-height:218px;display:flex;flex-direction:column;transition:.18s var(--ease)}.integration-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm);border-color:#D5E0DF}.integration-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.integration-logo{width:42px;height:42px;border-radius:13px;background:var(--surface-3);display:grid;place-items:center;font-size:12px;font-weight:850}.integration-card h3{margin:13px 0 5px;font-size:13px}.integration-card p{margin:0;color:var(--text-3);font-size:10.5px;line-height:1.55}.integration-capabilities{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px}.cap{padding:4px 6px;border-radius:7px;background:var(--surface-3);color:var(--text-2);font-size:9px;font-weight:700}.integration-card-foot{margin-top:auto;padding-top:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}.sync-badge{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:800;color:var(--text-3)}.sync-badge:before{content:"";width:6px;height:6px;border-radius:50%;background:#A9B4B7}.sync-badge.ready:before{background:#4FA777}.sync-badge.partial:before{background:#D19448}.sync-badge.partner:before{background:#8A78C3}@media(max-width:1100px){.integration-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:820px){.integration-hero{grid-template-columns:1fr}.integration-grid{grid-template-columns:1fr}}
+    .quick-create-grid { display:grid; gap:10px; }
+    .quick-create-option {
+      width:100%; border:1px solid var(--line); background:var(--surface); border-radius:14px; padding:14px;
+      display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:12px; text-align:left; color:var(--text);
+      transition:.16s var(--ease);
+    }
+    .quick-create-option:hover { border-color:#C9D9D7; background:var(--surface-2); transform:translateY(-1px); }
+    .quick-create-option .metric-icon { width:42px; height:42px; border-radius:12px; }
+    .quick-create-option strong { display:block; font-size:12px; }
+    .quick-create-option span.copy { display:block; margin-top:3px; color:var(--text-3); font-size:10px; line-height:1.4; }
+    .quick-create-option .chevron { color:var(--text-3); font-size:17px; }
+    @media (max-width:820px) {
+      .modal.quick-sheet {
+        top:auto; bottom:0; left:0; width:100%; max-height:72vh; border-radius:22px 22px 0 0;
+        transform:translateY(102%); opacity:1;
+      }
+      .modal.quick-sheet.open { transform:translateY(0); }
+      .modal.quick-sheet .modal-head { padding:16px 18px; }
+      .modal.quick-sheet .modal-body { padding:16px 18px calc(20px + env(safe-area-inset-bottom)); }
+    }
+
+
+    .integration-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:24px 0 12px}.integration-section-head h3{margin:4px 0 0;font-size:16px;letter-spacing:-.025em}.integration-section-head p{margin:4px 0 0;color:var(--text-3);font-size:10.5px}.integration-connected-list{display:grid;gap:9px}.integration-connected-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:13px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:13px 14px}.integration-connected-row .integration-logo{width:40px;height:40px}.integration-connected-main{min-width:0}.integration-connected-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800}.connection-dot{width:7px;height:7px;border-radius:50%;background:#4FA777;box-shadow:0 0 0 4px #E8F5EE}.integration-connected-meta{margin-top:4px;color:var(--text-3);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.integration-connected-actions{display:flex;align-items:center;gap:7px}.provider-section-label{grid-column:1/-1;margin:8px 0 0;color:var(--text-3);font-size:9px;font-weight:850;letter-spacing:.11em;text-transform:uppercase}.busy-cal-event{margin:5px;border-radius:9px;padding:7px;background:#F0F3F3;border-left:3px solid #8B999D;color:#617075;font-size:10px;font-weight:700}.busy-cal-event span{font-weight:500;opacity:.82}
+    @media(max-width:820px){.integration-connected-row{grid-template-columns:40px minmax(0,1fr)}.integration-connected-actions{grid-column:1/-1;padding-left:53px}.integration-section-head{align-items:flex-start}.integration-section-head>.btn{flex:0 0 auto}.hero-card{min-height:132px!important;padding:18px 18px!important}.hero-card h2{font-size:27px!important;margin-top:7px}.hero-card p,.hero-card .hero-actions{display:none}.brand-reverse-mark{width:34px!important;height:36px!important;right:18px!important;top:16px!important;opacity:.92}.next-card{min-height:0!important}.content{padding-top:14px!important}}
+
+    .mobile-nav { display:none; }
+    .mobile-create { display:none; }
+
+    @media (max-width: 1100px) {
+      :root { --sidebar: 210px; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .hero { grid-template-columns: 1fr; }
+      .next-card { min-height: 190px; }
+    }
+
+    @media (max-width: 820px) {
+      .app-shell { display:block; }
+      .sidebar { display:none; }
+      .main { padding-bottom: 92px; }
+      .topbar {
+        min-height:64px;
+        padding:10px 14px;
+        display:grid;
+        grid-template-columns:112px minmax(0,1fr) 112px;
+        grid-template-areas:"brand title actions";
+        align-items:center;
+        column-gap:8px;
+      }
+      .mobile-brand {
+        grid-area:brand;
+        display:flex;
+        width:108px;
+        height:28px;
+        align-items:center;
+        justify-self:start;
+      }
+      .mobile-brand .brand-logo-img { width:108px; height:auto; max-height:28px; }
+      .topbar-left {
+        grid-area:title;
+        width:100%;
+        min-width:0;
+        text-align:center;
+        justify-self:center;
+      }
+      .page-title { font-size:17px; line-height:1.1; text-align:center; }
+      .page-subtitle { display:none; }
+      .top-actions {
+        grid-area:actions;
+        justify-self:end;
+        width:112px;
+        display:flex;
+        justify-content:flex-end;
+        align-items:center;
+        gap:7px;
+      }
+      .search { width:40px; height:40px; padding:0; justify-content:center; border-radius:12px; cursor:pointer; }
+      .search input, .search .kbd { display:none; }
+      .top-actions .btn-primary { display:none; }
+      .content { padding:16px 14px 18px; }
+      .grid-2 { grid-template-columns:1fr; }
+      .metrics { gap:9px; }
+      .metric { padding:14px; }
+      .metric-value { font-size:24px; }
+      .mobile-nav {
+        position:fixed; left:0; right:0; bottom:0; z-index:50; display:grid; grid-template-columns:repeat(5,1fr);
+        padding:7px max(8px, env(safe-area-inset-left)) calc(7px + env(safe-area-inset-bottom));
+        background:rgba(255,255,255,.94); backdrop-filter:blur(16px); border-top:1px solid var(--line);
+      }
+      .mobile-nav button { border:0; background:transparent; color:var(--text-3); display:grid; justify-items:center; gap:4px; font-size:9px; font-weight:700; padding:4px; }
+      .mobile-nav button.active { color:var(--primary); }
+      .mobile-nav svg { width:18px; height:18px; }
+      .mobile-create {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        position:fixed;
+        right:14px;
+        bottom:78px;
+        width:auto;
+        min-width:104px;
+        height:46px;
+        padding:0 16px;
+        border-radius:999px;
+        border:1px solid rgba(255,255,255,.16);
+        background:var(--primary);
+        color:white;
+        font-size:12px;
+        font-weight:800;
+        letter-spacing:-.01em;
+        box-shadow:0 14px 30px rgba(23,107,104,.28);
+        z-index:49;
+      }
+      .mobile-create svg { width:18px; height:18px; }
+      .mobile-create:active { transform:translateY(1px); }
+      .onboarding-points { grid-template-columns:1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .topbar { padding:9px 12px; grid-template-columns:96px minmax(0,1fr) 96px; }
+      .mobile-brand { width:92px; height:25px; }
+      .mobile-brand .brand-logo-img { width:92px; max-height:25px; }
+      .top-actions { width:96px; }
+      .page-title { font-size:16px; }
+      .hero-card { min-height:250px; padding:24px 20px; }
+      .hero-actions { flex-direction:column; align-items:stretch; }
+      .metrics { grid-template-columns:repeat(2,1fr); }
+      .metric-top { display:block; }
+      .metric-badge { display:inline-block; margin-top:8px; }
+      .toolbar { align-items:flex-start; }
+      .toolbar-right { flex-wrap:wrap; justify-content:flex-end; }
+      .form-grid, .info-grid { grid-template-columns:1fr; }
+      .drawer { width:100vw; }
+      .drawer-body { padding:17px; }
+      .appointment { grid-template-columns:50px 3px minmax(0,1fr); }
+      .appointment > .chip { display:none; }
+      .page-subtitle { max-width:160px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading" class="loading-overlay">
+    <div class="loader-card">
+      <div class="spinner"></div>
+      <strong>Préparation de votre espace</strong>
+      <p>Chargement sécurisé des données…</p>
+    </div>
+  </div>
+
+  <section id="onboarding" class="onboarding" hidden>
+    <div class="onboarding-card">
+      <div class="onboarding-brand"><img class="brand-stack-img" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iQ2FscXVlXzIiIGRhdGEtbmFtZT0iQ2FscXVlIDIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZpZXdCb3g9IjAgMCA1NzYuMDMgNDY3LjcyIj48bWV0YWRhdGE+PD94cGFja2V0IGJlZ2luPSIiIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz48eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJYTVAgQ29yZSA2LjAuMCI+PHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj48cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOmRjdGVybXM9Imh0dHA6Ly9wdXJsLm9yZy9kYy90ZXJtcy8iIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6Y2I5ZjU0OTgtYmI1OC00NTcyLTgwNDMtOGMzNjllNmJmYjliIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOmNiOWY1NDk4LWJiNTgtNDU3Mi04MDQzLThjMzY5ZTZiZmI5YiIgZGN0ZXJtczpwcm92ZW5hbmNlPSJodHRwczovL2NhaS1tYW5pZmVzdHMuYWRvYmUuY29tL21hbmlmZXN0cy91cm4tYzJwYS1lMTcxMzY0MC0wYmRmLTQ2OGUtYTNhZi1jMDdlNTk4YjY2MjktYWRvYmUiPiA8L3JkZjpEZXNjcmlwdGlvbj48L3JkZjpSREY+PC94OnhtcG1ldGE+Cjw/eHBhY2tldCBlbmQ9InciPz48L21ldGFkYXRhPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuY2xzLTEgewogICAgICAgIGZpbGw6ICMxMzMyMzk7CiAgICAgIH0KCiAgICAgIC5jbHMtMiB7CiAgICAgICAgZmlsbDogdXJsKCNEw6lncmFkw6lfc2Fuc19ub21fNyk7CiAgICAgIH0KCiAgICAgIC5jbHMtMyB7CiAgICAgICAgZmlsbDogIzEyMzEzOTsKICAgICAgfQoKICAgICAgLmNscy00IHsKICAgICAgICBmaWxsOiAjMjQ4NzgwOwogICAgICB9CiAgICA8L3N0eWxlPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJEw6lncmFkw6lfc2Fuc19ub21fNyIgZGF0YS1uYW1lPSJEw6lncmFkw6kgc2FucyBub20gNyIgeDE9IjE1MC44NSIgeTE9IjEzMi4xIiB4Mj0iNDgxLjUzIiB5Mj0iMTMyLjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMTMzMjM5Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzI3ODg4MSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgaWQ9IkNhbHF1ZV8xLTIiIGRhdGEtbmFtZT0iQ2FscXVlIDEiPgogICAgPGc+CiAgICAgIDxnPgogICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtNCIgZD0iTTE5OC44NCwyODMuMjJjMjAuNTktMzMuMDksNTMuOC01NS41LDkxLjc5LTYyLjM5LDIyLjQyLTMuMDUsNDIuNTgtMTIuNDYsNTguMDctMjguNDUsMTQuNDQtMTQuNjUsMjEuNTItMzIuNzUsMjEuMjctNTQuMzEsMjAuMDIsNDYuMSw3LjI0LDk5LjY1LTMwLjMsMTMzLjIyLTE2LjQ3LDcuMzgtMzMuMTEsMTEuNDgtNTEuMzcsMTIuMTdsLTg5LjQ3LS4yNFoiLz4KICAgICAgICA8Zz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTQxOC4xNywxMTEuNzZjLTEyLjcxLTU4LjcxLTYwLjE0LTEwMi40MS0xMjAuMTYtMTA4LjY5TDE1Ny40MSwwbC0xLjMsNjcuNDUsMTMzLjYsMi45N2MyMC44NiwxLjU1LDM5Ljc2LDkuMzIsNTUuMywyMy43MiwzOS4zOCwzNi40Nyw0OC45NSw5NS4xNiwyNS40OSwxNDMuMTctNC45OSwxMC4yMS0xMS40LDE3LjU0LTE3LjkxLDI2Ljg4LDUzLjAxLTMxLjE0LDc4LjM1LTkzLjQxLDY1LjU4LTE1Mi40M1oiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTI0OC4yOCwxNjAuNzZsLTYwLjYyLTM4LjA5Yy02Ljg2LTQuMzEtMTUuMzQtNS4xNC0yMi42Mi0uOTMtNC45MywyLjg1LTEwLjQ0LDkuNDMtMTAuNDQsMTcuMTJsLjA5LDEzNC41OCwxMDguNTQtODUuMjVjOS40OS03LjQ1LDE3LjU3LTE1LjUyLDE5Ljg4LTI3LjU3LTEyLjU4LDYuNzctMjQuMDcsNi45LTM0Ljg0LjE0WiIvPgogICAgICAgICAgPGNpcmNsZSBjbGFzcz0iY2xzLTEiIGN4PSIzMzAuNTYiIGN5PSIxMzguNTIiIHI9IjE5LjE2IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNy45NSAzMTMuODIpIHJvdGF0ZSgtNTIuMDIpIi8+CiAgICAgICAgPC9nPgogICAgICA8L2c+CiAgICAgIDxnPgogICAgICAgIDxnPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0zIiBkPSJNNTMuNDUsNDExLjc0Yy0yLjIxLTQuMDYtNS4yOC03LjE0LTkuMjItOS4yMi0zLjk0LTIuMDgtOC40Mi0zLjEyLTEzLjQ2LTMuMTItNi4zNywwLTExLjg1LDEuNTEtMTYuNDUsNC41MS00LjYsMy4wMS04LjE0LDcuMS0xMC42MSwxMi4yNy0yLjQ4LDUuMTctMy43MSwxMS4wNy0zLjcxLDE3LjcxczEuMjEsMTIuMzgsMy42NSwxNy41MWMyLjQzLDUuMTMsNS45LDkuMTMsMTAuNDEsMTIsNC41MSwyLjg3LDkuOSw0LjMxLDE2LjE4LDQuMzEsNS4yMiwwLDkuODgtMS4xNSwxMy45OS0zLjQ1LDQuMTEtMi4zLDcuMjMtNS42Miw5LjM1LTkuOTVsMS4wNiwxMS44MWgxMS4xNHYtOTcuNjJoLTEyLjM0djQzLjI0Wk01MC44LDQ0NS40M2MtMS42OCwzLjQ1LTQuMDUsNi4xNS03LjEsOC4wOS0zLjA1LDEuOTUtNi43LDIuOTItMTAuOTQsMi45MnMtNy44Ny0uOTctMTAuODgtMi45MmMtMy4wMS0xLjk0LTUuMzEtNC42NC02LjktOC4wOS0xLjU5LTMuNDUtMi4zOS03LjQzLTIuMzktMTEuOTRzLjgtOC4zMywyLjM5LTExLjc0YzEuNTktMy40LDMuODktNi4xLDYuOS04LjA5LDMtMS45OSw2LjYzLTIuOTgsMTAuODgtMi45OHM3Ljg5Ljk3LDEwLjk0LDIuOTIsNS40Miw0LjYyLDcuMSw4LjAyYzEuNjgsMy40MSwyLjUyLDcuMzYsMi41MiwxMS44N3MtLjg0LDguNDktMi41MiwxMS45NFoiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMyIgZD0iTTEyNC4wMSw0NTQuNDVjLTMuMSwxLjk1LTcuMDgsMi45Mi0xMS45NCwyLjkyLTYuNjMsMC0xMS43Mi0yLjEtMTUuMjUtNi4zLTMuMDYtMy42My00Ljc5LTguNjItNS4yLTE0Ljk0bDUwLjE3LS4xMnYtNC42NGMwLTYuNDUtMS4yNi0xMi4wNy0zLjc4LTE2Ljg0LTIuNTItNC43OC02LjA2LTguNDktMTAuNjEtMTEuMTQtNC41Ni0yLjY1LTkuOTMtMy45OC0xNi4xMi0zLjk4cy0xMS43OCwxLjQ2LTE2LjUxLDQuMzhjLTQuNzMsMi45Mi04LjQ0LDYuOTQtMTEuMTQsMTIuMDctMi43LDUuMTMtNC4wNSwxMS4xLTQuMDUsMTcuOTFzMS4zNywxMi42Miw0LjExLDE3LjdjMi43NCw1LjA5LDYuNTQsOS4wNywxMS40MSwxMS45NCw0Ljg2LDIuODcsMTAuNDMsNC4zMSwxNi43MSw0LjMxLDguMDUsMCwxNC42OC0xLjksMTkuODktNS43LDUuMjItMy44LDguNjItOS4xNSwxMC4yMS0xNi4wNWgtMTEuNjdjLTEuMDYsMy43MS0zLjE0LDYuNTQtNi4yMyw4LjQ5Wk0xMDAuNiw0MTIuNjFjMi45Ni0xLjgxLDYuNTItMi43MiwxMC42OC0yLjcyLDUuNDgsMCw5Ljg2LDEuNjQsMTMuMTMsNC45MSwzLjI3LDMuMjcsNC45MSw3LjYsNC45MSwxM2gtMzcuNDJjLjM3LTIuNjYuOTktNS4wOSwxLjk0LTcuMjMsMS41NC0zLjQ5LDMuOC02LjE0LDYuNzYtNy45NloiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMyIgZD0iTTIyOC45MywzOTkuNDFjLTUuODQsMC0xMC43NCwxLjU1LTE0LjcyLDQuNjQtMi45MiwyLjI3LTUsNS4xMS02LjI1LDguNDgtMS4zNi0zLjM3LTMuNDMtNi4yMS02LjIyLTguNDgtMy44LTMuMS04LjU4LTQuNjQtMTQuMzItNC42NC01LjEzLDAtOS40OCwxLjIyLTEzLjA2LDMuNjUtMi43NywxLjg4LTQuODQsNC4xMy02LjI2LDYuNzJsLTEuMjMtOC41MWgtMTEuMTR2NjQuODZoMTIuNDd2LTM4LjQ2YzAtMy40NS42Ni02LjQzLDEuOTktOC45NXMzLjE2LTQuNDYsNS41LTUuODRjMi4zNC0xLjM3LDUuMDYtMi4wNiw4LjE2LTIuMDYsNC40MiwwLDcuOTEsMS4zNSwxMC40OCw0LjA1LDIuNTYsMi43LDMuODUsNi42MSwzLjg1LDExLjc0djM5LjUzaDEyLjMzdi0zOC40NmMwLTMuNDUuNjYtNi40NSwxLjk5LTkuMDIsMS4zMy0yLjU2LDMuMTYtNC41Myw1LjUtNS45LDIuMzQtMS4zNyw1LjA2LTIuMDYsOC4xNi0yLjA2LDQuNDIsMCw3LjkzLDEuMzksMTAuNTQsNC4xOCwyLjYxLDIuNzgsMy45MSw2Ljc0LDMuOTEsMTEuODd2MzkuMzloMTIuMnYtNDIuNDRjMC03LjUyLTIuMTItMTMuNDQtNi4zNy0xNy43Ny00LjI0LTQuMzMtMTAuMDgtNi41LTE3LjUxLTYuNVoiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMyIgZD0iTTMxMi4xNiw0MDQuMDVjLTQuMzgtMi41Ni05LjQ4LTMuODUtMTUuMzItMy44NXMtMTEuNDUsMS40NC0xNi4wNSw0LjMxYy00LjYsMi44Ny04LjIsNi44NS0xMC44MSwxMS45NC0yLjYxLDUuMDktMy45MSwxMC45NC0zLjkxLDE3LjU4czEuMzMsMTIuNiwzLjk4LDE3LjY0LDYuMzQsOC45OCwxMS4wNywxMS44MWM0LjczLDIuODMsMTAuMTksNC4yNCwxNi4zOCw0LjI0LDcuNiwwLDEzLjg0LTEuNzksMTguNy01LjM3LDQuODYtMy41OCw4LjEzLTguNzMsOS44Mi0xNS40NWgtOC43NWMtMS4xNSw0LjI0LTMuNDEsNy40Ny02Ljc3LDkuNjgtMy4zNiwyLjIxLTcuNjUsMy4zMi0xMi44NywzLjMyLTcuMjUsMC0xMi44NC0yLjM0LTE2Ljc4LTcuMDMtMy42LTQuMjktNS41My0xMC4xOC01Ljg0LTE3LjY0aDUxdi00LjUxYzAtNi4xLTEuMjItMTEuNDMtMy42NS0xNS45OC0yLjQzLTQuNTUtNS44NC04LjExLTEwLjIxLTEwLjY4Wk0yNzUuMjMsNDI4LjU5Yy4zOC0zLjI2LDEuMTUtNi4yMiwyLjM3LTguODIsMS43Ny0zLjc2LDQuMzEtNi42NSw3LjYzLTguNjksMy4zMi0yLjAzLDcuMTgtMy4wNSwxMS42MS0zLjA1LDYuMDEsMCwxMC44NSwxLjg4LDE0LjUyLDUuNjQsMy42NywzLjc2LDUuNSw4LjczLDUuNSwxNC45MmgtNDEuNjNaIi8+CiAgICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTMiIGQ9Ik0zODkuODIsNDE0LjEzYy0yLjIxLTQuNjgtNS4zNy04LjE4LTkuNDgtMTAuNDgtNC4xMS0yLjMtOC44Mi0zLjQ1LTE0LjEzLTMuNDUtNi4zNywwLTExLjc4LDEuNDgtMTYuMjUsNC40NC00LjQ3LDIuOTYtNy44OSw3LjAxLTEwLjI4LDEyLjE0LTIuMzksNS4xMy0zLjU4LDEwLjkyLTMuNTgsMTcuMzhzMS4xOSwxMi4wOSwzLjU4LDE3LjE4YzIuMzksNS4wOSw1Ljc5LDkuMDksMTAuMjEsMTIuMDEsNC40MiwyLjkyLDkuNzMsNC4zOCwxNS45Miw0LjM4LDUuMzksMCwxMC4yMS0xLjIyLDE0LjQ2LTMuNjVzNy41MS02LjEyLDkuODEtMTEuMDdsLjkzLDEzLjEzaDcuOTZ2LTk2LjY5aC05LjE1djQ0LjdaTTM4Ny4wMyw0NDcuMDljLTEuNzcsMy44NS00LjI5LDYuODUtNy41Niw5LjAyLTMuMjcsMi4xNy03LjMsMy4yNS0xMi4wNywzLjI1cy04LjU1LTEuMDgtMTEuODctMy4yNS01Ljg0LTUuMTctNy41Ni05LjAyYy0xLjcyLTMuODUtMi41OS04LjI0LTIuNTktMTMuMnMuODYtOS4zMywyLjU5LTEzLjEzLDQuMjQtNi44MSw3LjU2LTkuMDJjMy4zMi0yLjIxLDcuMjctMy4zMSwxMS44Ny0zLjMxczguOCwxLjExLDEyLjA3LDMuMzFjMy4yNywyLjIxLDUuNzksNS4yMiw3LjU2LDkuMDIsMS43NywzLjgsMi42NSw4LjE4LDIuNjUsMTMuMTNzLS44OSw5LjM1LTIuNjUsMTMuMloiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMyIgZD0iTTQyMi41OCwzNzAuNjJjLTEuODYsMC0zLjQ1LjY5LTQuNzcsMi4wNi0xLjMzLDEuMzctMS45OSwyLjk4LTEuOTksNC44NHMuNjYsMy40NSwxLjk5LDQuNzhjMS4zMywxLjMyLDIuOTIsMS45OSw0Ljc3LDEuOTlzMy40Ny0uNjYsNC44NC0xLjk5YzEuMzctMS4zMywyLjA2LTIuOTIsMi4wNi00Ljc4cy0uNjktMy40Ny0yLjA2LTQuODRjLTEuMzctMS4zNy0yLjk4LTIuMDYtNC44NC0yLjA2WiIvPgogICAgICAgICAgPHJlY3QgY2xhc3M9ImNscy0zIiB4PSI0MTguMDciIHk9IjQwMS45MyIgd2lkdGg9IjkuMTUiIGhlaWdodD0iNjQuMiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0zIiBkPSJNNDg0LjkxLDQ1NS44NGMtMy41NCwyLjQzLTcuNzQsMy42NS0xMi42LDMuNjUtNC4zMywwLTguMTEtMS4wNi0xMS4zNC0zLjE4LTMuMjMtMi4xMi01LjcyLTUuMDgtNy40OS04Ljg5LTEuNzctMy44LTIuNjUtOC4yNy0yLjY1LTEzLjRzLjk1LTkuNzUsMi44NS0xMy41OWMxLjktMy44NSw0LjUzLTYuODMsNy44OS04Ljk1LDMuMzYtMi4xMiw3LjE2LTMuMTgsMTEuNDEtMy4xOCw0LjUxLDAsOC40OSwxLjIsMTEuOTQsMy41OCwzLjQ1LDIuMzksNS43OSw1Ljc5LDcuMDMsMTAuMjFoOS4xNWMtMS4yNC02LjYzLTQuNC0xMS45NC05LjQ4LTE1LjkyLTUuMDktMy45OC0xMS4zNC01Ljk3LTE4Ljc3LTUuOTctNi4xOSwwLTExLjYxLDEuNDQtMTYuMjUsNC4zMS00LjY0LDIuODctOC4yNyw2Ljg1LTEwLjg3LDExLjk0LTIuNjEsNS4wOS0zLjkxLDEwLjk5LTMuOTEsMTcuNzFzMS4yOCwxMi42LDMuODUsMTcuNjRjMi41Niw1LjA0LDYuMTIsOC45NSwxMC42OCwxMS43NCw0LjU1LDIuNzgsOS44OCw0LjE4LDE1Ljk4LDQuMTgsNC44NiwwLDkuMzEtLjkxLDEzLjMzLTIuNzIsNC4wMi0xLjgxLDcuNC00LjM2LDEwLjE1LTcuNjMsMi43NC0zLjI3LDQuNi03LjA3LDUuNTctMTEuNDFoLTkuMjhjLTEuMjQsNC4xNi0zLjYzLDcuNDUtNy4xNiw5Ljg4WiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0zIiBkPSJNNTcxLjc5LDQxNi41MmMtMi44My01LjA0LTYuNy05LjAyLTExLjYtMTEuOTQtNC45MS0yLjkyLTEwLjUtNC4zOC0xNi43OC00LjM4cy0xMS43NiwxLjQ2LTE2LjcxLDQuMzhjLTQuOTUsMi45Mi04Ljg0LDYuOS0xMS42NywxMS45NC0yLjgzLDUuMDQtNC4yNCwxMC44Ny00LjI0LDE3LjUxczEuNDEsMTIuMjIsNC4yNCwxNy4zMWMyLjgzLDUuMDksNi43Miw5LjA5LDExLjY3LDEyLjAxLDQuOTUsMi45MiwxMC41Miw0LjM4LDE2LjcxLDQuMzhzMTEuODctMS40NiwxNi43OC00LjM4YzQuOTEtMi45Miw4Ljc3LTYuOTIsMTEuNi0xMi4wMSwyLjgzLTUuMDgsNC4yNC0xMC44NSw0LjI0LTE3LjMxcy0xLjQyLTEyLjQ3LTQuMjQtMTcuNTFaTTU2My43Nyw0NDcuMjJjLTEuOTksMy44NS00LjczLDYuODUtOC4yMiw5LjAyLTMuNDksMi4xNy03LjU0LDMuMjUtMTIuMTQsMy4yNXMtOC42NC0xLjA4LTEyLjE0LTMuMjVjLTMuNDktMi4xNy02LjIzLTUuMTctOC4yMi05LjAyLTEuOTktMy44NS0yLjk4LTguMjktMi45OC0xMy4zM3MuOTktOS4zMywyLjk4LTEzLjEzYzEuOTktMy44LDQuNzMtNi44MSw4LjIyLTkuMDIsMy40OS0yLjIxLDcuNTQtMy4zMSwxMi4xNC0zLjMxczguNjQsMS4xMSwxMi4xNCwzLjMxYzMuNDksMi4yMSw2LjIzLDUuMjIsOC4yMiw5LjAyczIuOTgsOC4xOCwyLjk4LDEzLjEzLS45OSw5LjQ4LTIuOTgsMTMuMzNaIi8+CiAgICAgICAgPC9nPgogICAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSIzMTEuMDMgMzc4LjcyIDMwMC45NSAzOTQuNSAyOTMuMzkgMzk0LjUgMzAxLjQ4IDM3OC43MiAzMTEuMDMgMzc4LjcyIi8+CiAgICAgIDwvZz4KICAgIDwvZz4KICA8L2c+Cjwvc3ZnPg==" alt="Demédico"></div>
+      <h1>Le soin au centre.<br>Le reste, orchestré.</h1>
+      <p>
+        Un practice OS paramédical pensé pour le soin : patient 360°, agenda intelligent, suivi clinique, communications, automatisations et intégrations.
+        Cette V0.1 initialise automatiquement son espace de données privé dans Google Sheets.
+      </p>
+      <div class="onboarding-points">
+        <div class="onboarding-point"><strong>Patient 360°</strong><span>Coordonnées, historique, notes et prochaines actions au même endroit.</span></div>
+        <div class="onboarding-point"><strong>Agenda utile</strong><span>Planning orienté consultation, pas simple calendrier administratif.</span></div>
+        <div class="onboarding-point"><strong>Architecture évolutive</strong><span>Backend séparé pour brancher plus tard Google Calendar, Outlook et une vraie DB.</span></div>
+      </div>
+      <button class="btn btn-primary" style="min-height:46px" onclick="setupWorkspace()">
+        <span data-icon="sparkles"></span>
+        Initialiser mon espace
+      </button>
+      <p class="help" style="margin-top:13px">
+        Cette version est un MVP technique. Avant usage avec des données de santé réelles, fais valider hébergement,
+        accès, conservation et conformité dans le pays d’exploitation.
+      </p>
+    </div>
+  </section>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><img class="brand-logo-img" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iQ2FscXVlXzIiIGRhdGEtbmFtZT0iQ2FscXVlIDIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZpZXdCb3g9IjAgMCAxMjU3LjA3IDI4My40NiI+PG1ldGFkYXRhPjw/eHBhY2tldCBiZWdpbj0iIiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+PHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNi4wLjAiPjxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIiB4bWxuczpkY3Rlcm1zPSJodHRwOi8vcHVybC5vcmcvZGMvdGVybXMvIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOmNiOWY1NDk4LWJiNTgtNDU3Mi04MDQzLThjMzY5ZTZiZmI5YiIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpjYjlmNTQ5OC1iYjU4LTQ1NzItODA0My04YzM2OWU2YmZiOWIiIGRjdGVybXM6cHJvdmVuYW5jZT0iaHR0cHM6Ly9jYWktbWFuaWZlc3RzLmFkb2JlLmNvbS9tYW5pZmVzdHMvdXJuLWMycGEtYzM4NmNhOGQtZmI2ZS00MjJiLWJjM2MtNzU0Yzk1ZDQ1ODA5LWFkb2JlIj4gPC9yZGY6RGVzY3JpcHRpb24+PC9yZGY6UkRGPjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJ3Ij8+PC9tZXRhZGF0YT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLmNscy0xIHsKICAgICAgICBmaWxsOiAjMTMzMjM5OwogICAgICB9CgogICAgICAuY2xzLTIgewogICAgICAgIGZpbGw6IHVybCgjRMOpZ3JhZMOpX3NhbnNfbm9tXzcpOwogICAgICB9CgogICAgICAuY2xzLTMgewogICAgICAgIGZpbGw6ICMyNjg4ODE7CiAgICAgIH0KCiAgICAgIC5jbHMtNCB7CiAgICAgICAgZmlsbDogIzI0ODc4MDsKICAgICAgfQogICAgPC9zdHlsZT4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iRMOpZ3JhZMOpX3NhbnNfbm9tXzciIGRhdGEtbmFtZT0iRMOpZ3JhZMOpIHNhbnMgbm9tIDciIHgxPSItMy43NSIgeTE9IjEzMi4xIiB4Mj0iMzI2LjkzIiB5Mj0iMTMyLjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMTMzMjM5Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzI3ODg4MSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgaWQ9IkNhbHF1ZV8xLTIiIGRhdGEtbmFtZT0iQ2FscXVlIDEiPgogICAgPGc+CiAgICAgIDxnPgogICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtNCIgZD0iTTQ0LjI0LDI4My4yMmMyMC41OS0zMy4wOSw1My44LTU1LjUsOTEuNzktNjIuMzksMjIuNDItMy4wNSw0Mi41OC0xMi40Niw1OC4wNy0yOC40NSwxNC40NC0xNC42NSwyMS41Mi0zMi43NSwyMS4yNy01NC4zMSwyMC4wMiw0Ni4xLDcuMjQsOTkuNjUtMzAuMywxMzMuMjItMTYuNDcsNy4zOC0zMy4xMSwxMS40OC01MS4zNywxMi4xN2wtODkuNDctLjI0WiIvPgogICAgICAgIDxnPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJNMjYzLjU3LDExMS43NkMyNTAuODYsNTMuMDUsMjAzLjQzLDkuMzUsMTQzLjQxLDMuMDdMMi44MSwwbC0xLjMsNjcuNDUsMTMzLjYsMi45N2MyMC44NiwxLjU1LDM5Ljc2LDkuMzIsNTUuMywyMy43MiwzOS4zOCwzNi40Nyw0OC45NSw5NS4xNiwyNS40OSwxNDMuMTctNC45OSwxMC4yMS0xMS40LDE3LjU0LTE3LjkxLDI2Ljg4LDUzLjAxLTMxLjE0LDc4LjM1LTkzLjQxLDY1LjU4LTE1Mi40M1oiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTkzLjY4LDE2MC43NmwtNjAuNjItMzguMDljLTYuODYtNC4zMS0xNS4zNC01LjE0LTIyLjYyLS45M0M1LjUxLDEyNC41OSwwLDEzMS4xNywwLDEzOC44NmwuMDksMTM0LjU4LDEwOC41NC04NS4yNWM5LjQ5LTcuNDUsMTcuNTctMTUuNTIsMTkuODgtMjcuNTctMTIuNTgsNi43Ny0yNC4wNyw2LjktMzQuODQuMTRaIi8+CiAgICAgICAgICA8Y2lyY2xlIGNsYXNzPSJjbHMtMSIgY3g9IjE3NS45NiIgY3k9IjEzOC41MiIgcj0iMTkuMTYiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC00MS41MSAxOTEuOTYpIHJvdGF0ZSgtNTIuMDIpIi8+CiAgICAgICAgPC9nPgogICAgICA8L2c+CiAgICAgIDxnPgogICAgICAgIDxnPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNDM1Ljg3LDEzMS43MmMtMy40Ny02LjM5LTguMy0xMS4yMi0xNC40OS0xNC40OS02LjE4LTMuMjYtMTMuMjMtNC45LTIxLjE2LTQuOS0xMCwwLTE4LjYyLDIuMzctMjUuODQsNy4wOS03LjIzLDQuNzMtMTIuNzksMTEuMTUtMTYuNjgsMTkuMjgtMy44OSw4LjEzLTUuODMsMTcuNC01LjgzLDI3LjgzczEuOTEsMTkuNDYsNS43MywyNy41MWMzLjgyLDguMDYsOS4yOCwxNC4zNSwxNi4zNiwxOC44Niw3LjA5LDQuNTIsMTUuNTYsNi43OCwyNS40Myw2Ljc4LDguMiwwLDE1LjUzLTEuODEsMjEuOTktNS40Miw2LjQ2LTMuNjEsMTEuMzYtOC44MiwxNC43LTE1LjYzbDEuNjcsMTguNTVoMTcuNTFWNjMuNzhoLTE5LjM5djY3Ljk1Wk00MzEuNywxODQuNjdjLTIuNjQsNS40Mi02LjM2LDkuNjYtMTEuMTUsMTIuNzEtNC43OSwzLjA2LTEwLjUyLDQuNTktMTcuMiw0LjU5cy0xMi4zNy0xLjUzLTE3LjA5LTQuNTljLTQuNzMtMy4wNS04LjM0LTcuMjktMTAuODQtMTIuNzEtMi41LTUuNDItMy43NS0xMS42Ny0zLjc1LTE4Ljc2czEuMjUtMTMuMDksMy43NS0xOC40NWMyLjUtNS4zNSw2LjExLTkuNTksMTAuODQtMTIuNzEsNC43Mi0zLjEzLDEwLjQyLTQuNjksMTcuMDktNC42OXMxMi40LDEuNTMsMTcuMiw0LjU5YzQuNzksMy4wNiw4LjUxLDcuMjYsMTEuMTUsMTIuNjEsMi42NCw1LjM1LDMuOTYsMTEuNTcsMy45NiwxOC42NXMtMS4zMiwxMy4zNC0zLjk2LDE4Ljc2WiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNTQ2Ljc1LDE5OC44NGMtNC44NywzLjA2LTExLjEyLDQuNTktMTguNzYsNC41OS0xMC40MiwwLTE4LjQxLTMuMy0yMy45Ny05LjktNC44MS01LjcxLTcuNTMtMTMuNTQtOC4xOC0yMy40N2w3OC44NC0uMTl2LTcuMjljMC0xMC4xNC0xLjk4LTE4Ljk3LTUuOTQtMjYuNDctMy45Ni03LjUxLTkuNTItMTMuMzQtMTYuNjctMTcuNTEtNy4xNi00LjE3LTE1LjYtNi4yNS0yNS4zMi02LjI1cy0xOC41MiwyLjI5LTI1Ljk1LDYuODhjLTcuNDQsNC41OS0xMy4yNywxMC45MS0xNy41MSwxOC45Ny00LjI0LDguMDYtNi4zNiwxNy40NC02LjM2LDI4LjE0czIuMTUsMTkuODQsNi40NiwyNy44MmM0LjMxLDcuOTksMTAuMjgsMTQuMjUsMTcuOTMsMTguNzYsNy42NCw0LjUyLDE2LjM5LDYuNzgsMjYuMjYsNi43OCwxMi42NCwwLDIzLjA2LTIuOTksMzEuMjYtOC45Niw4LjItNS45NywxMy41NS0xNC4zOCwxNi4wNS0yNS4yMmgtMTguMzRjLTEuNjcsNS44My00LjkzLDEwLjI4LTkuOCwxMy4zNFpNNTA5Ljk2LDEzMy4wOGM0LjY1LTIuODUsMTAuMjUtNC4yNywxNi43OC00LjI3LDguNjEsMCwxNS40OSwyLjU3LDIwLjYzLDcuNzEsNS4xNCw1LjE0LDcuNzEsMTEuOTUsNy43MSwyMC40M2gtNTguOGMuNTgtNC4xNywxLjU1LTcuOTksMy4wNS0xMS4zNiwyLjQzLTUuNDksNS45Ny05LjY2LDEwLjYzLTEyLjUxWiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNzExLjYyLDExMi4zNGMtOS4xNywwLTE2Ljg4LDIuNDMtMjMuMTMsNy4zLTQuNTksMy41Ny03Ljg1LDguMDMtOS44MiwxMy4zMy0yLjE0LTUuMy01LjM4LTkuNzUtOS43Ny0xMy4zMy01Ljk3LTQuODYtMTMuNDgtNy4zLTIyLjUxLTcuMy04LjA2LDAtMTQuOSwxLjkxLTIwLjUzLDUuNzMtNC4zNSwyLjk2LTcuNjEsNi40OC05Ljg0LDEwLjU2bC0xLjkzLTEzLjM3aC0xNy41MXYxMDEuOTJoMTkuNTl2LTYwLjQ0YzAtNS40MiwxLjA0LTEwLjExLDMuMTMtMTQuMDdzNC45Ny03LjAxLDguNjUtOS4xN2MzLjY4LTIuMTUsNy45NS0zLjIzLDEyLjgyLTMuMjMsNi45NSwwLDEyLjQ0LDIuMTIsMTYuNDcsNi4zNiw0LjAzLDQuMjQsNi4wNCwxMC4zOCw2LjA0LDE4LjQ0djYyLjExaDE5LjM4di02MC40NGMwLTUuNDIsMS4wNC0xMC4xNCwzLjEzLTE0LjE4LDIuMDgtNC4wMyw0Ljk3LTcuMTIsOC42NS05LjI3LDMuNjgtMi4xNSw3Ljk1LTMuMjMsMTIuODItMy4yMyw2Ljk1LDAsMTIuNDcsMi4xOSwxNi41Nyw2LjU3LDQuMSw0LjM4LDYuMTUsMTAuNiw2LjE1LDE4LjY1djYxLjloMTkuMTh2LTY2LjdjMC0xMS44MS0zLjM0LTIxLjEyLTEwLTI3LjkzLTYuNjctNi44MS0xNS44NC0xMC4yMi0yNy41MS0xMC4yMloiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTg0Mi40LDExOS42NGMtNi44OC00LjAzLTE0LjktNi4wNS0yNC4wNy02LjA1cy0xOCwyLjI2LTI1LjIyLDYuNzhjLTcuMjMsNC41Mi0xMi44OSwxMC43Ny0xNi45OSwxOC43Ni00LjEsNy45OS02LjE1LDE3LjItNi4xNSwyNy42MnMyLjA4LDE5LjgsNi4yNSwyNy43MmM0LjE3LDcuOTIsOS45NywxNC4xLDE3LjQsMTguNTUsNy40Myw0LjQ0LDE2LjAxLDYuNjcsMjUuNzQsNi42NywxMS45NSwwLDIxLjc0LTIuODIsMjkuMzktOC40NCw3LjY0LTUuNjMsMTIuNzgtMTMuNzIsMTUuNDItMjQuMjhoLTEzLjc2Yy0xLjgxLDYuNjctNS4zNSwxMS43NC0xMC42MywxNS4yMS01LjI4LDMuNDctMTIuMDIsNS4yMS0yMC4yMiw1LjIxLTExLjQsMC0yMC4xOC0zLjY4LTI2LjM3LTExLjA1LTUuNjUtNi43My04LjY5LTE2LTkuMTctMjcuNzJoODAuMTV2LTcuMDljMC05LjU5LTEuOTEtMTcuOTYtNS43My0yNS4xMi0zLjgyLTcuMTUtOS4xNy0xMi43NS0xNi4wNS0xNi43OFpNNzg0LjM4LDE1OC4yYy41OS01LjEyLDEuOC05Ljc3LDMuNzMtMTMuODYsMi43OC01LjksNi43Ny0xMC40NSwxMS45OC0xMy42NSw1LjIxLTMuMiwxMS4yOS00LjgsMTguMjQtNC44LDkuNDUsMCwxNy4wNiwyLjk2LDIyLjgyLDguODYsNS43Niw1LjkxLDguNjUsMTMuNzIsOC42NSwyMy40NWgtNjUuNDJaIi8+CiAgICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik05NjQuNDQsMTM1LjQ4Yy0zLjQ4LTcuMzYtOC40NC0xMi44NS0xNC45LTE2LjQ3LTYuNDYtMy42MS0xMy44Ni01LjQyLTIyLjItNS40Mi0xMC4wMSwwLTE4LjUyLDIuMzMtMjUuNTMsNi45OC03LjAyLDQuNjYtMTIuNCwxMS4wMS0xNi4xNSwxOS4wNy0zLjc1LDguMDYtNS42MywxNy4xNy01LjYzLDI3LjNzMS44NywxOSw1LjYzLDI2Ljk5YzMuNzUsNy45OSw5LjEsMTQuMjgsMTYuMDUsMTguODcsNi45NSw0LjU4LDE1LjI4LDYuODgsMjUuMDEsNi44OCw4LjQ3LDAsMTYuMDUtMS45MSwyMi43Mi01LjczLDYuNjctMy44MiwxMS44MS05LjYyLDE1LjQyLTE3LjRsMS40NiwyMC42M2gxMi41MVY2NS4yNGgtMTQuMzh2NzAuMjRaTTk2MC4wNiwxODcuMjdjLTIuNzgsNi4wNS02Ljc0LDEwLjc3LTExLjg4LDE0LjE4LTUuMTQsMy40MS0xMS40Niw1LjExLTE4Ljk3LDUuMTFzLTEzLjQ0LTEuNy0xOC42NS01LjExYy01LjIxLTMuNDEtOS4xNy04LjEzLTExLjg4LTE0LjE4LTIuNzEtNi4wNC00LjA2LTEyLjk1LTQuMDYtMjAuNzRzMS4zNS0xNC42Niw0LjA2LTIwLjYzYzIuNzEtNS45Nyw2LjY3LTEwLjcsMTEuODgtMTQuMTgsNS4yMS0zLjQ3LDExLjQzLTUuMjEsMTguNjUtNS4yMXMxMy44MywxLjc0LDE4Ljk3LDUuMjFjNS4xNCwzLjQ4LDkuMSw4LjIsMTEuODgsMTQuMTgsMi43OCw1Ljk3LDQuMTcsMTIuODUsNC4xNywyMC42M3MtMS4zOSwxNC42OS00LjE3LDIwLjc0WiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTAxNS45Miw2Ny4xMWMtMi45MiwwLTUuNDIsMS4wOC03LjUsMy4yMy0yLjA4LDIuMTYtMy4xMyw0LjY5LTMuMTMsNy42MXMxLjA0LDUuNDIsMy4xMyw3LjUxYzIuMDgsMi4wOCw0LjU5LDMuMTMsNy41LDMuMTNzNS40NS0xLjA0LDcuNjEtMy4xM2MyLjE1LTIuMDksMy4yMy00LjU5LDMuMjMtNy41MXMtMS4wOC01LjQ1LTMuMjMtNy42MWMtMi4xNi0yLjE1LTQuNjktMy4yMy03LjYxLTMuMjNaIi8+CiAgICAgICAgICA8cmVjdCBjbGFzcz0iY2xzLTEiIHg9IjEwMDguODMiIHk9IjExNi4zIiB3aWR0aD0iMTQuMzgiIGhlaWdodD0iMTAwLjg4Ii8+CiAgICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMTEzLjg4LDIwMS4wM2MtNS41NiwzLjgyLTEyLjE2LDUuNzMtMTkuOCw1LjczLTYuODEsMC0xMi43NS0xLjY3LTE3LjgyLTUtNS4wNy0zLjM0LTktNy45OS0xMS43OC0xMy45Ny0yLjc4LTUuOTctNC4xNy0xMi45OS00LjE3LTIxLjA1czEuNDktMTUuMzIsNC40OC0yMS4zNmMyLjk5LTYuMDUsNy4xMi0xMC43MywxMi40LTE0LjA3LDUuMjgtMy4zMywxMS4yNS01LDE3LjkyLTUsNy4wOSwwLDEzLjM0LDEuODgsMTguNzYsNS42Myw1LjQyLDMuNzUsOS4xLDkuMSwxMS4wNSwxNi4wNWgxNC4zOGMtMS45NS0xMC40Mi02LjkxLTE4Ljc2LTE0LjktMjUuMDEtNy45OS02LjI1LTE3LjgyLTkuMzgtMjkuNDktOS4zOC05LjczLDAtMTguMjQsMi4yNi0yNS41Myw2Ljc4LTcuMjksNC41Mi0xMi45OSwxMC43Ny0xNy4wOSwxOC43Ni00LjEsNy45OS02LjE1LDE3LjI3LTYuMTUsMjcuODNzMi4wMSwxOS44LDYuMDQsMjcuNzJjNC4wMyw3LjkyLDkuNjIsMTQuMDcsMTYuNzgsMTguNDUsNy4xNSw0LjM4LDE1LjUzLDYuNTcsMjUuMTEsNi41Nyw3LjY0LDAsMTQuNjItMS40MywyMC45NS00LjI3LDYuMzItMi44NSwxMS42NC02Ljg0LDE1Ljk0LTExLjk4LDQuMzEtNS4xNCw3LjIyLTExLjExLDguNzUtMTcuOTJoLTE0LjU5Yy0xLjk1LDYuNTMtNS43LDExLjcxLTExLjI2LDE1LjUyWiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTI1MC40LDEzOS4yM2MtNC40NS03LjkyLTEwLjUyLTE0LjE3LTE4LjI0LTE4Ljc2LTcuNzEtNC41OC0xNi41LTYuODgtMjYuMzctNi44OHMtMTguNDgsMi4yOS0yNi4yNiw2Ljg4Yy03Ljc4LDQuNTktMTMuOSwxMC44NC0xOC4zNCwxOC43Ni00LjQ1LDcuOTItNi42NywxNy4wOS02LjY3LDI3LjUxczIuMjIsMTkuMjEsNi42NywyNy4yYzQuNDUsNy45OSwxMC41NiwxNC4yOCwxOC4zNCwxOC44Nyw3Ljc4LDQuNTgsMTYuNTMsNi44OCwyNi4yNiw2Ljg4czE4LjY2LTIuMjksMjYuMzctNi44OGM3LjcxLTQuNTksMTMuNzktMTAuODcsMTguMjQtMTguODcsNC40NS03Ljk5LDYuNjctMTcuMDYsNi42Ny0yNy4ycy0yLjIyLTE5LjU5LTYuNjctMjcuNTFaTTEyMzcuNzksMTg3LjQ4Yy0zLjEzLDYuMDQtNy40NCwxMC43Ny0xMi45MiwxNC4xNy01LjQ5LDMuNDEtMTEuODUsNS4xMS0xOS4wNyw1LjExcy0xMy41OC0xLjctMTkuMDctNS4xMWMtNS40OS0zLjQxLTkuOC04LjEzLTEyLjkyLTE0LjE3LTMuMTMtNi4wNS00LjY5LTEzLjAzLTQuNjktMjAuOTVzMS41Ni0xNC42Niw0LjY5LTIwLjYzYzMuMTMtNS45Nyw3LjQzLTEwLjcsMTIuOTItMTQuMTgsNS40OS0zLjQ3LDExLjg0LTUuMjEsMTkuMDctNS4yMXMxMy41OCwxLjc0LDE5LjA3LDUuMjFjNS40OSwzLjQ4LDkuOCw4LjIsMTIuOTIsMTQuMTgsMy4xMyw1Ljk3LDQuNjksMTIuODUsNC42OSwyMC42M3MtMS41NiwxNC45LTQuNjksMjAuOTVaIi8+CiAgICAgICAgPC9nPgogICAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSI4NDAuNjQgNzkuODMgODI0Ljc5IDEwNC42NCA4MTIuOTEgMTA0LjY0IDgyNS42MyA3OS44MyA4NDAuNjQgNzkuODMiLz4KICAgICAgPC9nPgogICAgPC9nPgogIDwvZz4KPC9zdmc+" alt="Demédico"></div>
+
+      <nav class="nav" id="desktopNav">
+        <button class="nav-btn active" data-view="dashboard"><span data-icon="home"></span><span>Accueil</span></button>
+        <button class="nav-btn" data-view="agenda"><span data-icon="calendar"></span><span>Agenda</span></button>
+        <button class="nav-btn" data-view="patients"><span data-icon="users"></span><span>Patients</span></button>
+        <button class="nav-btn" data-view="tasks"><span data-icon="checkSquare"></span><span>Tâches</span></button>
+        <button class="nav-btn" data-view="analytics"><span data-icon="chart"></span><span>Statistiques</span></button>
+        <button class="nav-btn" data-view="integrations"><span data-icon="plug"></span><span>Intégrations</span></button>
+        <button class="nav-btn" data-view="settings"><span data-icon="settings"></span><span>Paramètres</span></button>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+      <div style="padding:0 10px 10px;color:var(--text-3);font-size:9px;font-weight:700;letter-spacing:.06em">DEMÉDICO v0.4.0</div>
+
+      <div class="side-card">
+        <div class="eyebrow">Action rapide</div>
+        <p>Crée un rendez-vous sans quitter l’écran en cours.</p>
+        <button class="btn btn-primary" onclick="openAppointmentModal()"><span data-icon="plus"></span> Rendez-vous</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="mobile-brand"><img class="brand-logo-img" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iQ2FscXVlXzIiIGRhdGEtbmFtZT0iQ2FscXVlIDIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZpZXdCb3g9IjAgMCAxMjU3LjA3IDI4My40NiI+PG1ldGFkYXRhPjw/eHBhY2tldCBiZWdpbj0iIiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+PHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNi4wLjAiPjxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIiB4bWxuczpkY3Rlcm1zPSJodHRwOi8vcHVybC5vcmcvZGMvdGVybXMvIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOmNiOWY1NDk4LWJiNTgtNDU3Mi04MDQzLThjMzY5ZTZiZmI5YiIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpjYjlmNTQ5OC1iYjU4LTQ1NzItODA0My04YzM2OWU2YmZiOWIiIGRjdGVybXM6cHJvdmVuYW5jZT0iaHR0cHM6Ly9jYWktbWFuaWZlc3RzLmFkb2JlLmNvbS9tYW5pZmVzdHMvdXJuLWMycGEtYzM4NmNhOGQtZmI2ZS00MjJiLWJjM2MtNzU0Yzk1ZDQ1ODA5LWFkb2JlIj4gPC9yZGY6RGVzY3JpcHRpb24+PC9yZGY6UkRGPjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJ3Ij8+PC9tZXRhZGF0YT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLmNscy0xIHsKICAgICAgICBmaWxsOiAjMTMzMjM5OwogICAgICB9CgogICAgICAuY2xzLTIgewogICAgICAgIGZpbGw6IHVybCgjRMOpZ3JhZMOpX3NhbnNfbm9tXzcpOwogICAgICB9CgogICAgICAuY2xzLTMgewogICAgICAgIGZpbGw6ICMyNjg4ODE7CiAgICAgIH0KCiAgICAgIC5jbHMtNCB7CiAgICAgICAgZmlsbDogIzI0ODc4MDsKICAgICAgfQogICAgPC9zdHlsZT4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iRMOpZ3JhZMOpX3NhbnNfbm9tXzciIGRhdGEtbmFtZT0iRMOpZ3JhZMOpIHNhbnMgbm9tIDciIHgxPSItMy43NSIgeTE9IjEzMi4xIiB4Mj0iMzI2LjkzIiB5Mj0iMTMyLjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMTMzMjM5Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzI3ODg4MSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgaWQ9IkNhbHF1ZV8xLTIiIGRhdGEtbmFtZT0iQ2FscXVlIDEiPgogICAgPGc+CiAgICAgIDxnPgogICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtNCIgZD0iTTQ0LjI0LDI4My4yMmMyMC41OS0zMy4wOSw1My44LTU1LjUsOTEuNzktNjIuMzksMjIuNDItMy4wNSw0Mi41OC0xMi40Niw1OC4wNy0yOC40NSwxNC40NC0xNC42NSwyMS41Mi0zMi43NSwyMS4yNy01NC4zMSwyMC4wMiw0Ni4xLDcuMjQsOTkuNjUtMzAuMywxMzMuMjItMTYuNDcsNy4zOC0zMy4xMSwxMS40OC01MS4zNywxMi4xN2wtODkuNDctLjI0WiIvPgogICAgICAgIDxnPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJNMjYzLjU3LDExMS43NkMyNTAuODYsNTMuMDUsMjAzLjQzLDkuMzUsMTQzLjQxLDMuMDdMMi44MSwwbC0xLjMsNjcuNDUsMTMzLjYsMi45N2MyMC44NiwxLjU1LDM5Ljc2LDkuMzIsNTUuMywyMy43MiwzOS4zOCwzNi40Nyw0OC45NSw5NS4xNiwyNS40OSwxNDMuMTctNC45OSwxMC4yMS0xMS40LDE3LjU0LTE3LjkxLDI2Ljg4LDUzLjAxLTMxLjE0LDc4LjM1LTkzLjQxLDY1LjU4LTE1Mi40M1oiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTkzLjY4LDE2MC43NmwtNjAuNjItMzguMDljLTYuODYtNC4zMS0xNS4zNC01LjE0LTIyLjYyLS45M0M1LjUxLDEyNC41OSwwLDEzMS4xNywwLDEzOC44NmwuMDksMTM0LjU4LDEwOC41NC04NS4yNWM5LjQ5LTcuNDUsMTcuNTctMTUuNTIsMTkuODgtMjcuNTctMTIuNTgsNi43Ny0yNC4wNyw2LjktMzQuODQuMTRaIi8+CiAgICAgICAgICA8Y2lyY2xlIGNsYXNzPSJjbHMtMSIgY3g9IjE3NS45NiIgY3k9IjEzOC41MiIgcj0iMTkuMTYiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC00MS41MSAxOTEuOTYpIHJvdGF0ZSgtNTIuMDIpIi8+CiAgICAgICAgPC9nPgogICAgICA8L2c+CiAgICAgIDxnPgogICAgICAgIDxnPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNDM1Ljg3LDEzMS43MmMtMy40Ny02LjM5LTguMy0xMS4yMi0xNC40OS0xNC40OS02LjE4LTMuMjYtMTMuMjMtNC45LTIxLjE2LTQuOS0xMCwwLTE4LjYyLDIuMzctMjUuODQsNy4wOS03LjIzLDQuNzMtMTIuNzksMTEuMTUtMTYuNjgsMTkuMjgtMy44OSw4LjEzLTUuODMsMTcuNC01LjgzLDI3LjgzczEuOTEsMTkuNDYsNS43MywyNy41MWMzLjgyLDguMDYsOS4yOCwxNC4zNSwxNi4zNiwxOC44Niw3LjA5LDQuNTIsMTUuNTYsNi43OCwyNS40Myw2Ljc4LDguMiwwLDE1LjUzLTEuODEsMjEuOTktNS40Miw2LjQ2LTMuNjEsMTEuMzYtOC44MiwxNC43LTE1LjYzbDEuNjcsMTguNTVoMTcuNTFWNjMuNzhoLTE5LjM5djY3Ljk1Wk00MzEuNywxODQuNjdjLTIuNjQsNS40Mi02LjM2LDkuNjYtMTEuMTUsMTIuNzEtNC43OSwzLjA2LTEwLjUyLDQuNTktMTcuMiw0LjU5cy0xMi4zNy0xLjUzLTE3LjA5LTQuNTljLTQuNzMtMy4wNS04LjM0LTcuMjktMTAuODQtMTIuNzEtMi41LTUuNDItMy43NS0xMS42Ny0zLjc1LTE4Ljc2czEuMjUtMTMuMDksMy43NS0xOC40NWMyLjUtNS4zNSw2LjExLTkuNTksMTAuODQtMTIuNzEsNC43Mi0zLjEzLDEwLjQyLTQuNjksMTcuMDktNC42OXMxMi40LDEuNTMsMTcuMiw0LjU5YzQuNzksMy4wNiw4LjUxLDcuMjYsMTEuMTUsMTIuNjEsMi42NCw1LjM1LDMuOTYsMTEuNTcsMy45NiwxOC42NXMtMS4zMiwxMy4zNC0zLjk2LDE4Ljc2WiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNTQ2Ljc1LDE5OC44NGMtNC44NywzLjA2LTExLjEyLDQuNTktMTguNzYsNC41OS0xMC40MiwwLTE4LjQxLTMuMy0yMy45Ny05LjktNC44MS01LjcxLTcuNTMtMTMuNTQtOC4xOC0yMy40N2w3OC44NC0uMTl2LTcuMjljMC0xMC4xNC0xLjk4LTE4Ljk3LTUuOTQtMjYuNDctMy45Ni03LjUxLTkuNTItMTMuMzQtMTYuNjctMTcuNTEtNy4xNi00LjE3LTE1LjYtNi4yNS0yNS4zMi02LjI1cy0xOC41MiwyLjI5LTI1Ljk1LDYuODhjLTcuNDQsNC41OS0xMy4yNywxMC45MS0xNy41MSwxOC45Ny00LjI0LDguMDYtNi4zNiwxNy40NC02LjM2LDI4LjE0czIuMTUsMTkuODQsNi40NiwyNy44MmM0LjMxLDcuOTksMTAuMjgsMTQuMjUsMTcuOTMsMTguNzYsNy42NCw0LjUyLDE2LjM5LDYuNzgsMjYuMjYsNi43OCwxMi42NCwwLDIzLjA2LTIuOTksMzEuMjYtOC45Niw4LjItNS45NywxMy41NS0xNC4zOCwxNi4wNS0yNS4yMmgtMTguMzRjLTEuNjcsNS44My00LjkzLDEwLjI4LTkuOCwxMy4zNFpNNTA5Ljk2LDEzMy4wOGM0LjY1LTIuODUsMTAuMjUtNC4yNywxNi43OC00LjI3LDguNjEsMCwxNS40OSwyLjU3LDIwLjYzLDcuNzEsNS4xNCw1LjE0LDcuNzEsMTEuOTUsNy43MSwyMC40M2gtNTguOGMuNTgtNC4xNywxLjU1LTcuOTksMy4wNS0xMS4zNiwyLjQzLTUuNDksNS45Ny05LjY2LDEwLjYzLTEyLjUxWiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNzExLjYyLDExMi4zNGMtOS4xNywwLTE2Ljg4LDIuNDMtMjMuMTMsNy4zLTQuNTksMy41Ny03Ljg1LDguMDMtOS44MiwxMy4zMy0yLjE0LTUuMy01LjM4LTkuNzUtOS43Ny0xMy4zMy01Ljk3LTQuODYtMTMuNDgtNy4zLTIyLjUxLTcuMy04LjA2LDAtMTQuOSwxLjkxLTIwLjUzLDUuNzMtNC4zNSwyLjk2LTcuNjEsNi40OC05Ljg0LDEwLjU2bC0xLjkzLTEzLjM3aC0xNy41MXYxMDEuOTJoMTkuNTl2LTYwLjQ0YzAtNS40MiwxLjA0LTEwLjExLDMuMTMtMTQuMDdzNC45Ny03LjAxLDguNjUtOS4xN2MzLjY4LTIuMTUsNy45NS0zLjIzLDEyLjgyLTMuMjMsNi45NSwwLDEyLjQ0LDIuMTIsMTYuNDcsNi4zNiw0LjAzLDQuMjQsNi4wNCwxMC4zOCw2LjA0LDE4LjQ0djYyLjExaDE5LjM4di02MC40NGMwLTUuNDIsMS4wNC0xMC4xNCwzLjEzLTE0LjE4LDIuMDgtNC4wMyw0Ljk3LTcuMTIsOC42NS05LjI3LDMuNjgtMi4xNSw3Ljk1LTMuMjMsMTIuODItMy4yMyw2Ljk1LDAsMTIuNDcsMi4xOSwxNi41Nyw2LjU3LDQuMSw0LjM4LDYuMTUsMTAuNiw2LjE1LDE4LjY1djYxLjloMTkuMTh2LTY2LjdjMC0xMS44MS0zLjM0LTIxLjEyLTEwLTI3LjkzLTYuNjctNi44MS0xNS44NC0xMC4yMi0yNy41MS0xMC4yMloiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTg0Mi40LDExOS42NGMtNi44OC00LjAzLTE0LjktNi4wNS0yNC4wNy02LjA1cy0xOCwyLjI2LTI1LjIyLDYuNzhjLTcuMjMsNC41Mi0xMi44OSwxMC43Ny0xNi45OSwxOC43Ni00LjEsNy45OS02LjE1LDE3LjItNi4xNSwyNy42MnMyLjA4LDE5LjgsNi4yNSwyNy43MmM0LjE3LDcuOTIsOS45NywxNC4xLDE3LjQsMTguNTUsNy40Myw0LjQ0LDE2LjAxLDYuNjcsMjUuNzQsNi42NywxMS45NSwwLDIxLjc0LTIuODIsMjkuMzktOC40NCw3LjY0LTUuNjMsMTIuNzgtMTMuNzIsMTUuNDItMjQuMjhoLTEzLjc2Yy0xLjgxLDYuNjctNS4zNSwxMS43NC0xMC42MywxNS4yMS01LjI4LDMuNDctMTIuMDIsNS4yMS0yMC4yMiw1LjIxLTExLjQsMC0yMC4xOC0zLjY4LTI2LjM3LTExLjA1LTUuNjUtNi43My04LjY5LTE2LTkuMTctMjcuNzJoODAuMTV2LTcuMDljMC05LjU5LTEuOTEtMTcuOTYtNS43My0yNS4xMi0zLjgyLTcuMTUtOS4xNy0xMi43NS0xNi4wNS0xNi43OFpNNzg0LjM4LDE1OC4yYy41OS01LjEyLDEuOC05Ljc3LDMuNzMtMTMuODYsMi43OC01LjksNi43Ny0xMC40NSwxMS45OC0xMy42NSw1LjIxLTMuMiwxMS4yOS00LjgsMTguMjQtNC44LDkuNDUsMCwxNy4wNiwyLjk2LDIyLjgyLDguODYsNS43Niw1LjkxLDguNjUsMTMuNzIsOC42NSwyMy40NWgtNjUuNDJaIi8+CiAgICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik05NjQuNDQsMTM1LjQ4Yy0zLjQ4LTcuMzYtOC40NC0xMi44NS0xNC45LTE2LjQ3LTYuNDYtMy42MS0xMy44Ni01LjQyLTIyLjItNS40Mi0xMC4wMSwwLTE4LjUyLDIuMzMtMjUuNTMsNi45OC03LjAyLDQuNjYtMTIuNCwxMS4wMS0xNi4xNSwxOS4wNy0zLjc1LDguMDYtNS42MywxNy4xNy01LjYzLDI3LjNzMS44NywxOSw1LjYzLDI2Ljk5YzMuNzUsNy45OSw5LjEsMTQuMjgsMTYuMDUsMTguODcsNi45NSw0LjU4LDE1LjI4LDYuODgsMjUuMDEsNi44OCw4LjQ3LDAsMTYuMDUtMS45MSwyMi43Mi01LjczLDYuNjctMy44MiwxMS44MS05LjYyLDE1LjQyLTE3LjRsMS40NiwyMC42M2gxMi41MVY2NS4yNGgtMTQuMzh2NzAuMjRaTTk2MC4wNiwxODcuMjdjLTIuNzgsNi4wNS02Ljc0LDEwLjc3LTExLjg4LDE0LjE4LTUuMTQsMy40MS0xMS40Niw1LjExLTE4Ljk3LDUuMTFzLTEzLjQ0LTEuNy0xOC42NS01LjExYy01LjIxLTMuNDEtOS4xNy04LjEzLTExLjg4LTE0LjE4LTIuNzEtNi4wNC00LjA2LTEyLjk1LTQuMDYtMjAuNzRzMS4zNS0xNC42Niw0LjA2LTIwLjYzYzIuNzEtNS45Nyw2LjY3LTEwLjcsMTEuODgtMTQuMTgsNS4yMS0zLjQ3LDExLjQzLTUuMjEsMTguNjUtNS4yMXMxMy44MywxLjc0LDE4Ljk3LDUuMjFjNS4xNCwzLjQ4LDkuMSw4LjIsMTEuODgsMTQuMTgsMi43OCw1Ljk3LDQuMTcsMTIuODUsNC4xNywyMC42M3MtMS4zOSwxNC42OS00LjE3LDIwLjc0WiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTAxNS45Miw2Ny4xMWMtMi45MiwwLTUuNDIsMS4wOC03LjUsMy4yMy0yLjA4LDIuMTYtMy4xMyw0LjY5LTMuMTMsNy42MXMxLjA0LDUuNDIsMy4xMyw3LjUxYzIuMDgsMi4wOCw0LjU5LDMuMTMsNy41LDMuMTNzNS40NS0xLjA0LDcuNjEtMy4xM2MyLjE1LTIuMDksMy4yMy00LjU5LDMuMjMtNy41MXMtMS4wOC01LjQ1LTMuMjMtNy42MWMtMi4xNi0yLjE1LTQuNjktMy4yMy03LjYxLTMuMjNaIi8+CiAgICAgICAgICA8cmVjdCBjbGFzcz0iY2xzLTEiIHg9IjEwMDguODMiIHk9IjExNi4zIiB3aWR0aD0iMTQuMzgiIGhlaWdodD0iMTAwLjg4Ii8+CiAgICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMTEzLjg4LDIwMS4wM2MtNS41NiwzLjgyLTEyLjE2LDUuNzMtMTkuOCw1LjczLTYuODEsMC0xMi43NS0xLjY3LTE3LjgyLTUtNS4wNy0zLjM0LTktNy45OS0xMS43OC0xMy45Ny0yLjc4LTUuOTctNC4xNy0xMi45OS00LjE3LTIxLjA1czEuNDktMTUuMzIsNC40OC0yMS4zNmMyLjk5LTYuMDUsNy4xMi0xMC43MywxMi40LTE0LjA3LDUuMjgtMy4zMywxMS4yNS01LDE3LjkyLTUsNy4wOSwwLDEzLjM0LDEuODgsMTguNzYsNS42Myw1LjQyLDMuNzUsOS4xLDkuMSwxMS4wNSwxNi4wNWgxNC4zOGMtMS45NS0xMC40Mi02LjkxLTE4Ljc2LTE0LjktMjUuMDEtNy45OS02LjI1LTE3LjgyLTkuMzgtMjkuNDktOS4zOC05LjczLDAtMTguMjQsMi4yNi0yNS41Myw2Ljc4LTcuMjksNC41Mi0xMi45OSwxMC43Ny0xNy4wOSwxOC43Ni00LjEsNy45OS02LjE1LDE3LjI3LTYuMTUsMjcuODNzMi4wMSwxOS44LDYuMDQsMjcuNzJjNC4wMyw3LjkyLDkuNjIsMTQuMDcsMTYuNzgsMTguNDUsNy4xNSw0LjM4LDE1LjUzLDYuNTcsMjUuMTEsNi41Nyw3LjY0LDAsMTQuNjItMS40MywyMC45NS00LjI3LDYuMzItMi44NSwxMS42NC02Ljg0LDE1Ljk0LTExLjk4LDQuMzEtNS4xNCw3LjIyLTExLjExLDguNzUtMTcuOTJoLTE0LjU5Yy0xLjk1LDYuNTMtNS43LDExLjcxLTExLjI2LDE1LjUyWiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTI1MC40LDEzOS4yM2MtNC40NS03LjkyLTEwLjUyLTE0LjE3LTE4LjI0LTE4Ljc2LTcuNzEtNC41OC0xNi41LTYuODgtMjYuMzctNi44OHMtMTguNDgsMi4yOS0yNi4yNiw2Ljg4Yy03Ljc4LDQuNTktMTMuOSwxMC44NC0xOC4zNCwxOC43Ni00LjQ1LDcuOTItNi42NywxNy4wOS02LjY3LDI3LjUxczIuMjIsMTkuMjEsNi42NywyNy4yYzQuNDUsNy45OSwxMC41NiwxNC4yOCwxOC4zNCwxOC44Nyw3Ljc4LDQuNTgsMTYuNTMsNi44OCwyNi4yNiw2Ljg4czE4LjY2LTIuMjksMjYuMzctNi44OGM3LjcxLTQuNTksMTMuNzktMTAuODcsMTguMjQtMTguODcsNC40NS03Ljk5LDYuNjctMTcuMDYsNi42Ny0yNy4ycy0yLjIyLTE5LjU5LTYuNjctMjcuNTFaTTEyMzcuNzksMTg3LjQ4Yy0zLjEzLDYuMDQtNy40NCwxMC43Ny0xMi45MiwxNC4xNy01LjQ5LDMuNDEtMTEuODUsNS4xMS0xOS4wNyw1LjExcy0xMy41OC0xLjctMTkuMDctNS4xMWMtNS40OS0zLjQxLTkuOC04LjEzLTEyLjkyLTE0LjE3LTMuMTMtNi4wNS00LjY5LTEzLjAzLTQuNjktMjAuOTVzMS41Ni0xNC42Niw0LjY5LTIwLjYzYzMuMTMtNS45Nyw3LjQzLTEwLjcsMTIuOTItMTQuMTgsNS40OS0zLjQ3LDExLjg0LTUuMjEsMTkuMDctNS4yMXMxMy41OCwxLjc0LDE5LjA3LDUuMjFjNS40OSwzLjQ4LDkuOCw4LjIsMTIuOTIsMTQuMTgsMy4xMyw1Ljk3LDQuNjksMTIuODUsNC42OSwyMC42M3MtMS41NiwxNC45LTQuNjksMjAuOTVaIi8+CiAgICAgICAgPC9nPgogICAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSI4NDAuNjQgNzkuODMgODI0Ljc5IDEwNC42NCA4MTIuOTEgMTA0LjY0IDgyNS42MyA3OS44MyA4NDAuNjQgNzkuODMiLz4KICAgICAgPC9nPgogICAgPC9nPgogIDwvZz4KPC9zdmc+" alt="Demédico"></div>
+        <div class="topbar-left">
+          <h1 class="page-title" id="pageTitle">Accueil</h1>
+          <div class="page-subtitle" id="pageSubtitle">Votre journée, en un coup d’œil.</div>
+        </div>
+
+        <div class="top-actions">
+          <div class="search" title="Recherche patients" onclick="if(window.innerWidth <= 820){ openMobileSearch(); }">
+            <span data-icon="search"></span>
+            <input id="globalSearch" placeholder="Rechercher un patient…" autocomplete="off">
+            <span class="kbd">⌘K</span>
+          </div>
+          <button class="btn btn-primary" onclick="openPatientModal()"><span data-icon="plus"></span><span>Nouveau patient</span></button>
+        </div>
+      </header>
+
+      <div class="content">
+        <section id="view-dashboard" class="section active">
+          <div class="hero">
+            <article class="hero-card"><img class="brand-reverse-mark" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iQ2FscXVlXzIiIGRhdGEtbmFtZT0iQ2FscXVlIDIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZpZXdCb3g9IjAgMCAyNjYuODMgMjgzLjQ2Ij48bWV0YWRhdGE+PD94cGFja2V0IGJlZ2luPSIiIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz48eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJYTVAgQ29yZSA2LjAuMCI+PHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj48cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOmRjdGVybXM9Imh0dHA6Ly9wdXJsLm9yZy9kYy90ZXJtcy8iIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6Y2I5ZjU0OTgtYmI1OC00NTcyLTgwNDMtOGMzNjllNmJmYjliIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOmNiOWY1NDk4LWJiNTgtNDU3Mi04MDQzLThjMzY5ZTZiZmI5YiIgZGN0ZXJtczpwcm92ZW5hbmNlPSJodHRwczovL2NhaS1tYW5pZmVzdHMuYWRvYmUuY29tL21hbmlmZXN0cy91cm4tYzJwYS1iNjFhMzA5YS0xZDg4LTQ1ZTAtOTZjOC05YjgwY2E1MjAyZTktYWRvYmUiPiA8L3JkZjpEZXNjcmlwdGlvbj48L3JkZjpSREY+PC94OnhtcG1ldGE+Cjw/eHBhY2tldCBlbmQ9InciPz48L21ldGFkYXRhPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuY2xzLTEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KCiAgICAgIC5jbHMtMiB7CiAgICAgICAgZmlsbDogIzI0ODc4MDsKICAgICAgfQoKICAgICAgLmNscy0zIHsKICAgICAgICBmaWxsOiB1cmwoI0TDqWdyYWTDqV9zYW5zX25vbV85KTsKICAgICAgfQoKICAgICAgLmNscy00IHsKICAgICAgICBmaWxsOiB1cmwoI0TDqWdyYWTDqV9zYW5zX25vbV85LTIpOwogICAgICB9CiAgICA8L3N0eWxlPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJEw6lncmFkw6lfc2Fuc19ub21fOSIgZGF0YS1uYW1lPSJEw6lncmFkw6kgc2FucyBub20gOSIgeDE9Ii0zLjc1IiB5MT0iMTMyLjEiIHgyPSIzMjYuOTMiIHkyPSIxMzIuMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMjc4ODgxIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJEw6lncmFkw6lfc2Fuc19ub21fOS0yIiBkYXRhLW5hbWU9IkTDqWdyYWTDqSBzYW5zIG5vbSA5IiB4MT0iMTU2LjgiIHkxPSIxMzguNTIiIHgyPSIxOTUuMTMiIHkyPSIxMzguNTIiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTc2Ljg1IC04NS40Mikgcm90YXRlKDUyLjAyKSIgeGxpbms6aHJlZj0iI0TDqWdyYWTDqV9zYW5zX25vbV85Ii8+CiAgPC9kZWZzPgogIDxnIGlkPSJDYWxxdWVfMS0yIiBkYXRhLW5hbWU9IkNhbHF1ZSAxIj4KICAgIDxnPgogICAgICA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik00NC4yNCwyODMuMjJjMjAuNTktMzMuMDksNTMuOC01NS41LDkxLjc5LTYyLjM5LDIyLjQyLTMuMDUsNDIuNTgtMTIuNDYsNTguMDctMjguNDUsMTQuNDQtMTQuNjUsMjEuNTItMzIuNzUsMjEuMjctNTQuMzEsMjAuMDIsNDYuMSw3LjI0LDk5LjY1LTMwLjMsMTMzLjIyLTE2LjQ3LDcuMzgtMzMuMTEsMTEuNDgtNTEuMzcsMTIuMTdsLTg5LjQ3LS4yNFoiLz4KICAgICAgPGc+CiAgICAgICAgPHBhdGggY2xhc3M9ImNscy0zIiBkPSJNMjYzLjU3LDExMS43NkMyNTAuODYsNTMuMDUsMjAzLjQzLDkuMzUsMTQzLjQxLDMuMDdMMi44MSwwbC0xLjMsNjcuNDUsMTMzLjYsMi45N2MyMC44NiwxLjU1LDM5Ljc2LDkuMzIsNTUuMywyMy43MiwzOS4zOCwzNi40Nyw0OC45NSw5NS4xNiwyNS40OSwxNDMuMTctNC45OSwxMC4yMS0xMS40LDE3LjU0LTE3LjkxLDI2Ljg4LDUzLjAxLTMxLjE0LDc4LjM1LTkzLjQxLDY1LjU4LTE1Mi40M1oiLz4KICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik05My42OCwxNjAuNzZsLTYwLjYyLTM4LjA5Yy02Ljg2LTQuMzEtMTUuMzQtNS4xNC0yMi42Mi0uOTNDNS41MSwxMjQuNTksMCwxMzEuMTcsMCwxMzguODZsLjA5LDEzNC41OCwxMDguNTQtODUuMjVjOS40OS03LjQ1LDE3LjU3LTE1LjUyLDE5Ljg4LTI3LjU3LTEyLjU4LDYuNzctMjQuMDcsNi45LTM0Ljg0LjE0WiIvPgogICAgICAgIDxjaXJjbGUgY2xhc3M9ImNscy00IiBjeD0iMTc1Ljk2IiBjeT0iMTM4LjUyIiByPSIxOS4xNiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTQxLjUxIDE5MS45Nikgcm90YXRlKC01Mi4wMikiLz4KICAgICAgPC9nPgogICAgPC9nPgogIDwvZz4KPC9zdmc+" alt="" aria-hidden="true">
+              <div class="hero-kicker" id="heroDate">AUJOURD’HUI</div>
+              <h2 id="heroGreeting">Bonjour.</h2>
+              <p id="heroSentence">Demédico fait remonter la bonne information au bon moment — sans transformer le praticien en opérateur de logiciel.</p>
+              <div class="hero-actions">
+                <button class="btn" onclick="openAppointmentModal()"><span data-icon="calendarPlus"></span> Nouveau rendez-vous</button>
+                <button class="btn" onclick="navigate('patients')"><span data-icon="users"></span> Voir les patients</button>
+              </div>
+            </article>
+
+            <aside class="next-card" id="nextAppointmentCard">
+              <div class="card-head"><div><div class="eyebrow">Prochaine consultation</div></div><span class="status-dot"></span></div>
+              <div class="empty"><div><strong>Aucune consultation à venir</strong><p>Ajoute un rendez-vous pour commencer à piloter la journée.</p></div></div>
+            </aside>
+          </div>
+
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-top"><div class="metric-icon"><span data-icon="calendar"></span></div><span class="metric-badge">Aujourd’hui</span></div>
+              <div class="metric-value" id="metricAppointments">0</div>
+              <div class="metric-label">consultations planifiées</div>
+            </div>
+            <div class="metric">
+              <div class="metric-top"><div class="metric-icon"><span data-icon="users"></span></div><span class="metric-badge">Base active</span></div>
+              <div class="metric-value" id="metricPatients">0</div>
+              <div class="metric-label">patients actifs</div>
+            </div>
+            <div class="metric">
+              <div class="metric-top"><div class="metric-icon"><span data-icon="checkSquare"></span></div><span class="metric-badge">À traiter</span></div>
+              <div class="metric-value" id="metricTasks">0</div>
+              <div class="metric-label">tâches ouvertes</div>
+            </div>
+            <div class="metric">
+              <div class="metric-top"><div class="metric-icon"><span data-icon="activity"></span></div><span class="metric-badge">30 jours</span></div>
+              <div class="metric-value" id="metricConsultations">0</div>
+              <div class="metric-label">consultations réalisées</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <section class="panel">
+              <div class="card-head">
+                <div><h3 class="panel-title">Programme du jour</h3><p class="panel-sub">Ce qui mérite ton attention aujourd’hui.</p></div>
+                <button class="btn btn-sm" onclick="navigate('agenda')">Agenda complet</button>
+              </div>
+              <div id="todaySchedule" class="schedule"></div>
+            </section>
+
+            <section class="panel">
+              <div class="card-head">
+                <div><h3 class="panel-title">À faire</h3><p class="panel-sub">Actions cliniques et administratives.</p></div>
+                <button class="icon-btn" onclick="openTaskModal()" aria-label="Ajouter une tâche"><span data-icon="plus"></span></button>
+              </div>
+              <div id="dashboardTasks" class="tasks"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-patients" class="section">
+          <div class="toolbar">
+            <div class="toolbar-left"><div><h2>Patients</h2><p class="panel-sub" id="patientsCount">0 patient</p></div></div>
+            <div class="toolbar-right">
+              <button class="btn" onclick="refreshData()"><span data-icon="refresh"></span> Actualiser</button>
+              <button class="btn btn-primary" onclick="openPatientModal()"><span data-icon="plus"></span> Nouveau patient</button>
+            </div>
+          </div>
+
+          <section class="panel flush">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Patient</th><th>Téléphone</th><th>Prochain RDV</th><th>Dernière visite</th><th>Statut</th></tr></thead>
+                <tbody id="patientsTable"></tbody>
+              </table>
+            </div>
+            <div id="patientsEmpty" class="empty" hidden>
+              <div><div class="empty-icon"><span data-icon="users"></span></div><strong>Aucun patient pour l’instant</strong><p>Commence par créer une fiche patient. Les rendez-vous et consultations s’y rattacheront ensuite.</p></div>
+            </div>
+          </section>
+        </section>
+
+        <section id="view-agenda" class="section">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <div><h2>Agenda</h2><p class="panel-sub" id="agendaRange">Semaine en cours</p></div>
+            </div>
+            <div class="toolbar-right">
+              <div class="segmented"><button class="active">Semaine</button><button disabled>Jour</button><button disabled>Mois</button></div>
+              <button class="btn btn-primary" onclick="openAppointmentModal()"><span data-icon="plus"></span> Rendez-vous</button>
+            </div>
+          </div>
+          <section class="panel flush">
+            <div style="overflow-x:auto">
+              <div class="calendar-shell" id="calendarGrid"></div>
+            </div>
+          </section>
+        </section>
+
+        <section id="view-tasks" class="section">
+          <div class="toolbar">
+            <div class="toolbar-left"><div><h2>Tâches</h2><p class="panel-sub">Suivi, rappels et actions à ne pas perdre.</p></div></div>
+            <div class="toolbar-right"><button class="btn btn-primary" onclick="openTaskModal()"><span data-icon="plus"></span> Nouvelle tâche</button></div>
+          </div>
+          <section class="panel"><div id="allTasks" class="tasks"></div></section>
+        </section>
+
+        <section id="view-analytics" class="section">
+          <div class="toolbar"><div><h2>Statistiques</h2><p class="panel-sub">Peu d’indicateurs, mais utiles.</p></div></div>
+          <div class="metrics">
+            <div class="metric"><div class="eyebrow">Patients actifs</div><div class="metric-value" id="anaPatients">0</div><div class="metric-label">base actuelle</div></div>
+            <div class="metric"><div class="eyebrow">RDV · 30 jours</div><div class="metric-value" id="anaAppointments">0</div><div class="metric-label">activité récente</div></div>
+            <div class="metric"><div class="eyebrow">Consultations · 30 jours</div><div class="metric-value" id="anaConsultations">0</div><div class="metric-label">notes enregistrées</div></div>
+            <div class="metric"><div class="eyebrow">No-show</div><div class="metric-value" id="anaNoShow">0%</div><div class="metric-label">sur les RDV passés</div></div>
+          </div>
+          <section class="panel">
+            <div class="card-head"><div><h3 class="panel-title">Lecture produit</h3><p class="panel-sub">La V0.1 évite volontairement les “vanity metrics”.</p></div></div>
+            <p style="color:var(--text-2);font-size:12px;line-height:1.7;max-width:760px;margin:0">
+              L’objectif n’est pas de transformer le praticien en analyste : le tableau de bord doit surtout faire ressortir
+              l’occupation, les absences, les patients sans suivi et les tâches en retard. Les modules financiers et acquisition
+              pourront être ajoutés séparément pour ne pas polluer l’expérience clinique.
+            </p>
+          </section>
+        </section>
+
+
+        <section id="view-integrations" class="section">
+          <div class="toolbar"><div class="toolbar-left"><div><h2>Intégrations</h2><p class="panel-sub">Vos outils connectés, vos disponibilités unifiées.</p></div></div><div class="toolbar-right"><button class="btn" onclick="refreshData()"><span data-icon="refresh"></span> Actualiser</button></div></div>
+          <div class="integration-hero">
+            <section class="panel"><div class="eyebrow" style="color:rgba(255,255,255,.58)">DEMÉDICO CONNECT</div><h2>Tout connecter.<br>Tout garder sous contrôle.</h2><p>Centralisez vos agendas et services externes sans perdre la maîtrise de vos données. Les événements privés externes deviennent des indisponibilités, jamais des dossiers patients.</p></section>
+            <section class="panel"><div class="integration-principles"><div class="integration-principle"><div class="metric-icon"><span data-icon="shield"></span></div><div><strong>Privacy by default</strong><span>Intitulés de calendrier externes neutres par défaut.</span></div></div><div class="integration-principle"><div class="metric-icon"><span data-icon="refresh"></span></div><div><strong>Conflits maîtrisés</strong><span>IDs externes et source de vérité explicite pour éviter les doublons.</span></div></div><div class="integration-principle"><div class="metric-icon"><span data-icon="link"></span></div><div><strong>Adapters interchangeables</strong><span>Google, Microsoft, API REST, ICS ou connecteur partenaire.</span></div></div></div></section>
+          </div>
+          <div id="connectedIntegrationsWrap" hidden>
+            <div class="integration-section-head"><div><div class="eyebrow">ACTIVES</div><h3>Connectées à Demédico</h3></div><button class="btn btn-sm" onclick="syncAllFromUi()"><span data-icon="refresh"></span> Synchroniser tout</button></div>
+            <div id="connectedIntegrations" class="integration-connected-list"></div>
+          </div>
+          <div class="integration-section-head"><div><div class="eyebrow">CATALOGUE</div><h3>Disponibles</h3><p>Ajoutez uniquement les outils utiles à votre organisation.</p></div></div>
+          <div id="integrationGrid" class="integration-grid"></div>
+        </section>
+        <section id="view-settings" class="section">
+          <div class="toolbar"><div><h2>Paramètres</h2><p class="panel-sub">Cabinet, stockage et intégrations.</p></div></div>
+          <div class="grid-2">
+            <section class="panel">
+              <div class="card-head"><div><h3 class="panel-title">Cabinet</h3><p class="panel-sub">Personnalise les informations visibles dans l’app.</p></div></div>
+              <div class="form-grid">
+                <div class="field full"><label>Nom du cabinet</label><input id="settingsPracticeName" placeholder="Cabinet Horizon"></div>
+                <div class="field"><label>Nom du praticien</label><input id="settingsPractitionerName" placeholder="Dr Martin"></div>
+                <div class="field"><label>Spécialité</label><input id="settingsSpecialty" placeholder="Ostéopathie"></div>
+                <div class="field full"><button class="btn btn-primary" onclick="saveSettings()">Enregistrer</button></div>
+              </div>
+            </section>
+            <section class="panel"><div class="card-head"><div><h3 class="panel-title">Demédico Connect</h3><p class="panel-sub">Google Calendar/Workspace, Microsoft 365, Planity/Planfy, Phorest, NexHealth, Pabau et connecteurs génériques.</p></div></div><div class="integration-principle"><div class="metric-icon"><span data-icon="plug"></span></div><div><strong>Centre d’intégrations</strong><span>Visualise clairement les capacités et le sens de synchronisation.</span></div></div><button class="btn btn-primary" style="margin-top:12px" onclick="navigate('integrations')"><span data-icon="plug"></span> Ouvrir Demédico Connect</button></section>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <button id="mobilePrimaryAction" class="mobile-create" onclick="handleMobilePrimary()" aria-label="Créer"><span data-icon="plus"></span><span id="mobilePrimaryLabel" class="mobile-create-label">Créer</span></button>
+  <nav class="mobile-nav" id="mobileNav">
+    <button class="active" data-view="dashboard"><span data-icon="home"></span><span>Accueil</span></button>
+    <button data-view="agenda"><span data-icon="calendar"></span><span>Agenda</span></button>
+    <button data-view="patients"><span data-icon="users"></span><span>Patients</span></button>
+    <button data-view="tasks"><span data-icon="checkSquare"></span><span>Tâches</span></button>
+    <button data-view="settings"><span data-icon="settings"></span><span>Plus</span></button>
+  </nav>
+
+  <div id="drawerBackdrop" class="drawer-backdrop" onclick="closeDrawer()"></div>
+  <aside id="patientDrawer" class="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div><div class="eyebrow">Dossier patient</div><h2 class="drawer-title" id="drawerTitle">Patient</h2></div>
+      <button class="icon-btn" onclick="closeDrawer()" aria-label="Fermer"><span data-icon="x"></span></button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-footer">
+      <button class="btn" onclick="editCurrentPatient()"><span data-icon="edit"></span> Modifier</button>
+      <button class="btn btn-primary" onclick="openAppointmentModal(state.currentPatientId)"><span data-icon="calendarPlus"></span> Rendez-vous</button>
+    </div>
+  </aside>
+
+  <div id="modalBackdrop" class="modal-backdrop" onclick="closeModal()"></div>
+
+  <section id="patientModal" class="modal" aria-hidden="true">
+    <div class="modal-head"><div><div class="eyebrow">Patient</div><h2 class="drawer-title" id="patientModalTitle">Nouveau patient</h2></div><button class="icon-btn" onclick="closeModal()"><span data-icon="x"></span></button></div>
+    <div class="modal-body">
+      <form id="patientForm" onsubmit="event.preventDefault(); submitPatient();">
+        <input type="hidden" id="patientId">
+        <div class="form-grid">
+          <div class="field"><label>Prénom *</label><input id="patientFirstName" required maxlength="80"></div>
+          <div class="field"><label>Nom *</label><input id="patientLastName" required maxlength="80"></div>
+          <div class="field"><label>Date de naissance</label><input id="patientBirthDate" type="date"></div>
+          <div class="field"><label>Statut</label><select id="patientStatus"><option value="ACTIVE">Actif</option><option value="INACTIVE">Inactif</option></select></div>
+          <div class="field"><label>Téléphone</label><input id="patientPhone" type="tel" maxlength="40"></div>
+          <div class="field"><label>Email</label><input id="patientEmail" type="email" maxlength="160"></div>
+          <div class="field full"><label>Informations importantes</label><textarea id="patientImportantInfo" maxlength="2000" placeholder="Allergies, précautions, antécédents utiles…"></textarea><div class="help">Ne mets ici que les informations nécessaires à la prise en charge.</div></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="submitPatient()">Enregistrer le patient</button></div>
+  </section>
+
+  <section id="appointmentModal" class="modal" aria-hidden="true">
+    <div class="modal-head"><div><div class="eyebrow">Agenda</div><h2 class="drawer-title">Nouveau rendez-vous</h2></div><button class="icon-btn" onclick="closeModal()"><span data-icon="x"></span></button></div>
+    <div class="modal-body">
+      <form id="appointmentForm" onsubmit="event.preventDefault(); submitAppointment();">
+        <div class="form-grid">
+          <div class="field full"><label>Patient *</label><select id="appointmentPatient" required></select></div>
+          <div class="field"><label>Date *</label><input id="appointmentDate" type="date" required></div>
+          <div class="field"><label>Type</label><select id="appointmentType"><option>Première consultation</option><option selected>Suivi</option><option>Consultation</option><option>Urgence</option></select></div>
+          <div class="field"><label>Début *</label><input id="appointmentStart" type="time" value="09:00" required></div>
+          <div class="field"><label>Fin *</label><input id="appointmentEnd" type="time" value="09:45" required></div>
+          <div class="field full"><label>Lieu</label><input id="appointmentLocation" placeholder="Cabinet principal"></div>
+          <div class="field full"><label>Note agenda</label><textarea id="appointmentNotes" maxlength="1000" placeholder="Information logistique ou contexte bref…"></textarea></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="submitAppointment()">Créer le rendez-vous</button></div>
+  </section>
+
+  <section id="taskModal" class="modal" aria-hidden="true">
+    <div class="modal-head"><div><div class="eyebrow">Suivi</div><h2 class="drawer-title">Nouvelle tâche</h2></div><button class="icon-btn" onclick="closeModal()"><span data-icon="x"></span></button></div>
+    <div class="modal-body">
+      <form onsubmit="event.preventDefault(); submitTask();">
+        <div class="form-grid">
+          <div class="field full"><label>Tâche *</label><input id="taskTitle" required maxlength="180" placeholder="Rappeler le patient…"></div>
+          <div class="field"><label>Échéance</label><input id="taskDueDate" type="date"></div>
+          <div class="field"><label>Priorité</label><select id="taskPriority"><option value="NORMAL">Normale</option><option value="HIGH">Haute</option><option value="LOW">Basse</option></select></div>
+          <div class="field full"><label>Patient lié</label><select id="taskPatient"></select></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="submitTask()">Ajouter</button></div>
+  </section>
+
+  <section id="consultationModal" class="modal" aria-hidden="true">
+    <div class="modal-head"><div><div class="eyebrow">Note clinique</div><h2 class="drawer-title">Nouvelle consultation</h2></div><button class="icon-btn" onclick="closeModal()"><span data-icon="x"></span></button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field full"><label>Motif</label><input id="consultMotive" maxlength="240"></div>
+        <div class="field"><label>Douleur (0–10)</label><input id="consultPain" type="number" min="0" max="10" step="1"></div>
+        <div class="field"><label>Date</label><input id="consultDate" type="date"></div>
+        <div class="field full"><label>Observations</label><textarea id="consultObservations" maxlength="5000"></textarea></div>
+        <div class="field full"><label>Traitement / actes</label><textarea id="consultTreatment" maxlength="5000"></textarea></div>
+        <div class="field full"><label>Recommandations</label><textarea id="consultRecommendations" maxlength="3000"></textarea></div>
+        <div class="field full"><label>Suivi</label><input id="consultFollowUp" maxlength="240" placeholder="Revoir dans 2 semaines"></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="submitConsultation()">Enregistrer la consultation</button></div>
+  </section>
+
+
+  <section id="mobileSearchModal" class="modal quick-sheet" aria-hidden="true">
+    <div class="modal-head">
+      <div><div class="eyebrow">Recherche</div><h2 class="drawer-title">Trouver un patient</h2></div>
+      <button class="icon-btn" onclick="closeModal()"><span data-icon="x"></span></button>
+    </div>
+    <div class="modal-body">
+      <div class="field full">
+        <label>Nom, téléphone ou email</label>
+        <input id="mobileSearchInput" autocomplete="off" placeholder="Ex. Cohen, 06…, email…" oninput="renderMobileSearchResults()">
+      </div>
+      <div id="mobileSearchResults" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <section id="quickCreateModal" class="modal quick-sheet" aria-hidden="true">
+    <div class="modal-head">
+      <div><div class="eyebrow">Action rapide</div><h2 class="drawer-title">Créer</h2></div>
+      <button class="icon-btn" onclick="closeModal()" aria-label="Fermer"><span data-icon="x"></span></button>
+    </div>
+    <div class="modal-body">
+      <div class="quick-create-grid">
+        <button class="quick-create-option" onclick="closeModal(); openPatientModal();">
+          <div class="metric-icon"><span data-icon="users"></span></div>
+          <div><strong>Nouveau patient</strong><span class="copy">Créer une fiche patient et compléter ses coordonnées.</span></div>
+          <span class="chevron">›</span>
+        </button>
+        <button class="quick-create-option" onclick="closeModal(); openAppointmentModal();">
+          <div class="metric-icon"><span data-icon="calendarPlus"></span></div>
+          <div><strong>Nouveau rendez-vous</strong><span class="copy">Planifier une consultation pour un patient existant.</span></div>
+          <span class="chevron">›</span>
+        </button>
+        <button class="quick-create-option" onclick="closeModal(); openTaskModal();">
+          <div class="metric-icon"><span data-icon="checkSquare"></span></div>
+          <div><strong>Nouvelle tâche</strong><span class="copy">Ajouter un rappel clinique ou administratif.</span></div>
+          <span class="chevron">›</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div id="toastWrap" class="toast-wrap"></div>
+
+  <script>
+    const state = {
+      data: null,
+      view: 'dashboard',
+      currentPatientId: null,
+      currentPatientDetails: null,
+      searchTimer: null
+    };
+
+    const ICONS = {
+      home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.8 12 3l9 7.8v9.2a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+      calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+      calendarPlus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M12 13v5M9.5 15.5h5"/></svg>',
+      users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+      checkSquare:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+      chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+      settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.28.35.48.76.6 1 .12.35.1.73.1 1.1v1.8c0 .37.02.75-.1 1.1-.12.24-.32.65-.6 1z"/></svg>',
+      plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>',
+      search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
+      x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+      edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/></svg>',
+      mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+      phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.69 2.8a2 2 0 0 1-.45 2.11L8.08 9.9a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.33 1.84.56 2.8.69A2 2 0 0 1 22 16.92z"/></svg>',
+      activity:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg>',
+      refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6v5h-5"/><path d="M18.5 15a7 7 0 1 1-.7-7.7L20 10"/></svg>',
+      sparkles:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m12 3-1.2 3.8L7 8l3.8 1.2L12 13l1.2-3.8L17 8l-3.8-1.2zM5 14l-.8 2.2L2 17l2.2.8L5 20l.8-2.2L8 17l-2.2-.8zM19 13l-.9 2.6-2.6.9 2.6.9L19 20l.9-2.6 2.6-.9-2.6-.9z"/></svg>'
+    };
+
+    const VIEW_META = {
+      dashboard: ['Accueil', 'Votre journée, en un coup d’œil.'],
+      agenda: ['Agenda', 'Planifier sans perdre le contexte patient.'],
+      patients: ['Patients', 'Une vue 360° claire, sans jargon CRM.'],
+      tasks: ['Tâches', 'Les prochaines actions, pas une liste oubliée.'],
+      analytics: ['Statistiques', 'Des indicateurs utiles au cabinet.'],
+      integrations: ['Intégrations', 'Connecter Demédico sans perdre la maîtrise des données.'],
+      settings: ['Paramètres', 'Cabinet et intégrations.']
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderIcons(document);
+      bindNavigation();
+      bindSearch();
+      setDefaultDates();
+      loadApp();
+    });
+
+    function renderIcons(root) {
+      (root || document).querySelectorAll('[data-icon]').forEach(el => {
+        el.innerHTML = ICONS[el.dataset.icon] || '';
+      });
+    }
+
+    function gs(method, ...args) {
+      return new Promise((resolve, reject) => {
+        if (!(window.google && google.script && google.script.run)) {
+          reject(new Error('Cette interface doit être ouverte depuis une Web App Google Apps Script.'));
+          return;
+        }
+        try {
+          const runner = google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(err => reject(new Error(err && err.message ? err.message : String(err))));
+          const serverMethod = runner[method];
+          if (typeof serverMethod !== 'function') {
+            reject(new Error(`Fonction serveur « ${method} » absente de cette version. Mets à jour Code.gs / Outlook.gs puis redéploie Demédico.`));
+            return;
+          }
+          serverMethod.apply(runner, args);
+        } catch (err) {
+          const raw = err && err.message ? err.message : String(err);
+          if (/runner\[method\].*not a function|is not a function/i.test(raw)) {
+            reject(new Error(`Fonction serveur « ${method} » absente du déploiement actif. Mets à jour les fichiers Apps Script puis crée une nouvelle version du déploiement.`));
+          } else {
+            reject(new Error(raw));
+          }
+        }
+      });
+    }
+
+    async function loadApp() {
+      showLoading(true);
+      try {
+        const data = await gs('getBootstrap');
+        if (data.setupRequired) {
+          document.getElementById('onboarding').hidden = false;
+          return;
+        }
+        state.data = data;
+        document.getElementById('onboarding').hidden = true;
+        renderAll();
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function setupWorkspace() {
+      showLoading(true);
+      try {
+        await gs('setupWorkspace');
+        toast('Espace Demédico initialisé.');
+        await loadApp();
+      } catch (err) {
+        toast(err.message, 'error');
+        showLoading(false);
+      }
+    }
+
+    async function refreshData(silent = false) {
+      if (!silent) showLoading(true);
+      try {
+        const data = await gs('getBootstrap');
+        state.data = data;
+        renderAll();
+        if (!silent) toast('Données actualisées.');
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        if (!silent) showLoading(false);
+      }
+    }
+
+    function renderAll() {
+      if (!state.data) return;
+      renderHeader();
+      renderDashboard();
+      renderPatients(state.data.patients || []);
+      renderPatientSelects();
+      renderTasks();
+      renderCalendar();
+      renderAnalytics();
+      renderIntegrations();
+      renderSettings();
+      updateMobilePrimary();
+      renderIcons(document);
+    }
+
+    function renderHeader() {
+      const settings = state.data.settings || {};
+      const name = settings.practitionerName || '';
+      document.getElementById('heroGreeting').textContent = name ? `Bonjour ${name}.` : 'Bonjour.';
+      document.getElementById('heroDate').textContent = formatDateLong(new Date()).toUpperCase();
+    }
+
+    function renderDashboard() {
+      const s = state.data.stats || {};
+      setText('metricAppointments', s.todayAppointments || 0);
+      setText('metricPatients', s.activePatients || 0);
+      setText('metricTasks', s.openTasks || 0);
+      setText('metricConsultations', s.consultations30d || 0);
+
+      const next = state.data.nextAppointment;
+      const card = document.getElementById('nextAppointmentCard');
+      if (next) {
+        card.innerHTML = `
+          <div class="card-head"><div class="eyebrow">Prochaine consultation</div><span class="status-dot"></span></div>
+          <div class="next-time">${escapeHtml(formatTime(next.startAt))}</div>
+          <div class="next-name">${escapeHtml(next.patientName || 'Patient')}</div>
+          <div class="next-meta">${escapeHtml(next.type || 'Consultation')} · ${escapeHtml(durationLabel(next.startAt, next.endAt))}</div>
+          <div class="next-foot">
+            <span class="chip">${escapeHtml(next.location || 'Cabinet')}</span>
+            <button class="btn btn-sm btn-primary" onclick="openPatient('${escapeAttr(next.patientId)}')">Dossier</button>
+          </div>`;
+      } else {
+        card.innerHTML = `<div class="card-head"><div class="eyebrow">Prochaine consultation</div><span class="status-dot"></span></div>
+          <div class="empty"><div><strong>Aucune consultation à venir</strong><p>Ajoute un rendez-vous pour commencer à piloter la journée.</p></div></div>`;
+      }
+
+      const schedule = document.getElementById('todaySchedule');
+      const today = state.data.todayAppointments || [];
+      if (!today.length) {
+        schedule.innerHTML = emptyBlock('calendar', 'Journée libre', 'Aucun rendez-vous enregistré aujourd’hui.');
+      } else {
+        schedule.innerHTML = today.map(a => `
+          <div class="appointment" onclick="openPatient('${escapeAttr(a.patientId)}')">
+            <div class="appt-time">${escapeHtml(formatTime(a.startAt))}</div>
+            <div class="appt-bar" style="background:${statusColor(a.status)}"></div>
+            <div class="appt-main"><div class="appt-name">${escapeHtml(a.patientName)}</div><div class="appt-meta">${escapeHtml(a.type)} · ${escapeHtml(a.location || 'Cabinet')}</div></div>
+            <span class="chip ${chipClass(a.status)}">${escapeHtml(statusLabel(a.status))}</span>
+          </div>`).join('');
+      }
+
+      renderTaskList('dashboardTasks', (state.data.tasks || []).filter(t => t.status !== 'DONE').slice(0, 5));
+    }
+
+    function renderPatients(list) {
+      const rows = document.getElementById('patientsTable');
+      const empty = document.getElementById('patientsEmpty');
+      setText('patientsCount', `${list.length} patient${list.length > 1 ? 's' : ''}`);
+      empty.hidden = list.length > 0;
+      rows.innerHTML = list.map(p => `
+        <tr onclick="openPatient('${escapeAttr(p.id)}')">
+          <td><div class="person"><div class="avatar">${initials(p.firstName,p.lastName)}</div><div><strong>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</strong><span>${escapeHtml(p.email || 'Aucun email')}</span></div></div></td>
+          <td>${escapeHtml(p.phone || '—')}</td>
+          <td>${p.nextAppointmentAt ? escapeHtml(formatDateShort(p.nextAppointmentAt) + ' · ' + formatTime(p.nextAppointmentAt)) : '<span style="color:var(--text-3)">À planifier</span>'}</td>
+          <td>${p.lastConsultationAt ? escapeHtml(formatDateShort(p.lastConsultationAt)) : '<span style="color:var(--text-3)">—</span>'}</td>
+          <td><span class="chip ${p.status === 'ACTIVE' ? 'success' : ''}">${p.status === 'ACTIVE' ? 'Actif' : 'Inactif'}</span></td>
+        </tr>`).join('');
+    }
+
+    function renderPatientSelects() {
+      const options = ['<option value="">Sélectionner…</option>'].concat(
+        (state.data.patients || []).map(p => `<option value="${escapeAttr(p.id)}">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</option>`)
+      ).join('');
+      document.getElementById('appointmentPatient').innerHTML = options;
+      document.getElementById('taskPatient').innerHTML = '<option value="">Aucun patient</option>' + options.replace('<option value="">Sélectionner…</option>', '');
+    }
+
+    function renderTasks() {
+      renderTaskList('allTasks', state.data.tasks || []);
+    }
+
+    function renderTaskList(targetId, tasks) {
+      const el = document.getElementById(targetId);
+      if (!tasks.length) {
+        el.innerHTML = emptyBlock('checkSquare', 'Rien à traiter', 'Les tâches de suivi apparaîtront ici.');
+        renderIcons(el);
+        return;
+      }
+      el.innerHTML = tasks.map(t => `
+        <div class="task ${t.status === 'DONE' ? 'done' : ''}">
+          <button class="task-check" onclick="event.stopPropagation();toggleTask('${escapeAttr(t.id)}','${t.status === 'DONE' ? 'OPEN' : 'DONE'}')" aria-label="Changer le statut">✓</button>
+          <div><div class="task-title">${escapeHtml(t.title)}</div><div class="task-meta">${escapeHtml(taskMeta(t))}</div></div>
+          <span class="chip ${t.priority === 'HIGH' ? 'warning' : ''}">${escapeHtml(priorityLabel(t.priority))}</span>
+        </div>`).join('');
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendarGrid');
+      const week = getWeekDays(new Date());
+      const startHour = 8, endHour = 19;
+      document.getElementById('agendaRange').textContent = `${formatDateShort(week[0])} — ${formatDateShort(week[4])}`;
+      let html = '<div class="cal-cell cal-head"></div>';
+      week.forEach(d => html += `<div class="cal-cell cal-head">${escapeHtml(d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'}))}</div>`);
+      for (let hour = startHour; hour < endHour; hour++) {
+        html += `<div class="cal-cell cal-time">${String(hour).padStart(2,'0')}:00</div>`;
+        week.forEach(d => {
+          const events = (state.data.weekAppointments || []).filter(a => sameDay(new Date(a.startAt), d) && new Date(a.startAt).getHours() === hour);
+          const busy = (state.data.weekBusyBlocks || []).filter(b => sameDay(new Date(b.startAt), d) && new Date(b.startAt).getHours() === hour);
+          html += `<div class="cal-cell">${events.map(a => `<div class="cal-event" onclick="openPatient('${escapeAttr(a.patientId)}')">${escapeHtml(formatTime(a.startAt))} · ${escapeHtml(a.patientName)}<br><span style="font-weight:500;opacity:.8">${escapeHtml(a.type)}</span></div>`).join('')}${busy.map(b => `<div class="busy-cal-event">${escapeHtml(formatTime(b.startAt))} · Indisponible<br><span>${escapeHtml(b.provider==='google_workspace'?'Google Calendar':b.provider==='microsoft_365'?'Outlook':'Calendrier externe')}</span></div>`).join('')}</div>`;
+        });
+      }
+      grid.innerHTML = html;
+    }
+
+    function renderAnalytics() {
+      const s = state.data.stats || {};
+      setText('anaPatients', s.activePatients || 0);
+      setText('anaAppointments', s.appointments30d || 0);
+      setText('anaConsultations', s.consultations30d || 0);
+      setText('anaNoShow', `${s.noShowRate || 0}%`);
+    }
+
+
+    function renderIntegrations(){
+      const grid=document.getElementById('integrationGrid'), connectedBox=document.getElementById('connectedIntegrations'), wrap=document.getElementById('connectedIntegrationsWrap');
+      if(!grid||!state.data)return;
+      const items=state.data.integrations||[], connected=items.filter(i=>i.connected), available=items.filter(i=>!i.connected);
+      wrap.hidden=!connected.length;
+      connectedBox.innerHTML=connected.map(i=>{
+        const action=i.provider==='google_workspace'?`<button class="btn btn-sm" onclick="configureGoogle()">Synchroniser</button>`:i.provider==='microsoft_365'?`<button class="btn btn-sm" onclick="configureMicrosoft()">Synchroniser</button>`:`<button class="btn btn-sm" onclick="showIntegrationInfo('${escapeAttr(i.provider)}')">Gérer</button>`;
+        return `<article class="integration-connected-row"><div class="integration-logo">${escapeHtml((i.shortLabel||'?').slice(0,3))}</div><div class="integration-connected-main"><div class="integration-connected-title"><span class="connection-dot"></span>${escapeHtml(i.name)}</div><div class="integration-connected-meta">${escapeHtml(i.account||'Compte connecté')} · ${escapeHtml(i.syncDirection||'Synchronisation active')}${i.lastSyncAt?' · dernière sync '+escapeHtml(relativeDate(i.lastSyncAt)):''}</div></div><div class="integration-connected-actions">${action}</div></article>`;
+      }).join('');
+      const labels={CALENDAR:'Calendriers',BOOKING:'Réservation & booking',HEALTH:'Systèmes métier',STANDARD:'Standards & autres'};
+      let last='';
+      grid.innerHTML=available.sort((a,b)=>String(a.category).localeCompare(String(b.category))).map(i=>{
+        let head='';if(i.category!==last){last=i.category;head=`<div class="provider-section-label">${escapeHtml(labels[i.category]||i.category||'Autres')}</div>`;}
+        const sc=i.availability==='READY'?'ready':i.availability==='PARTNER'?'partner':'partial';
+        const sl=i.availability==='READY'?'Prêt à connecter':i.availability==='PARTNER'?'Accès partenaire':'Configuration requise';
+        const caps=(i.capabilities||[]).map(c=>`<span class="cap">${escapeHtml(c)}</span>`).join('');
+        const btn=i.provider==='google_workspace'?`<button class="btn btn-sm btn-primary" onclick="configureGoogle()">Connecter</button>`:i.provider==='microsoft_365'?`<button class="btn btn-sm btn-primary" onclick="configureMicrosoft()">Connecter</button>`:`<button class="btn btn-sm" onclick="showIntegrationInfo('${escapeAttr(i.provider)}')">Détails</button>`;
+        return `${head}<article class="integration-card"><div class="integration-card-head"><div class="integration-logo">${escapeHtml((i.shortLabel||'?').slice(0,3))}</div><span class="chip">${escapeHtml(i.syncDirection||'Variable')}</span></div><h3>${escapeHtml(i.name)}</h3><p>${escapeHtml(i.description)}</p><div class="integration-capabilities">${caps}</div><div class="integration-card-foot"><span class="sync-badge ${sc}">${escapeHtml(sl)}</span>${btn}</div></article>`;
+      }).join('');
+      renderIcons(document.getElementById('view-integrations'));
+    }
+    function showIntegrationInfo(provider){const i=(state.data?.integrations||[]).find(x=>x.provider===provider);if(i)toast(`${i.name} — ${i.integrationNote||i.description}`)}
+    function relativeDate(v){const d=new Date(String(v).length===19?v+'Z':v);if(Number.isNaN(d.getTime()))return String(v);const m=Math.max(0,Math.round((Date.now()-d.getTime())/60000));if(m<1)return'à l’instant';if(m<60)return`il y a ${m} min`;const h=Math.round(m/60);if(h<24)return`il y a ${h} h`;return formatDateShort(d)}
+    async function syncAllFromUi(){try{showLoading(true);await gs('syncAllCalendars');toast('Calendriers synchronisés.');await refreshData(true)}catch(err){toast(err.message,'error')}finally{showLoading(false)}}
+    async function configureGoogle(){try{showLoading(true);const r=await gs('connectGoogleWorkspace');toast(r.message||'Google Workspace connecté.');await refreshData(true)}catch(err){toast(err.message,'error')}finally{showLoading(false)}}
+
+    async function configureMicrosoft(){
+      let popup=null;
+      try{
+        // Ouvrir tout de suite pour éviter le blocage anti-popup du navigateur.
+        popup=window.open('about:blank','demedico_microsoft_oauth','width=620,height=760');
+        showLoading(true);
+        const r=await gs('connectMicrosoft365');
+        if(r && r.authUrl){
+          if(popup){ popup.location.href=r.authUrl; }
+          else { window.open(r.authUrl,'_blank'); }
+          showLoading(false);
+          toast('Autorise Demédico dans Microsoft. La connexion se finalisera à la fermeture de la fenêtre.');
+
+          if(popup){
+            const started=Date.now();
+            const timer=setInterval(async()=>{
+              if(Date.now()-started>180000){ clearInterval(timer); return; }
+              if(popup.closed){
+                clearInterval(timer);
+                try{
+                  showLoading(true);
+                  const done=await gs('connectMicrosoft365');
+                  if(done && done.authUrl){ toast('Autorisation Microsoft non terminée.','error'); return; }
+                  toast(done.message||'Outlook connecté et synchronisé.');
+                  await refreshData(true);
+                }catch(err){ toast(err.message,'error'); }
+                finally{ showLoading(false); }
+              }
+            },900);
+          }
+          return;
+        }
+        if(popup && !popup.closed) popup.close();
+        toast(r.message||'Outlook synchronisé.');
+        await refreshData(true);
+      }catch(err){
+        if(popup && !popup.closed) popup.close();
+        toast(err.message,'error');
+      }finally{
+        showLoading(false);
+      }
+    }
+    function renderSettings() {
+      const s = state.data.settings || {};
+      document.getElementById('settingsPracticeName').value = s.practiceName || '';
+      document.getElementById('settingsPractitionerName').value = s.practitionerName || '';
+      document.getElementById('settingsSpecialty').value = s.specialty || '';
+    }
+
+    async function saveSettings() {
+      try {
+        await gs('saveSettings', {
+          practiceName: value('settingsPracticeName'),
+          practitionerName: value('settingsPractitionerName'),
+          specialty: value('settingsSpecialty')
+        });
+        toast('Paramètres enregistrés.');
+        await refreshData(true);
+      } catch (err) { toast(err.message,'error'); }
+    }
+
+    function bindNavigation() {
+      document.querySelectorAll('[data-view]').forEach(btn => {
+        btn.addEventListener('click', () => navigate(btn.dataset.view));
+      });
+    }
+
+    function navigate(view) {
+      if (!VIEW_META[view]) return;
+      state.view = view;
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(`view-${view}`).classList.add('active');
+      document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+      setText('pageTitle', VIEW_META[view][0]);
+      setText('pageSubtitle', VIEW_META[view][1]);
+      updateMobilePrimary();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function bindSearch() {
+      const input = document.getElementById('globalSearch');
+      input.addEventListener('input', () => {
+        clearTimeout(state.searchTimer);
+        state.searchTimer = setTimeout(() => {
+          const q = input.value.trim().toLowerCase();
+          if (!q) { renderPatients(state.data?.patients || []); return; }
+          navigate('patients');
+          const filtered = (state.data?.patients || []).filter(p =>
+            [p.firstName,p.lastName,p.email,p.phone].join(' ').toLowerCase().includes(q)
+          );
+          renderPatients(filtered);
+        }, 120);
+      });
+      document.addEventListener('keydown', e => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault(); input.focus();
+        }
+        if (e.key === 'Escape') { closeDrawer(); closeModal(); }
+      });
+    }
+
+
+    function updateMobilePrimary() {
+      const label = document.getElementById('mobilePrimaryLabel');
+      const button = document.getElementById('mobilePrimaryAction');
+      if (!label || !button) return;
+      const config = {
+        patients: ['Patient', 'Créer un patient'],
+        agenda: ['Rendez-vous', 'Créer un rendez-vous'],
+        tasks: ['Tâche', 'Créer une tâche'],
+        dashboard: ['Créer', 'Créer'],
+        analytics: ['Créer', 'Créer'],
+        integrations: ['Créer', 'Créer'],
+        settings: ['Créer', 'Créer']
+      }[state.view] || ['Créer','Créer'];
+      label.textContent = config[0];
+      button.setAttribute('aria-label', config[1]);
+    }
+
+    function handleMobilePrimary() {
+      if (state.view === 'patients') return openPatientModal();
+      if (state.view === 'agenda') return openAppointmentModal();
+      if (state.view === 'tasks') return openTaskModal();
+      openQuickCreate();
+    }
+
+    function openMobileSearch() {
+      if (window.innerWidth > 820) return;
+      openModal('mobileSearchModal');
+      const input = document.getElementById('mobileSearchInput');
+      input.value = '';
+      renderMobileSearchResults();
+      setTimeout(() => input.focus(), 140);
+    }
+
+    function renderMobileSearchResults() {
+      const input = document.getElementById('mobileSearchInput');
+      const target = document.getElementById('mobileSearchResults');
+      if (!input || !target) return;
+      const q = input.value.trim().toLowerCase();
+      const patients = (state.data?.patients || []).filter(p => {
+        if (!q) return true;
+        return [p.firstName,p.lastName,p.email,p.phone].join(' ').toLowerCase().includes(q);
+      }).slice(0,8);
+      if (!patients.length) {
+        target.innerHTML = `<div class="empty" style="min-height:120px"><div><strong>Aucun patient trouvé</strong><p>Tu peux créer une nouvelle fiche directement depuis le bouton “+ Patient”.</p></div></div>`;
+        return;
+      }
+      target.innerHTML = patients.map(p => `
+        <button class="quick-create-option" style="width:100%;margin-bottom:8px" onclick="closeModal(); openPatient('${escapeAttr(p.id)}')">
+          <div class="avatar">${initials(p.firstName,p.lastName)}</div>
+          <div style="text-align:left;min-width:0;flex:1"><strong>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</strong><span class="copy">${escapeHtml(p.phone || p.email || 'Dossier patient')}</span></div>
+          <span class="chevron">›</span>
+        </button>`).join('');
+    }
+
+    function openQuickCreate() {
+      openModal('quickCreateModal');
+    }
+
+    function openPatientModal(patient = null) {
+      closeModal();
+      document.getElementById('patientModalTitle').textContent = patient ? 'Modifier le patient' : 'Nouveau patient';
+      document.getElementById('patientId').value = patient?.id || '';
+      document.getElementById('patientFirstName').value = patient?.firstName || '';
+      document.getElementById('patientLastName').value = patient?.lastName || '';
+      document.getElementById('patientBirthDate').value = patient?.birthDate || '';
+      document.getElementById('patientPhone').value = patient?.phone || '';
+      document.getElementById('patientEmail').value = patient?.email || '';
+      document.getElementById('patientStatus').value = patient?.status || 'ACTIVE';
+      document.getElementById('patientImportantInfo').value = patient?.importantInfo || '';
+      openModal('patientModal');
+      setTimeout(() => document.getElementById('patientFirstName').focus(), 120);
+    }
+
+    async function submitPatient() {
+      const payload = {
+        id: value('patientId'),
+        firstName: value('patientFirstName'),
+        lastName: value('patientLastName'),
+        birthDate: value('patientBirthDate'),
+        phone: value('patientPhone'),
+        email: value('patientEmail'),
+        status: value('patientStatus'),
+        importantInfo: value('patientImportantInfo')
+      };
+      if (!payload.firstName || !payload.lastName) return toast('Prénom et nom sont obligatoires.','error');
+      try {
+        setModalBusy(true);
+        const saved = await gs('savePatient', payload);
+        closeModal();
+        toast(payload.id ? 'Patient mis à jour.' : 'Patient créé.');
+        await refreshData(true);
+        openPatient(saved.id);
+      } catch (err) { toast(err.message,'error'); }
+      finally { setModalBusy(false); }
+    }
+
+    function editCurrentPatient() {
+      const p = state.currentPatientDetails?.patient;
+      if (p) openPatientModal(p);
+    }
+
+    async function openPatient(patientId) {
+      if (!patientId) return;
+      state.currentPatientId = patientId;
+      openDrawerSkeleton();
+      try {
+        const details = await gs('getPatientDetails', patientId);
+        state.currentPatientDetails = details;
+        renderPatientDrawer(details);
+      } catch (err) {
+        toast(err.message,'error');
+        closeDrawer();
+      }
+    }
+
+    function openDrawerSkeleton() {
+      document.getElementById('drawerTitle').textContent = 'Chargement…';
+      document.getElementById('drawerBody').innerHTML = '<div class="empty"><div><div class="spinner"></div><p>Ouverture du dossier…</p></div></div>';
+      document.getElementById('drawerBackdrop').classList.add('open');
+      document.getElementById('patientDrawer').classList.add('open');
+      document.getElementById('patientDrawer').setAttribute('aria-hidden','false');
+    }
+
+    function renderPatientDrawer(d) {
+      const p = d.patient;
+      document.getElementById('drawerTitle').textContent = `${p.firstName} ${p.lastName}`;
+      const appts = d.appointments || [];
+      const consultations = d.consultations || [];
+      const tasks = d.tasks || [];
+      document.getElementById('drawerBody').innerHTML = `
+        <div class="patient-hero">
+          <div class="avatar">${initials(p.firstName,p.lastName)}</div>
+          <div><h3>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</h3><p>${escapeHtml(ageLabel(p.birthDate))} · ${escapeHtml(p.phone || 'Téléphone non renseigné')} · ${escapeHtml(p.email || 'Email non renseigné')}</p></div>
+        </div>
+        <div class="tabs">
+          <button class="tab active" data-patient-tab="overview">Aperçu</button>
+          <button class="tab" data-patient-tab="consultations">Consultations</button>
+          <button class="tab" data-patient-tab="appointments">Rendez-vous</button>
+          <button class="tab" data-patient-tab="tasks">Tâches</button>
+        </div>
+
+        <div class="patient-section active" data-patient-panel="overview">
+          <div class="info-grid">
+            <div class="info-box"><span>Prochain rendez-vous</span><strong>${d.nextAppointment ? escapeHtml(formatDateShort(d.nextAppointment.startAt)+' · '+formatTime(d.nextAppointment.startAt)) : 'À planifier'}</strong></div>
+            <div class="info-box"><span>Dernière consultation</span><strong>${consultations[0] ? escapeHtml(formatDateShort(consultations[0].date)) : 'Aucune'}</strong></div>
+          </div>
+          ${p.importantInfo ? `<div style="margin-top:14px;padding:13px;border-radius:12px;background:var(--warning-soft);color:#6D4B22"><div class="eyebrow" style="color:#8D612A">Information importante</div><p style="font-size:11px;line-height:1.55;margin:6px 0 0">${escapeHtml(p.importantInfo).replace(/\n/g,'<br>')}</p></div>` : ''}
+          <div class="card-head" style="margin-top:20px"><div><h3 class="panel-title">Historique récent</h3><p class="panel-sub">Consultations et actions importantes.</p></div><button class="btn btn-sm btn-primary" onclick="openConsultationModal()">+ Consultation</button></div>
+          ${renderTimeline(consultations)}
+        </div>
+
+        <div class="patient-section" data-patient-panel="consultations">
+          <div class="card-head"><div><h3 class="panel-title">Consultations</h3><p class="panel-sub">${consultations.length} note(s)</p></div><button class="btn btn-sm btn-primary" onclick="openConsultationModal()">+ Nouvelle</button></div>
+          ${consultations.length ? consultations.map(c => `<div class="timeline-card" style="margin-bottom:9px"><strong>${escapeHtml(formatDateShort(c.date))} · ${escapeHtml(c.motive || 'Consultation')}</strong><p>${escapeHtml(c.observations || 'Aucune observation').replace(/\n/g,'<br>')}</p>${c.painScore !== '' ? `<small>Douleur : ${escapeHtml(String(c.painScore))}/10</small>` : ''}</div>`).join('') : emptyBlock('activity','Aucune consultation','Les notes cliniques apparaîtront ici.')}
+        </div>
+
+        <div class="patient-section" data-patient-panel="appointments">
+          ${appts.length ? appts.map(a => `<div class="appointment"><div class="appt-time">${escapeHtml(formatDateShort(a.startAt))}</div><div class="appt-bar" style="background:${statusColor(a.status)}"></div><div class="appt-main"><div class="appt-name">${escapeHtml(formatTime(a.startAt))} · ${escapeHtml(a.type)}</div><div class="appt-meta">${escapeHtml(a.location || 'Cabinet')}</div></div><select class="status-select" aria-label="Statut du rendez-vous" onchange="updateAppointmentStatus('${escapeAttr(a.id)}',this.value)"><option value="BOOKED" ${a.status==='BOOKED'?'selected':''}>Prévu</option><option value="DONE" ${a.status==='DONE'?'selected':''}>Terminé</option><option value="NO_SHOW" ${a.status==='NO_SHOW'?'selected':''}>Absent</option><option value="CANCELLED" ${a.status==='CANCELLED'?'selected':''}>Annulé</option></select></div>`).join('') : emptyBlock('calendar','Aucun rendez-vous','Planifie le prochain suivi directement depuis le dossier.')}
+        </div>
+
+        <div class="patient-section" data-patient-panel="tasks">
+          <div class="tasks">${tasks.length ? tasks.map(t => `<div class="task ${t.status==='DONE'?'done':''}"><button class="task-check" onclick="toggleTask('${escapeAttr(t.id)}','${t.status==='DONE'?'OPEN':'DONE'}')">✓</button><div><div class="task-title">${escapeHtml(t.title)}</div><div class="task-meta">${escapeHtml(taskMeta(t))}</div></div><span class="chip">${escapeHtml(priorityLabel(t.priority))}</span></div>`).join('') : emptyBlock('checkSquare','Aucune tâche','Ajoute une tâche de suivi depuis l’écran Tâches.')}</div>
+        </div>`;
+
+      document.querySelectorAll('[data-patient-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-patient-tab]').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('[data-patient-panel]').forEach(pnl => pnl.classList.remove('active'));
+          btn.classList.add('active');
+          document.querySelector(`[data-patient-panel="${btn.dataset.patientTab}"]`).classList.add('active');
+        });
+      });
+      renderIcons(document.getElementById('drawerBody'));
+    }
+
+    function renderTimeline(consultations) {
+      if (!consultations.length) return emptyBlock('activity','Historique vide','Ajoute la première consultation pour commencer le suivi longitudinal.');
+      return `<div class="timeline">${consultations.slice(0,5).map(c => `<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-card"><strong>${escapeHtml(c.motive || 'Consultation')}</strong><p>${escapeHtml((c.observations || c.treatment || 'Note clinique enregistrée').slice(0,220))}</p><small>${escapeHtml(formatDateShort(c.date))}${c.painScore !== '' ? ' · Douleur '+escapeHtml(String(c.painScore))+'/10' : ''}</small></div></div>`).join('')}</div>`;
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawerBackdrop').classList.remove('open');
+      document.getElementById('patientDrawer').classList.remove('open');
+      document.getElementById('patientDrawer').setAttribute('aria-hidden','true');
+    }
+
+    function openAppointmentModal(patientId = '') {
+      if (!state.data?.patients?.length) {
+        toast('Crée d’abord un patient.','error'); openPatientModal(); return;
+      }
+      setDefaultDates();
+      if (patientId) document.getElementById('appointmentPatient').value = patientId;
+      openModal('appointmentModal');
+    }
+
+    async function submitAppointment() {
+      const date = value('appointmentDate');
+      const start = value('appointmentStart');
+      const end = value('appointmentEnd');
+      const payload = {
+        patientId: value('appointmentPatient'),
+        startAt: `${date}T${start}:00`,
+        endAt: `${date}T${end}:00`,
+        type: value('appointmentType'),
+        location: value('appointmentLocation'),
+        notes: value('appointmentNotes')
+      };
+      if (!payload.patientId || !date || !start || !end) return toast('Patient, date et horaires sont obligatoires.','error');
+      if (payload.endAt <= payload.startAt) return toast('L’heure de fin doit être après le début.','error');
+      try {
+        setModalBusy(true);
+        await gs('saveAppointment', payload);
+        closeModal(); toast('Rendez-vous créé.'); await refreshData(true);
+      } catch (err) { toast(err.message,'error'); }
+      finally { setModalBusy(false); }
+    }
+
+    function openTaskModal() {
+      document.getElementById('taskTitle').value = '';
+      document.getElementById('taskDueDate').value = localDateInput(new Date());
+      document.getElementById('taskPriority').value = 'NORMAL';
+      document.getElementById('taskPatient').value = state.currentPatientId || '';
+      openModal('taskModal');
+    }
+
+    async function submitTask() {
+      const payload = {
+        title: value('taskTitle'),
+        dueDate: value('taskDueDate'),
+        priority: value('taskPriority'),
+        patientId: value('taskPatient')
+      };
+      if (!payload.title) return toast('Le titre de la tâche est obligatoire.','error');
+      try {
+        setModalBusy(true); await gs('saveTask', payload); closeModal(); toast('Tâche ajoutée.'); await refreshData(true);
+      } catch (err) { toast(err.message,'error'); }
+      finally { setModalBusy(false); }
+    }
+
+    async function toggleTask(id, status) {
+      try {
+        await gs('setTaskStatus', id, status);
+        await refreshData(true);
+        if (state.currentPatientId && document.getElementById('patientDrawer').classList.contains('open')) openPatient(state.currentPatientId);
+      } catch (err) { toast(err.message,'error'); }
+    }
+
+    async function updateAppointmentStatus(id,status){
+      try{
+        await gs('setAppointmentStatus',id,status);
+        toast(`Rendez-vous : ${statusLabel(status)}.`);
+        await refreshData(true);
+        if(state.currentPatientId && document.getElementById('patientDrawer').classList.contains('open')){
+          await openPatient(state.currentPatientId);
+        }
+      }catch(err){
+        toast(err.message,'error');
+        if(state.currentPatientId) await openPatient(state.currentPatientId);
+      }
+    }
+
+    function openConsultationModal() {
+      if (!state.currentPatientId) return;
+      document.getElementById('consultMotive').value = '';
+      document.getElementById('consultPain').value = '';
+      document.getElementById('consultDate').value = localDateInput(new Date());
+      document.getElementById('consultObservations').value = '';
+      document.getElementById('consultTreatment').value = '';
+      document.getElementById('consultRecommendations').value = '';
+      document.getElementById('consultFollowUp').value = '';
+      openModal('consultationModal');
+    }
+
+    async function submitConsultation() {
+      if (!state.currentPatientId) return;
+      const payload = {
+        patientId: state.currentPatientId,
+        date: value('consultDate'),
+        motive: value('consultMotive'),
+        painScore: value('consultPain'),
+        observations: value('consultObservations'),
+        treatment: value('consultTreatment'),
+        recommendations: value('consultRecommendations'),
+        followUp: value('consultFollowUp')
+      };
+      try {
+        setModalBusy(true);
+        await gs('saveConsultation', payload);
+        closeModal(); toast('Consultation enregistrée.');
+        await refreshData(true); await openPatient(state.currentPatientId);
+      } catch (err) { toast(err.message,'error'); }
+      finally { setModalBusy(false); }
+    }
+
+    function openModal(id) {
+      document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
+      document.getElementById('modalBackdrop').classList.add('open');
+      const modal = document.getElementById(id);
+      modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
+      renderIcons(modal);
+    }
+
+    function closeModal() {
+      document.getElementById('modalBackdrop').classList.remove('open');
+      document.querySelectorAll('.modal').forEach(m => { m.classList.remove('open'); m.setAttribute('aria-hidden','true'); });
+    }
+
+    function setModalBusy(busy) {
+      document.querySelectorAll('.modal.open .btn-primary').forEach(b => b.disabled = busy);
+    }
+
+    function setDefaultDates() {
+      const today = localDateInput(new Date());
+      ['appointmentDate','taskDueDate','consultDate'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.value) el.value = today;
+      });
+    }
+
+    function toast(message, type = '') {
+      const wrap = document.getElementById('toastWrap');
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `<span>${type === 'error' ? '!' : '✓'}</span><div>${escapeHtml(message)}</div>`;
+      wrap.appendChild(el);
+      setTimeout(() => el.remove(), 3600);
+    }
+
+    function showLoading(show) { document.getElementById('loading').hidden = !show; }
+
+    function emptyBlock(icon, title, text) {
+      return `<div class="empty"><div><div class="empty-icon"><span data-icon="${icon}"></span></div><strong>${escapeHtml(title)}</strong><p>${escapeHtml(text)}</p></div></div>`;
+    }
+
+    function statusLabel(status) {
+      return ({BOOKED:'Prévu',DONE:'Terminé',CANCELLED:'Annulé',NO_SHOW:'Absent'})[status] || status || 'Prévu';
+    }
+    function chipClass(status) { return status === 'DONE' ? 'success' : status === 'NO_SHOW' ? 'danger' : status === 'CANCELLED' ? 'warning' : ''; }
+    function statusColor(status) { return status === 'DONE' ? 'var(--success)' : status === 'NO_SHOW' ? 'var(--danger)' : status === 'CANCELLED' ? 'var(--warning)' : 'var(--primary)'; }
+    function priorityLabel(p) { return ({HIGH:'Haute',LOW:'Basse',NORMAL:'Normale'})[p] || 'Normale'; }
+    function taskMeta(t) {
+      const patient = (state.data?.patients || []).find(p => p.id === t.patientId);
+      const bits = [];
+      if (t.dueDate) bits.push(formatDateShort(t.dueDate));
+      if (patient) bits.push(`${patient.firstName} ${patient.lastName}`);
+      return bits.join(' · ') || 'Sans échéance';
+    }
+
+    function formatTime(v) {
+      if (!v) return '—';
+      const d = new Date(v);
+      if (Number.isNaN(d.getTime())) return String(v).slice(11,16);
+      return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    }
+    function formatDateShort(v) {
+      if (!v) return '—';
+      const d = v instanceof Date ? v : new Date(String(v).length === 10 ? v+'T12:00:00' : v);
+      if (Number.isNaN(d.getTime())) return String(v);
+      return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
+    }
+    function formatDateLong(d) { return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+    function durationLabel(a,b) {
+      const ms = new Date(b)-new Date(a);
+      const m = Math.max(0,Math.round(ms/60000));
+      return `${m} min`;
+    }
+    function localDateInput(d) {
+      const x = new Date(d.getTime() - d.getTimezoneOffset()*60000);
+      return x.toISOString().slice(0,10);
+    }
+    function getWeekDays(date) {
+      const d = new Date(date); const day = d.getDay(); const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      const mon = new Date(d.setDate(diff)); mon.setHours(12,0,0,0);
+      return Array.from({length:5},(_,i)=>{ const x=new Date(mon); x.setDate(mon.getDate()+i); return x; });
+    }
+    function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+    function initials(a,b){ return `${(a||'')[0]||''}${(b||'')[0]||''}`.toUpperCase(); }
+    function ageLabel(birthDate) {
+      if (!birthDate) return 'Âge non renseigné';
+      const b = new Date(birthDate+'T12:00:00'); const n = new Date();
+      let age = n.getFullYear()-b.getFullYear(); const m=n.getMonth()-b.getMonth();
+      if (m<0 || (m===0 && n.getDate()<b.getDate())) age--;
+      return `${age} ans`;
+    }
+    function value(id){ return document.getElementById(id).value.trim(); }
+    function setText(id,v){ const e=document.getElementById(id); if(e)e.textContent=v; }
+    function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+    function escapeAttr(value) { return escapeHtml(value).replace(/`/g,'&#096;'); }
+  </script>
+<!--
+  Demédico · Team.html (v0.5.0)
+  Connexion, comptes, équipe, rôles, invitations, agendas. Injecté avant </body> :
+  - par doGet (page Apps Script)
+  - par tools/build-pwa.js (appli GitHub Pages)
+  Index.html reste inchangé : ce module remplace quelques fonctions d'Index par des versions enrichies.
+-->
+<style>
+
+  .team-list { display:grid; gap:8px; margin-top:16px; }
+  .team-row {
+    display:grid; grid-template-columns:34px minmax(0,1fr) auto auto; gap:10px; align-items:center;
+    padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:var(--surface);
+  }
+  .team-row .who { min-width:0; }
+  .team-row .who strong { display:block; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .team-row .who span { display:block; color:var(--text-3); font-size:10px; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .team-actions { display:flex; gap:6px; align-items:center; justify-content:flex-end; }
+  .team-status { display:inline-flex; margin-top:5px; }
+  .invite-result { margin-top:14px; padding:13px; border:1px dashed #BFD6D4; border-radius:12px; background:var(--surface-2); }
+  .invite-result .row { display:flex; gap:8px; margin-top:9px; }
+  .invite-result .row input { flex:1; min-width:0; }
+  .me-badge { padding:0 10px 12px; color:var(--text-3); font-size:10px; line-height:1.45; }
+  .me-badge strong { display:block; color:var(--text-2); font-size:11px; }
+  @media (max-width:560px) {
+    .team-row { grid-template-columns:34px minmax(0,1fr); }
+    .team-row > .status-select, .team-row > .team-actions { grid-column:2; justify-content:flex-start; }
+    .invite-result .row { flex-direction:column; }
+  }
+  .dm-auth { z-index:190; }
+  .dm-auth-card { width:min(460px,100%); }
+  .dm-auth-card .brand-stack-img { width:min(210px,60vw); }
+  .dm-auth-title { margin:20px 0 6px; font-size:24px; letter-spacing:-.04em; line-height:1.1; }
+  .dm-auth-sub { margin:0; color:var(--text-2); font-size:12px; line-height:1.55; }
+  .dm-auth-form { display:grid; gap:12px; margin-top:20px; }
+  .dm-auth-form .btn-primary { min-height:46px; }
+  .dm-auth-links { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:16px; }
+  .dm-link { border:0; background:none; padding:0; color:var(--primary); font-size:11px; font-weight:750; cursor:pointer; }
+  .dm-check { display:flex !important; align-items:center; gap:8px; text-transform:none !important; letter-spacing:0 !important; font-size:11px !important; font-weight:650 !important; color:var(--text-2) !important; }
+  .dm-check input { width:16px; height:16px; margin:0; }
+  .dm-note { padding:11px 12px; border-radius:12px; background:var(--surface-2); border:1px solid var(--line); color:var(--text-2); font-size:11px; line-height:1.5; }
+  .dm-note.warn { background:var(--warning-soft); border-color:#EED9BE; color:#6D4B22; }
+  .me-badge .dm-link { margin-top:6px; }
+</style>
+
+<script>
+  const DM_ROLE_LABEL = {ADMIN:'Administrateur', PRACTITIONER:'Praticien', SECRETARY:'Secrétariat'};
+  const DM_STATUS = {ACTIVE:['Actif','success'], INVITED:['Invitation en attente','warning'], REMOVED:['Retiré','danger']};
+  const DM_IN_GAS = !!(window.google && google.script && google.script.run);
+  const DM_API_URL = window.DEMEDICO_API || '';
+  const DM_TOKEN_KEY = 'dm_session';
+  let dmMemToken = '';
+  let dmInfo = null;
+
+  function dmMe() { return (state.data && state.data.team && state.data.team.me) || {}; }
+  function dmIsAdmin() { return dmMe().role === 'ADMIN'; }
+  function dmIsSecretary() { return dmMe().role === 'SECRETARY'; }
+  function dmInitials(name) {
+    const parts = String(name || '').replace(/@.*/, '').split(/[\s._-]+/).filter(Boolean);
+    return ((parts[0] || '?')[0] + ((parts[1] || '')[0] || '')).toUpperCase();
+  }
+
+  // ── Session ────────────────────────────────────────────────────────────────
+  function dmToken() {
+    try { return localStorage.getItem(DM_TOKEN_KEY) || sessionStorage.getItem(DM_TOKEN_KEY) || dmMemToken; }
+    catch (e) { return dmMemToken; }
+  }
+  function dmSetToken(token, remember) {
+    dmMemToken = token || '';
+    try {
+      localStorage.removeItem(DM_TOKEN_KEY);
+      sessionStorage.removeItem(DM_TOKEN_KEY);
+      if (token) (remember ? localStorage : sessionStorage).setItem(DM_TOKEN_KEY, token);
+    } catch (e) {}
+  }
+
+  // ── Pont vers le serveur : google.script.run (Apps Script) ou fetch (GitHub Pages) ──
+  function dmCall(fn, args) {
+    return new Promise((resolve, reject) => {
+      const done = res => {
+        if (res && res.ok) return resolve(res.result);
+        const err = new Error((res && res.error) || 'Erreur serveur.');
+        err.code = (res && res.code) || '';
+        if (err.code === 'AUTH') dmSetToken('');
+        reject(err);
+      };
+      if (DM_IN_GAS) {
+        google.script.run
+          .withSuccessHandler(done)
+          .withFailureHandler(e => reject(new Error((e && e.message) || String(e))))
+          .api(fn, args, dmToken());
+        return;
+      }
+      if (!DM_API_URL) return reject(new Error('Adresse du serveur absente (app-config.js).'));
+      fetch(DM_API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({fn, args, token:dmToken()})})
+        .then(r => r.json())
+        .then(done)
+        .catch(() => reject(new Error('Connexion au serveur impossible. Vérifie ta connexion Internet.')));
+    });
+  }
+
+  gs = function (method, ...args) { return dmCall(method, args); };
+
+  // ── Écrans d'accès ─────────────────────────────────────────────────────────
+  function dmInjectUI() {
+    if (!document.getElementById('dmAuth')) {
+      const logo = document.querySelector('.brand-stack-img');
+      document.body.insertAdjacentHTML('beforeend',
+        '<section id="dmAuth" class="onboarding dm-auth" hidden><div class="onboarding-card dm-auth-card">' +
+        '<div class="onboarding-brand">' + (logo ? `<img class="brand-stack-img" src="${logo.getAttribute('src')}" alt="Demédico">` : '') + '</div>' +
+        '<div id="dmAuthBody"></div></div></section>');
+    }
+    const settings = document.getElementById('view-settings');
+    if (settings && !document.getElementById('teamPanel')) {
+      settings.insertAdjacentHTML('beforeend',
+        '<section class="panel" id="accountPanel" style="margin-top:18px">' +
+        '<div class="card-head"><div><h3 class="panel-title">Mon compte</h3><p class="panel-sub" id="accountSub"></p></div>' +
+        '<button class="btn btn-sm" onclick="dmLogout()">Se déconnecter</button></div>' +
+        '<form class="form-grid" onsubmit="event.preventDefault(); dmChangePassword();">' +
+        '<div class="field"><label>Mot de passe actuel</label><input id="pwCurrent" type="password" autocomplete="current-password"></div>' +
+        '<div class="field"><label>Nouveau mot de passe</label><input id="pwNew" type="password" autocomplete="new-password" minlength="8"></div>' +
+        '<div class="field full"><button class="btn" type="submit">Changer mon mot de passe</button>' +
+        '<div class="help" style="margin-top:6px">Tes autres appareils seront déconnectés.</div></div></form></section>' +
+        '<section class="panel" id="teamPanel" style="margin-top:18px">' +
+        '<div class="card-head"><div><h3 class="panel-title">Équipe du cabinet</h3>' +
+        '<p class="panel-sub" id="teamSub">Praticiens et secrétariat ayant accès à ce cabinet.</p></div></div>' +
+        '<div id="teamInvite"></div><div id="teamList" class="team-list"></div></section>');
+    }
+    const patientSelect = document.getElementById('appointmentPatient');
+    if (patientSelect && !document.getElementById('appointmentPractitioner')) {
+      patientSelect.closest('.field').insertAdjacentHTML('afterend',
+        '<div class="field full"><label>Praticien *</label><select id="appointmentPractitioner" required></select></div>');
+    }
+    const sideCard = document.querySelector('.sidebar .side-card');
+    if (sideCard && !document.getElementById('meBadge')) sideCard.insertAdjacentHTML('beforebegin', '<div id="meBadge" class="me-badge"></div>');
+  }
+  dmInjectUI();
+
+  function dmField(id, label, type, extra) {
+    return `<div class="field"><label for="${id}">${label}</label><input id="${id}" type="${type || 'text'}" ${extra || ''}></div>`;
+  }
+  function dmRemember(id) {
+    return `<label class="dm-check"><input id="${id}" type="checkbox"> Rester connecté 30 jours (appareil personnel uniquement)</label>`;
+  }
+  function dmVal(id) { const el = document.getElementById(id); return el ? (el.type === 'checkbox' ? el.checked : el.value.trim()) : ''; }
+
+  function dmHideAuth() { document.getElementById('dmAuth').hidden = true; }
+
+  async function dmOpenAuth(view, data) {
+    const box = document.getElementById('dmAuth');
+    const body = document.getElementById('dmAuthBody');
+    document.getElementById('onboarding').hidden = true;
+    box.hidden = false;
+    if (!dmInfo) { try { dmInfo = await dmCall('appInfo', []); } catch (e) { dmInfo = {}; } }
+    const links = (...items) => `<div class="dm-auth-links">${items.join('')}</div>`;
+    const go = (v, label) => `<button type="button" class="dm-link" onclick="dmOpenAuth('${v}')">${label}</button>`;
+
+    if (view === 'signup') {
+      body.innerHTML =
+        `<h1 class="dm-auth-title">Ouvrir un cabinet</h1><p class="dm-auth-sub">Tu deviens administrateur du cabinet et tu pourras inviter ton équipe.</p>` +
+        (dmInfo.adoptable ? '<div class="dm-note warn" style="margin-top:14px">Des données Demédico existent déjà sur ce serveur : elles seront reprises dans ce premier cabinet.</div>' : '') +
+        `<form class="dm-auth-form" onsubmit="event.preventDefault(); dmSignup();">` +
+        dmField('suCode', 'Code d’ouverture', 'text', 'autocomplete="off" required') +
+        dmField('suPractice', 'Nom du cabinet', 'text', 'maxlength="120" placeholder="Cabinet Horizon" required') +
+        dmField('suName', 'Ton nom affiché', 'text', 'maxlength="120" placeholder="Dr Martin"') +
+        dmField('suEmail', 'Email', 'email', 'autocomplete="username" required') +
+        dmField('suPw', 'Mot de passe (8 caractères minimum)', 'password', 'autocomplete="new-password" minlength="8" required') +
+        dmField('suPw2', 'Confirme le mot de passe', 'password', 'autocomplete="new-password" minlength="8" required') +
+        dmRemember('suRemember') + `<button class="btn btn-primary" type="submit">Créer mon cabinet</button></form>` +
+        links(go('login', 'J’ai déjà un compte'));
+    } else if (view === 'join') {
+      body.innerHTML =
+        `<h1 class="dm-auth-title">Rejoindre ${escapeHtml(data.practiceName || 'le cabinet')}</h1>` +
+        `<p class="dm-auth-sub">Invitation pour <strong>${escapeHtml(data.email)}</strong> · ${escapeHtml(DM_ROLE_LABEL[data.role] || '')}.</p>` +
+        `<form class="dm-auth-form" onsubmit="event.preventDefault(); dmJoin('${escapeAttr(data.code)}');">` +
+        dmField('jName', 'Ton nom affiché', 'text', 'maxlength="120" placeholder="Prénom Nom"') +
+        dmField('jPw', data.accountExists ? 'Nouveau mot de passe' : 'Choisis ton mot de passe', 'password', 'autocomplete="new-password" minlength="8" required') +
+        dmField('jPw2', 'Confirme le mot de passe', 'password', 'autocomplete="new-password" minlength="8" required') +
+        dmRemember('jRemember') + `<button class="btn btn-primary" type="submit">Rejoindre le cabinet</button></form>` +
+        links(go('login', 'J’ai déjà un compte'));
+    } else if (view === 'forgot') {
+      body.innerHTML =
+        `<h1 class="dm-auth-title">Mot de passe oublié</h1><p class="dm-auth-sub">Tu vas recevoir un code à 6 chiffres par email.</p>` +
+        `<form class="dm-auth-form" onsubmit="event.preventDefault(); dmForgot();">` +
+        dmField('fEmail', 'Email', 'email', 'autocomplete="username" required') +
+        `<button class="btn btn-primary" type="submit">Recevoir un code</button></form>` +
+        links(go('login', 'Retour à la connexion'), go('reset', 'J’ai déjà un code'));
+    } else if (view === 'reset') {
+      body.innerHTML =
+        `<h1 class="dm-auth-title">Nouveau mot de passe</h1><p class="dm-auth-sub">Saisis le code reçu par email. Il est valable 20 minutes.</p>` +
+        `<form class="dm-auth-form" onsubmit="event.preventDefault(); dmReset();">` +
+        dmField('rEmail', 'Email', 'email', `autocomplete="username" required value="${escapeAttr((data && data.email) || '')}"`) +
+        dmField('rCode', 'Code reçu', 'text', 'inputmode="numeric" maxlength="6" autocomplete="one-time-code" required') +
+        dmField('rPw', 'Nouveau mot de passe', 'password', 'autocomplete="new-password" minlength="8" required') +
+        dmRemember('rRemember') + `<button class="btn btn-primary" type="submit">Valider</button></form>` +
+        links(go('login', 'Retour à la connexion'));
+    } else {
+      body.innerHTML =
+        `<h1 class="dm-auth-title">Connexion</h1><p class="dm-auth-sub">Le soin au centre. Le reste, orchestré.</p>` +
+        `<form class="dm-auth-form" onsubmit="event.preventDefault(); dmLogin();">` +
+        dmField('lEmail', 'Email', 'email', 'autocomplete="username" required') +
+        dmField('lPw', 'Mot de passe', 'password', 'autocomplete="current-password" required') +
+        dmRemember('lRemember') + `<button class="btn btn-primary" type="submit">Se connecter</button></form>` +
+        links(go('forgot', 'Mot de passe oublié ?'), (dmInfo.signupOpen ? go('signup', 'Ouvrir un nouveau cabinet') : ''));
+    }
+    const first = body.querySelector('input:not([type=checkbox])');
+    if (first) setTimeout(() => first.focus(), 60);
+  }
+
+  async function dmAuthSubmit(fn, payload, remember, okMessage) {
+    showLoading(true);
+    try {
+      const r = await dmCall(fn, [payload]);
+      dmSetToken(r.token, remember);
+      dmInfo = null;
+      if (okMessage) toast(okMessage);
+      await loadApp();
+    } catch (err) {
+      toast(err.message, 'error');
+      showLoading(false);
+    }
+  }
+
+  function dmSamePw(a, b) {
+    if (dmVal(a) !== dmVal(b)) { toast('Les deux mots de passe ne sont pas identiques.', 'error'); return false; }
+    return true;
+  }
+
+  function dmLogin() {
+    const remember = dmVal('lRemember');
+    dmAuthSubmit('login', {email:dmVal('lEmail'), password:dmVal('lPw'), remember}, remember);
+  }
+  function dmSignup() {
+    if (!dmSamePw('suPw', 'suPw2')) return;
+    const remember = dmVal('suRemember');
+    dmAuthSubmit('createCabinet', {signupCode:dmVal('suCode'), practiceName:dmVal('suPractice'), displayName:dmVal('suName'), email:dmVal('suEmail'), password:dmVal('suPw'), remember}, remember, 'Cabinet créé. Tu en es l’administrateur.');
+  }
+  function dmJoin(code) {
+    if (!dmSamePw('jPw', 'jPw2')) return;
+    const remember = dmVal('jRemember');
+    dmClearJoinParam();
+    dmAuthSubmit('acceptInvite', {code, displayName:dmVal('jName'), password:dmVal('jPw'), remember}, remember, 'Bienvenue dans le cabinet.');
+  }
+  async function dmForgot() {
+    const email = dmVal('fEmail');
+    showLoading(true);
+    try {
+      const r = await dmCall('requestPasswordReset', [{email}]);
+      toast(r.message);
+      dmOpenAuth('reset', {email});
+    } catch (err) { toast(err.message, 'error'); }
+    finally { showLoading(false); }
+  }
+  function dmReset() {
+    const remember = dmVal('rRemember');
+    dmAuthSubmit('resetPassword', {email:dmVal('rEmail'), code:dmVal('rCode'), password:dmVal('rPw'), remember}, remember, 'Mot de passe modifié.');
+  }
+
+  async function dmLogout() {
+    const t = dmToken();
+    dmSetToken('');
+    try { await dmCall('logout', [t]); } catch (e) {}
+    state.data = null;
+    closeDrawer();
+    closeModal();
+    dmOpenAuth('login');
+  }
+
+  async function dmChangePassword() {
+    const current = dmVal('pwCurrent'), password = dmVal('pwNew');
+    if (!current || !password) return toast('Remplis les deux champs.', 'error');
+    showLoading(true);
+    try {
+      let remember = false;
+      try { remember = !!localStorage.getItem(DM_TOKEN_KEY); } catch (e) {}
+      const r = await dmCall('changePassword', [{current, password, remember}]);
+      dmSetToken(r.token, remember);
+      document.getElementById('pwCurrent').value = '';
+      document.getElementById('pwNew').value = '';
+      toast('Mot de passe modifié. Tes autres appareils sont déconnectés.');
+    } catch (err) { toast(err.message, 'error'); }
+    finally { showLoading(false); }
+  }
+
+  // ── Lien d'invitation ──────────────────────────────────────────────────────
+  function dmJoinParam() {
+    return new Promise(resolve => {
+      if (DM_IN_GAS) {
+        try { google.script.url.getLocation(loc => resolve(((loc && loc.parameter) || {}).join || '')); }
+        catch (e) { resolve(''); }
+      } else {
+        try { resolve(new URLSearchParams(location.search).get('join') || ''); } catch (e) { resolve(''); }
+      }
+    });
+  }
+  function dmClearJoinParam() {
+    if (DM_IN_GAS) return;
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  }
+  async function dmOpenJoin(code) {
+    try {
+      const info = await dmCall('inviteInfo', [code]);
+      dmSetToken('');
+      dmOpenAuth('join', Object.assign({code}, info));
+    } catch (err) {
+      dmClearJoinParam();
+      toast(err.message, 'error');
+      dmOpenAuth('login');
+    }
+  }
+
+  // ── Chargement ─────────────────────────────────────────────────────────────
+  loadApp = async function () {
+    showLoading(true);
+    try {
+      document.getElementById('onboarding').hidden = true;
+      if (!state.dmJoinChecked) {
+        state.dmJoinChecked = true;
+        const join = await dmJoinParam();
+        if (join) { await dmOpenJoin(join); return; }
+      }
+      if (!dmToken()) { await dmOpenAuth('login'); return; }
+      const data = await gs('getBootstrap');
+      state.data = data;
+      dmHideAuth();
+      renderAll();
+    } catch (err) {
+      if (err.code === 'AUTH') { if (err.message && !/Session expirée/.test(err.message)) toast(err.message, 'error'); await dmOpenAuth('login'); }
+      else toast(err.message, 'error');
+    } finally {
+      showLoading(false);
+    }
+  };
+
+  setupWorkspace = function () { dmOpenAuth('signup'); };
+
+  // ── Agendas personnels : fenêtre d'autorisation Google ou Microsoft ───────
+  async function dmOAuthConnect(fn, label) {
+    let popup = null;
+    try {
+      popup = window.open('about:blank', 'dm_oauth', 'width=620,height=760');
+      showLoading(true);
+      const r = await gs(fn);
+      if (r && r.authUrl) {
+        if (popup) popup.location.href = r.authUrl; else window.open(r.authUrl, '_blank');
+        showLoading(false);
+        toast(`Autorise ${label} dans la fenêtre qui vient de s’ouvrir, puis ferme-la.`);
+        if (!popup) return;
+        const started = Date.now();
+        const timer = setInterval(async () => {
+          if (Date.now() - started > 300000) { clearInterval(timer); return; }
+          let closed = false;
+          try { closed = popup.closed; } catch (e) {}
+          if (!closed) return;
+          clearInterval(timer);
+          try {
+            showLoading(true);
+            const d = await gs(fn);
+            if (d && d.authUrl) toast(`Autorisation ${label} non terminée.`, 'error');
+            else { toast(d.message || `${label} connecté.`); await refreshData(true); }
+          } catch (err) { toast(err.message, 'error'); }
+          finally { showLoading(false); }
+        }, 900);
+        return;
+      }
+      if (popup && !popup.closed) popup.close();
+      toast((r && r.message) || `${label} synchronisé.`);
+      await refreshData(true);
+    } catch (err) {
+      if (popup && !popup.closed) popup.close();
+      toast(err.message, 'error');
+    } finally {
+      showLoading(false);
+    }
+  }
+  configureGoogle = function () { return dmOAuthConnect('connectGoogleWorkspace', 'Google Agenda'); };
+  configureMicrosoft = function () { return dmOAuthConnect('connectMicrosoft365', 'Outlook'); };
+
+  // ── Appli installable (GitHub Pages uniquement) ────────────────────────────
+  if (!DM_IN_GAS && 'serviceWorker' in navigator) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  }
+
+  // ── Rendu global : on complète le rendu d'Index ──────────────────────────────
+  const dmBaseRenderAll = renderAll;
+  renderAll = function () {
+    dmBaseRenderAll();
+    try {
+      dmRenderTeam();
+      dmFillPractitioners();
+      dmApplyRole();
+    } catch (err) {
+      console.error(err);
+    }
+    renderIcons(document);
+  };
+
+  function dmApplyRole() {
+    const me = dmMe();
+    const isSec = dmIsSecretary();
+    const isAdmin = dmIsAdmin();
+    const practice = (state.data.settings || {}).practiceName || '';
+
+    const badge = document.getElementById('meBadge');
+    if (badge) badge.innerHTML = `<strong>${escapeHtml(me.displayName || me.email || '')}</strong>${escapeHtml(DM_ROLE_LABEL[me.role] || '')}${practice ? ' · ' + escapeHtml(practice) : ''}<br><button class="dm-link" onclick="dmLogout()">Se déconnecter</button>`;
+    setText('accountSub', `${me.email || ''} · ${DM_ROLE_LABEL[me.role] || ''}`);
+
+    const hide = (el, yes) => { if (el) el.hidden = !!yes; };
+    hide(document.getElementById('metricConsultations')?.closest('.metric'), isSec);
+    hide(document.getElementById('anaConsultations')?.closest('.metric'), isSec);
+    document.querySelectorAll('[data-view="integrations"]').forEach(el => hide(el, isSec));
+    hide(document.querySelector('#view-settings button[onclick*="integrations"]')?.closest('.panel'), isSec);
+
+    ['settingsPracticeName', 'settingsSpecialty'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.disabled = !isAdmin;
+      el.title = isAdmin ? '' : 'Modifiable par l’administrateur du cabinet';
+    });
+    const nameLabel = document.getElementById('settingsPractitionerName')?.closest('.field')?.querySelector('label');
+    if (nameLabel) nameLabel.textContent = 'Ton nom affiché';
+  }
+
+  function dmFillPractitioners() {
+    const sel = document.getElementById('appointmentPractitioner');
+    if (!sel || !state.data) return;
+    const list = (state.data.team && state.data.team.practitioners) || [];
+    const me = dmMe();
+    const keep = sel.value;
+    sel.innerHTML = '<option value="">Sélectionner…</option>' +
+      list.map(p => `<option value="${escapeAttr(p.email)}">${escapeHtml(p.displayName || p.email)}</option>`).join('');
+    if (keep && list.some(p => p.email === keep)) sel.value = keep;
+    else if (!dmIsSecretary() && list.some(p => p.email === me.email)) sel.value = me.email;
+    else if (list.length === 1) sel.value = list[0].email;
+  }
+
+  // ── Rendez-vous : ajoute le praticien au formulaire d'Index ──────────────────
+  submitAppointment = async function () {
+    const date = value('appointmentDate');
+    const start = value('appointmentStart');
+    const end = value('appointmentEnd');
+    const payload = {
+      patientId: value('appointmentPatient'),
+      practitionerEmail: value('appointmentPractitioner'),
+      startAt: `${date}T${start}:00`,
+      endAt: `${date}T${end}:00`,
+      type: value('appointmentType'),
+      location: value('appointmentLocation'),
+      notes: value('appointmentNotes')
+    };
+    if (!payload.patientId || !date || !start || !end) return toast('Patient, date et horaires sont obligatoires.', 'error');
+    if (!payload.practitionerEmail) return toast('Choisis le praticien du rendez-vous.', 'error');
+    if (payload.endAt <= payload.startAt) return toast('L’heure de fin doit être après le début.', 'error');
+    try {
+      setModalBusy(true);
+      await gs('saveAppointment', payload);
+      closeModal();
+      toast('Rendez-vous créé.');
+      await refreshData(true);
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setModalBusy(false);
+    }
+  };
+
+  // ── Dossier patient : le secrétariat ne voit pas les notes cliniques ─────────
+  const dmBaseRenderPatientDrawer = renderPatientDrawer;
+  renderPatientDrawer = function (d) {
+    dmBaseRenderPatientDrawer(d);
+    if (!dmIsSecretary()) return;
+    const body = document.getElementById('drawerBody');
+    body.querySelectorAll('[data-patient-tab="consultations"], [data-patient-panel="consultations"]').forEach(el => el.remove());
+    body.querySelectorAll('button[onclick*="openConsultationModal"]').forEach(btn => {
+      const head = btn.closest('.card-head');
+      if (head) { const next = head.nextElementSibling; head.remove(); if (next) next.remove(); }
+      else btn.remove();
+    });
+  };
+
+  // ── Équipe ───────────────────────────────────────────────────────────────────
+  function dmRenderTeam() {
+    const panel = document.getElementById('teamPanel');
+    if (!panel || !state.data) return;
+    const me = dmMe();
+    const team = state.data.team || {};
+    const invite = document.getElementById('teamInvite');
+    const list = document.getElementById('teamList');
+
+    if (!dmIsAdmin()) {
+      setText('teamSub', `Ton rôle : ${DM_ROLE_LABEL[me.role] || me.role}. Seul l’administrateur gère l’équipe.`);
+      invite.innerHTML = '';
+      list.innerHTML = (team.practitioners || []).map(p => `
+        <div class="team-row"><div class="avatar">${escapeHtml(dmInitials(p.displayName || p.email))}</div>
+        <div class="who"><strong>${escapeHtml(p.displayName || p.email)}</strong><span>${escapeHtml(p.email)}</span></div></div>`).join('');
+      return;
+    }
+
+    setText('teamSub', 'Invite tes praticiens et ton secrétariat. Chacun reçoit un lien pour créer son mot de passe.');
+    if (!document.getElementById('inviteEmail')) {
+      invite.innerHTML = `
+        <div class="form-grid">
+          <div class="field"><label>Email du membre</label><input id="inviteEmail" type="email" maxlength="160" placeholder="prenom.nom@exemple.fr" autocomplete="off"></div>
+          <div class="field"><label>Rôle</label><select id="inviteRole">
+            <option value="PRACTITIONER">Praticien</option>
+            <option value="SECRETARY">Secrétariat</option>
+            <option value="ADMIN">Administrateur</option>
+          </select></div>
+          <div class="field full">
+            <button class="btn btn-primary" onclick="dmInvite()"><span data-icon="plus"></span> Créer l’invitation</button>
+            <div class="help" style="margin-top:7px">Praticien : patients, agenda, notes cliniques. Secrétariat : patients, agenda et tâches, sans notes cliniques. Administrateur : tout, plus la gestion de l’équipe.</div>
+          </div>
+        </div>
+        <div id="inviteResult"></div>`;
+    }
+
+    const members = team.members || [];
+    list.innerHTML = members.length ? members.map(m => dmMemberRow(m, me)).join('') :
+      '<div class="empty" style="min-height:120px"><div><strong>Aucun membre</strong><p>Invite ton premier collègue avec le formulaire ci-dessus.</p></div></div>';
+  }
+
+  function dmMemberRow(m, me) {
+    const self = m.email === me.email;
+    const st = DM_STATUS[m.status] || [m.status, ''];
+    const name = m.displayName || m.email;
+    const roleSelect = `<select class="status-select" ${self ? 'disabled title="Tu ne peux pas modifier ton propre rôle"' : ''} onchange="dmSetRole('${escapeAttr(m.email)}', this.value)">` +
+      ['ADMIN', 'PRACTITIONER', 'SECRETARY'].map(r => `<option value="${r}" ${m.role === r ? 'selected' : ''}>${DM_ROLE_LABEL[r]}</option>`).join('') +
+      '</select>';
+    const actions =
+      (m.status === 'INVITED' ? `<button class="btn btn-sm" onclick="dmResend('${escapeAttr(m.email)}')">Nouveau lien</button>` : '') +
+      (self ? '' : `<button class="btn btn-sm btn-danger" onclick="dmRemove('${escapeAttr(m.email)}')">Retirer</button>`);
+    return `
+      <div class="team-row">
+        <div class="avatar">${escapeHtml(dmInitials(name))}</div>
+        <div class="who"><strong>${escapeHtml(name)}${self ? ' (toi)' : ''}</strong><span>${escapeHtml(m.email)}</span>
+          <span class="chip ${st[1]} team-status">${escapeHtml(st[0])}</span></div>
+        ${roleSelect}
+        <div class="team-actions">${actions}</div>
+      </div>`;
+  }
+
+  function dmShowLink(email, link) {
+    const box = document.getElementById('inviteResult');
+    if (!box) return;
+    box.innerHTML = `
+      <div class="invite-result">
+        <div class="eyebrow">Lien d’invitation pour ${escapeHtml(email)}</div>
+        <div class="help" style="margin-top:5px">Envoie ce lien au membre (email, SMS, WhatsApp). En l’ouvrant, il choisit son mot de passe. Valable 7 jours, une seule utilisation.</div>
+        <div class="row"><input id="inviteLink" readonly value="${escapeAttr(link)}" onclick="this.select()"><button class="btn" onclick="dmCopy()">Copier</button></div>
+      </div>`;
+  }
+
+  async function dmCopy() {
+    const input = document.getElementById('inviteLink');
+    if (!input) return;
+    try {
+      await navigator.clipboard.writeText(input.value);
+      toast('Lien copié.');
+    } catch (e) {
+      input.focus();
+      input.select();
+      try { document.execCommand('copy'); toast('Lien copié.'); }
+      catch (_) { toast('Sélectionne le lien puis copie-le avec Ctrl+C.', 'error'); }
+    }
+  }
+
+  async function dmInvite() {
+    const email = value('inviteEmail');
+    const role = value('inviteRole');
+    if (!email) return toast('Indique l’adresse email du membre.', 'error');
+    showLoading(true);
+    try {
+      const r = await gs('inviteMember', {email, role});
+      await refreshData(true);
+      const input = document.getElementById('inviteEmail');
+      if (input) input.value = '';
+      dmShowLink(r.email, r.link);
+      toast('Invitation créée.');
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  async function dmResend(email) {
+    showLoading(true);
+    try {
+      const r = await gs('resendInvite', email);
+      dmShowLink(r.email, r.link);
+      document.getElementById('inviteResult')?.scrollIntoView({behavior:'smooth', block:'center'});
+      toast('Nouveau lien créé. L’ancien ne fonctionne plus.');
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  async function dmSetRole(email, role) {
+    showLoading(true);
+    try {
+      await gs('updateMemberRole', email, role);
+      toast(`Rôle mis à jour : ${DM_ROLE_LABEL[role]}.`);
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      await refreshData(true);
+      showLoading(false);
+    }
+  }
+
+  async function dmRemove(email) {
+    if (!confirm(`Retirer ${email} du cabinet ? Il sera déconnecté immédiatement.`)) return;
+    showLoading(true);
+    try {
+      await gs('removeMember', email);
+      toast('Membre retiré.');
+      await refreshData(true);
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      showLoading(false);
+    }
+  }
+</script>
+
+</body>
+</html>
