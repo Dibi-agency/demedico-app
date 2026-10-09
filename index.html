@@ -1646,7 +1646,7 @@
     function escapeAttr(value) { return escapeHtml(value).replace(/`/g,'&#096;'); }
   </script>
 <!--
-  Demédico · Team.html (v0.5.0)
+  Demédico · Team.html (v0.5.1 · Premium Auth UI)
   Connexion, comptes, équipe, rôles, invitations, agendas. Injecté avant </body> :
   - par doGet (page Apps Script)
   - par tools/build-pwa.js (appli GitHub Pages)
@@ -1674,20 +1674,409 @@
     .team-row > .status-select, .team-row > .team-actions { grid-column:2; justify-content:flex-start; }
     .invite-result .row { flex-direction:column; }
   }
-  .dm-auth { z-index:190; }
-  .dm-auth-card { width:min(460px,100%); }
-  .dm-auth-card .brand-stack-img { width:min(210px,60vw); }
-  .dm-auth-title { margin:20px 0 6px; font-size:24px; letter-spacing:-.04em; line-height:1.1; }
-  .dm-auth-sub { margin:0; color:var(--text-2); font-size:12px; line-height:1.55; }
-  .dm-auth-form { display:grid; gap:12px; margin-top:20px; }
-  .dm-auth-form .btn-primary { min-height:46px; }
-  .dm-auth-links { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:16px; }
-  .dm-link { border:0; background:none; padding:0; color:var(--primary); font-size:11px; font-weight:750; cursor:pointer; }
-  .dm-check { display:flex !important; align-items:center; gap:8px; text-transform:none !important; letter-spacing:0 !important; font-size:11px !important; font-weight:650 !important; color:var(--text-2) !important; }
-  .dm-check input { width:16px; height:16px; margin:0; }
-  .dm-note { padding:11px 12px; border-radius:12px; background:var(--surface-2); border:1px solid var(--line); color:var(--text-2); font-size:11px; line-height:1.5; }
-  .dm-note.warn { background:var(--warning-soft); border-color:#EED9BE; color:#6D4B22; }
+  /* ─────────────────────────────────────────────────────────────────────────
+     DEMÉDICO AUTH · Premium clinical UI v0.5.1
+     Design uniquement : aucune logique métier modifiée.
+     ───────────────────────────────────────────────────────────────────────── */
+  .dm-auth {
+    position:fixed !important;
+    inset:0;
+    z-index:190;
+    box-sizing:border-box;
+    display:flex;
+    align-items:flex-start;
+    justify-content:flex-start;
+    width:100%;
+    min-height:100vh;
+    min-height:100dvh;
+    padding:
+      max(24px, env(safe-area-inset-top))
+      max(20px, env(safe-area-inset-right))
+      max(24px, env(safe-area-inset-bottom))
+      max(20px, env(safe-area-inset-left));
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:contain;
+    touch-action:pan-y;
+    color:#142226;
+    background:
+      radial-gradient(circle at 10% 8%, rgba(39,136,129,.13) 0, rgba(39,136,129,0) 34%),
+      radial-gradient(circle at 92% 88%, rgba(19,50,57,.08) 0, rgba(19,50,57,0) 32%),
+      linear-gradient(145deg, #F8FAFA 0%, #F1F6F5 50%, #EEF4F3 100%);
+  }
+
+  .dm-auth[hidden] { display:none !important; }
+
+  .dm-auth::before {
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    opacity:.34;
+    background-image:
+      linear-gradient(rgba(19,50,57,.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(19,50,57,.022) 1px, transparent 1px);
+    background-size:32px 32px;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,.55), transparent 72%);
+    -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,.55), transparent 72%);
+  }
+
+  .dm-auth-card {
+    position:relative;
+    isolation:isolate;
+    box-sizing:border-box;
+    width:min(472px,100%);
+    max-height:none !important;
+    margin:auto;
+    padding:34px 34px 30px;
+    overflow:visible !important;
+    border:1px solid rgba(19,50,57,.09);
+    border-radius:28px;
+    background:rgba(255,255,255,.94);
+    box-shadow:
+      0 30px 80px rgba(19,50,57,.10),
+      0 8px 24px rgba(19,50,57,.055),
+      inset 0 1px 0 rgba(255,255,255,.9);
+    -webkit-backdrop-filter:blur(18px);
+    backdrop-filter:blur(18px);
+  }
+
+  .dm-auth[data-auth-view="signup"] .dm-auth-card,
+  .dm-auth[data-auth-view="join"] .dm-auth-card {
+    width:min(520px,100%);
+  }
+
+  .dm-auth .onboarding-brand {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:64px;
+    margin:0 0 22px;
+    padding:0 0 20px;
+    border-bottom:1px solid rgba(19,50,57,.07);
+  }
+
+  .dm-auth-card .brand-stack-img {
+    display:block;
+    width:min(176px,48vw);
+    max-width:100%;
+    height:auto;
+    margin:0 auto;
+  }
+
+  .dm-auth-title {
+    margin:0 0 8px;
+    color:#102F35;
+    font-size:clamp(28px,3vw,34px);
+    font-weight:780;
+    letter-spacing:-.045em;
+    line-height:1.04;
+  }
+
+  .dm-auth-sub {
+    max-width:42ch;
+    margin:0;
+    color:#64777B;
+    font-size:14px;
+    font-weight:450;
+    line-height:1.55;
+  }
+
+  .dm-auth-form {
+    display:grid;
+    gap:14px;
+    margin-top:24px;
+  }
+
+  .dm-auth .field {
+    min-width:0;
+  }
+
+  .dm-auth .field > label {
+    display:block;
+    margin:0 0 7px;
+    color:#52676B !important;
+    font-size:12px !important;
+    font-weight:760 !important;
+    line-height:1.25;
+    letter-spacing:.005em !important;
+    text-transform:none !important;
+  }
+
+  .dm-auth .field input,
+  .dm-auth .field select,
+  .dm-auth .field textarea {
+    box-sizing:border-box;
+    width:100%;
+    min-height:52px;
+    margin:0;
+    padding:0 15px;
+    color:#142226;
+    font:inherit;
+    font-size:15px;
+    font-weight:540;
+    line-height:1.2;
+    border:1px solid #D7E1E0;
+    border-radius:14px;
+    outline:none;
+    background:#FBFCFC;
+    box-shadow:
+      0 1px 1px rgba(19,50,57,.02),
+      inset 0 1px 0 rgba(255,255,255,.9);
+    transition:
+      border-color .16s ease,
+      box-shadow .16s ease,
+      background .16s ease,
+      transform .16s ease;
+  }
+
+  .dm-auth .field input::placeholder,
+  .dm-auth .field textarea::placeholder {
+    color:#A1ADAF;
+    opacity:1;
+    font-weight:450;
+  }
+
+  .dm-auth .field input:hover,
+  .dm-auth .field select:hover,
+  .dm-auth .field textarea:hover {
+    border-color:#BFCFCD;
+    background:#FFFFFF;
+  }
+
+  .dm-auth .field input:focus,
+  .dm-auth .field select:focus,
+  .dm-auth .field textarea:focus {
+    border-color:#2C8E87;
+    background:#FFFFFF;
+    box-shadow:
+      0 0 0 4px rgba(44,142,135,.11),
+      0 5px 16px rgba(19,50,57,.045);
+  }
+
+  /* Supprime le jaune agressif d'autofill Safari/Chrome sans casser l'autofill. */
+  .dm-auth input:-webkit-autofill,
+  .dm-auth input:-webkit-autofill:hover {
+    -webkit-text-fill-color:#142226;
+    -webkit-box-shadow:0 0 0 1000px #FBFCFC inset;
+    caret-color:#142226;
+    transition:background-color 9999s ease-out 0s;
+  }
+
+  .dm-auth input:-webkit-autofill:focus {
+    -webkit-text-fill-color:#142226;
+    -webkit-box-shadow:
+      0 0 0 4px rgba(44,142,135,.11),
+      0 0 0 1000px #FFFFFF inset;
+  }
+
+  .dm-auth-form .btn-primary {
+    width:100%;
+    min-height:52px;
+    margin-top:2px;
+    border:1px solid rgba(12,83,80,.12);
+    border-radius:14px;
+    background:#237F79;
+    color:#FFFFFF;
+    font-size:13px;
+    font-weight:790;
+    letter-spacing:-.01em;
+    box-shadow:0 10px 24px rgba(35,127,121,.18);
+    transition:
+      background .16s ease,
+      box-shadow .16s ease,
+      transform .16s ease;
+  }
+
+  @media (hover:hover) and (pointer:fine) {
+    .dm-auth-form .btn-primary:hover {
+      background:#1D716C;
+      box-shadow:0 12px 28px rgba(35,127,121,.23);
+      transform:translateY(-1px);
+    }
+  }
+
+  .dm-auth-form .btn-primary:active {
+    transform:translateY(0);
+    box-shadow:0 6px 16px rgba(35,127,121,.16);
+  }
+
+  .dm-auth-links {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:20px;
+    padding-top:18px;
+    border-top:1px solid rgba(19,50,57,.07);
+  }
+
+  .dm-link {
+    border:0;
+    background:none;
+    padding:3px 0;
+    color:#237F79;
+    font-size:12px;
+    font-weight:740;
+    line-height:1.4;
+    cursor:pointer;
+    text-underline-offset:3px;
+  }
+
+  .dm-link:hover {
+    text-decoration:underline;
+  }
+
+  .dm-check {
+    display:flex !important;
+    align-items:flex-start;
+    gap:9px;
+    margin-top:1px;
+    color:#6A7C80 !important;
+    font-size:11.5px !important;
+    font-weight:580 !important;
+    line-height:1.45;
+    letter-spacing:0 !important;
+    text-transform:none !important;
+    cursor:pointer;
+  }
+
+  .dm-check input {
+    flex:0 0 auto;
+    width:17px;
+    height:17px;
+    margin:0;
+    accent-color:#237F79;
+  }
+
+  .dm-note {
+    position:relative;
+    margin-top:16px;
+    padding:13px 14px 13px 16px;
+    border:1px solid #DDE8E6;
+    border-radius:14px;
+    background:#F7FAFA;
+    color:#5A6F73;
+    font-size:12px;
+    font-weight:520;
+    line-height:1.55;
+  }
+
+  .dm-note.warn {
+    border-color:#EED9BE;
+    background:#FFF8EE;
+    color:#765329;
+  }
+
+  .dm-note.warn::before {
+    content:"";
+    display:block;
+    position:absolute;
+    top:14px;
+    left:0;
+    width:3px;
+    height:calc(100% - 28px);
+    border-radius:0 3px 3px 0;
+    background:#D7A65E;
+  }
+
   .me-badge .dm-link { margin-top:6px; }
+
+  @media (max-width:560px) {
+    .dm-auth {
+      padding:
+        max(12px, env(safe-area-inset-top))
+        max(12px, env(safe-area-inset-right))
+        max(24px, env(safe-area-inset-bottom))
+        max(12px, env(safe-area-inset-left));
+      scroll-padding-top:12px;
+      scroll-padding-bottom:36vh;
+      background:
+        radial-gradient(circle at 12% 4%, rgba(39,136,129,.11) 0, rgba(39,136,129,0) 33%),
+        linear-gradient(180deg, #F4F8F7 0%, #EEF4F3 100%);
+    }
+
+    .dm-auth::before {
+      opacity:.18;
+      background-size:28px 28px;
+    }
+
+    .dm-auth-card,
+    .dm-auth[data-auth-view="signup"] .dm-auth-card,
+    .dm-auth[data-auth-view="join"] .dm-auth-card {
+      width:100%;
+      margin:auto;
+      padding:24px 20px 26px;
+      border-radius:22px;
+      box-shadow:
+        0 18px 46px rgba(19,50,57,.09),
+        0 4px 14px rgba(19,50,57,.035);
+    }
+
+    .dm-auth .onboarding-brand {
+      min-height:52px;
+      margin-bottom:18px;
+      padding-bottom:16px;
+    }
+
+    .dm-auth-card .brand-stack-img {
+      width:min(154px,48vw);
+    }
+
+    .dm-auth-title {
+      font-size:28px;
+      letter-spacing:-.04em;
+    }
+
+    .dm-auth-sub {
+      font-size:13.5px;
+    }
+
+    .dm-auth-form {
+      gap:13px;
+      margin-top:20px;
+    }
+
+    .dm-auth .field input,
+    .dm-auth .field select,
+    .dm-auth .field textarea {
+      min-height:54px;
+      padding:0 14px;
+      font-size:16px; /* évite le zoom automatique iOS */
+      border-radius:13px;
+    }
+
+    .dm-auth-form .btn-primary {
+      min-height:54px;
+      border-radius:13px;
+      font-size:14px;
+    }
+
+    .dm-auth-links {
+      margin-top:18px;
+      padding-top:16px;
+    }
+  }
+
+  @media (max-width:370px) {
+    .dm-auth-card {
+      padding-left:16px;
+      padding-right:16px;
+    }
+    .dm-auth-title { font-size:26px; }
+  }
+
+  @media (prefers-reduced-motion:reduce) {
+    .dm-auth *,
+    .dm-auth *::before,
+    .dm-auth *::after {
+      scroll-behavior:auto !important;
+      transition:none !important;
+      animation:none !important;
+    }
+  }
 </style>
 
 <script>
@@ -1796,6 +2185,7 @@
   async function dmOpenAuth(view, data) {
     const box = document.getElementById('dmAuth');
     const body = document.getElementById('dmAuthBody');
+    box.dataset.authView = view || 'login';
     document.getElementById('onboarding').hidden = true;
     box.hidden = false;
     let serverDown = '';
@@ -1859,7 +2249,10 @@
       body.insertAdjacentHTML('afterbegin', `<div class="dm-note warn" style="margin-top:14px">Le serveur Demédico ne répond pas. Vérifie ta connexion Internet. Si elle fonctionne, le déploiement Apps Script doit être réglé sur « Exécuter en tant que : Moi » et « Qui a accès : Tout le monde ».<br><small>${escapeHtml(serverDown)}</small></div>`);
     }
     const first = body.querySelector('input:not([type=checkbox])');
-    if (first) setTimeout(() => first.focus(), 60);
+    // Autofocus seulement sur ordinateur : sur mobile, il peut ouvrir le clavier
+    // et perturber le scroll du formulaire.
+    const finePointer = window.matchMedia && window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+    if (first && finePointer) setTimeout(() => first.focus(), 60);
   }
 
   async function dmAuthSubmit(fn, payload, remember, okMessage) {
