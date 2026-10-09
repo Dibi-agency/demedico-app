@@ -1798,14 +1798,19 @@
     const body = document.getElementById('dmAuthBody');
     document.getElementById('onboarding').hidden = true;
     box.hidden = false;
-    if (!dmInfo) { try { dmInfo = await dmCall('appInfo', []); } catch (e) { dmInfo = {}; } }
+    let serverDown = '';
+    if (!dmInfo) {
+      try { dmInfo = await dmCall('appInfo', []); }
+      catch (e) { dmInfo = null; serverDown = e.message || 'Le serveur ne répond pas.'; }
+    }
+    const info = dmInfo || {};
     const links = (...items) => `<div class="dm-auth-links">${items.join('')}</div>`;
     const go = (v, label) => `<button type="button" class="dm-link" onclick="dmOpenAuth('${v}')">${label}</button>`;
 
     if (view === 'signup') {
       body.innerHTML =
         `<h1 class="dm-auth-title">Ouvrir un cabinet</h1><p class="dm-auth-sub">Tu deviens administrateur du cabinet et tu pourras inviter ton équipe.</p>` +
-        (dmInfo.adoptable ? '<div class="dm-note warn" style="margin-top:14px">Des données Demédico existent déjà sur ce serveur : elles seront reprises dans ce premier cabinet.</div>' : '') +
+        (info.adoptable ? '<div class="dm-note warn" style="margin-top:14px">Des données Demédico existent déjà sur ce serveur : elles seront reprises dans ce premier cabinet.</div>' : '') +
         `<form class="dm-auth-form" onsubmit="event.preventDefault(); dmSignup();">` +
         dmField('suCode', 'Code d’ouverture', 'text', 'autocomplete="off" required') +
         dmField('suPractice', 'Nom du cabinet', 'text', 'maxlength="120" placeholder="Cabinet Horizon" required') +
@@ -1848,7 +1853,10 @@
         dmField('lEmail', 'Email', 'email', 'autocomplete="username" required') +
         dmField('lPw', 'Mot de passe', 'password', 'autocomplete="current-password" required') +
         dmRemember('lRemember') + `<button class="btn btn-primary" type="submit">Se connecter</button></form>` +
-        links(go('forgot', 'Mot de passe oublié ?'), (dmInfo.signupOpen ? go('signup', 'Ouvrir un nouveau cabinet') : ''));
+        links(go('forgot', 'Mot de passe oublié ?'), (info.signupOpen ? go('signup', 'Ouvrir un nouveau cabinet') : ''));
+    }
+    if (serverDown) {
+      body.insertAdjacentHTML('afterbegin', `<div class="dm-note warn" style="margin-top:14px">Le serveur Demédico ne répond pas. Vérifie ta connexion Internet. Si elle fonctionne, le déploiement Apps Script doit être réglé sur « Exécuter en tant que : Moi » et « Qui a accès : Tout le monde ».<br><small>${escapeHtml(serverDown)}</small></div>`);
     }
     const first = body.querySelector('input:not([type=checkbox])');
     if (first) setTimeout(() => first.focus(), 60);
