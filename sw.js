@@ -1,7 +1,7 @@
-/* Demédico · service worker 6b47610f04
+/* Demédico · service worker 259a290a35
    Réseau d'abord : l'appli est toujours à jour quand Internet fonctionne.
    Les appels au serveur (script.google.com) ne sont jamais mis en cache. */
-const CACHE = 'demedico-6b47610f04';
+const CACHE = 'demedico-259a290a35';
 const SHELL = ['./', 'index.html', 'manifest.json', 'app-config.js', 'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'icons/favicon-64.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'];
 
 self.addEventListener('install', e => {

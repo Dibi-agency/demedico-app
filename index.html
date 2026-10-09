@@ -1848,7 +1848,7 @@
         links(go('login', 'Retour à la connexion'));
     } else {
       body.innerHTML =
-        `<h1 class="dm-auth-title">Connexion</h1><p class="dm-auth-sub">Le soin au centre. Le reste, orchestré.</p>` +
+        `<h1 class="dm-auth-title">Connexion</h1><p class="dm-auth-sub">Le soin au centre.</p>` +
         `<form class="dm-auth-form" onsubmit="event.preventDefault(); dmLogin();">` +
         dmField('lEmail', 'Email', 'email', 'autocomplete="username" required') +
         dmField('lPw', 'Mot de passe', 'password', 'autocomplete="current-password" required') +
