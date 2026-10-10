@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <script src="app-config.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#12363a">
+  <title>Demédico Admin</title>
+  <style>
+    :root{
+      --bg:#f3f7f6;
+      --surface:#ffffff;
+      --surface-2:#f8fbfa;
+      --ink:#132327;
+      --muted:#718286;
+      --muted-2:#96a4a7;
+      --line:#dfe8e6;
+      --brand:#237f79;
+      --brand-2:#2f958c;
+      --brand-dark:#12363a;
+      --brand-soft:#e6f4f2;
+      --success:#1b9b73;
+      --success-soft:#e7f7f1;
+      --warning:#d79834;
+      --warning-soft:#fff4df;
+      --danger:#ce5a64;
+      --danger-soft:#fff0f1;
+      --info:#4e87c7;
+      --info-soft:#edf5ff;
+      --violet:#7567d7;
+      --violet-soft:#f1efff;
+      --shadow:0 16px 40px rgba(19,50,57,.08);
+      --shadow-sm:0 7px 22px rgba(19,50,57,.055);
+      --r-sm:12px;
+      --r-md:16px;
+      --r-lg:22px;
+      --sidebar:248px;
+      --topbar:78px;
+      --max:1640px;
+      font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink)}
+    body{font-size:14px}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    [hidden]{display:none!important}
+
+    .app{min-height:100vh}
+
+    /* ───────── Sidebar ───────── */
+    .sidebar{
+      position:fixed; inset:0 auto 0 0; width:var(--sidebar); z-index:30;
+      display:flex; flex-direction:column;
+      padding:20px 14px;
+      background:
+        radial-gradient(circle at 10% 8%, rgba(64,177,166,.18), transparent 30%),
+        linear-gradient(180deg,#0f4c4f 0%,#0c3f43 44%,#0c363a 100%);
+      color:#fff;
+      border-right:1px solid rgba(255,255,255,.07);
+    }
+    .brand{
+      display:flex;align-items:center;gap:11px;padding:6px 10px 20px;
+    }
+    .brand-mark{width:42px;height:42px;display:grid;place-items:center;flex:0 0 auto}
+    .brand-mark svg{width:100%;height:100%;display:block}
+    .brand-word{font-size:23px;font-weight:760;letter-spacing:-.035em;line-height:.9}
+    .brand-word small{
+      display:block;margin-top:7px;color:#9fc9c7;font-size:10px;font-weight:800;
+      letter-spacing:.15em;text-transform:uppercase
+    }
+
+    .nav{display:grid;gap:5px}
+    .nav-btn{
+      width:100%;min-height:46px;border:0;border-radius:13px;padding:0 13px;
+      display:flex;align-items:center;gap:11px;text-align:left;
+      color:#c7d9d9;background:transparent;font-weight:650;
+      transition:.16s ease;
+    }
+    .nav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8}
+    .nav-btn:hover{background:rgba(255,255,255,.075);color:#fff}
+    .nav-btn.active{
+      color:#fff;background:rgba(84,184,174,.22);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)
+    }
+    .nav-sep{height:1px;background:rgba(255,255,255,.09);margin:11px 8px}
+    .sidebar-footer{margin-top:auto;padding:12px 7px 2px}
+    .support-card{
+      border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.055);
+      border-radius:16px;padding:14px
+    }
+    .support-card strong{display:block;margin-bottom:5px;font-size:13px}
+    .support-card p{margin:0 0 12px;color:#b9cecd;font-size:11.5px;line-height:1.5}
+    .support-card button{
+      width:100%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);
+      color:#fff;border-radius:11px;padding:9px 11px;font-size:11.5px;font-weight:700
+    }
+
+    /* ───────── Shell ───────── */
+    .main{margin-left:var(--sidebar);min-height:100vh}
+    .topbar{
+      position:sticky;top:0;z-index:20;height:var(--topbar);
+      display:flex;align-items:center;gap:16px;
+      padding:12px 24px;
+      background:rgba(243,247,246,.86);
+      backdrop-filter:blur(18px);
+      border-bottom:1px solid rgba(19,50,57,.06)
+    }
+    .mobile-menu{display:none}
+    .page-heading{min-width:210px}
+    .page-heading h1{margin:0;font-size:24px;letter-spacing:-.035em}
+    .page-heading p{margin:4px 0 0;color:var(--muted);font-size:11.5px}
+    .top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+    .search{
+      width:min(380px,33vw);height:44px;display:flex;align-items:center;gap:9px;
+      padding:0 13px;background:#fff;border:1px solid var(--line);border-radius:12px;
+      box-shadow:0 3px 12px rgba(19,50,57,.025)
+    }
+    .search svg{width:18px;stroke:#809397}
+    .search input{width:100%;border:0;outline:0;background:transparent;color:var(--ink)}
+    .search input::placeholder{color:#97a6a9}
+    .top-chip{
+      min-height:44px;display:flex;align-items:center;gap:8px;padding:0 12px;
+      border:1px solid var(--line);border-radius:12px;background:#fff;color:#41575b;
+      font-size:12px;font-weight:650
+    }
+    .top-chip svg{width:17px;height:17px;stroke:#61777b;fill:none}
+    .profile{
+      min-height:44px;display:flex;align-items:center;gap:10px;padding:0 5px 0 8px
+    }
+    .avatar{
+      width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+      background:linear-gradient(145deg,#164c50,#2c8d86);color:white;font-weight:800;
+      box-shadow:0 4px 12px rgba(19,50,57,.14)
+    }
+    .profile-meta{line-height:1.15}
+    .profile-meta strong{display:block;font-size:12px}
+    .profile-meta span{display:block;margin-top:3px;color:var(--muted);font-size:10px}
+
+    .content{width:min(var(--max),100%);margin:0 auto;padding:22px 24px 40px}
+
+    /* ───────── Shared UI ───────── */
+    .grid{display:grid;gap:14px}
+    .kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .two-col{grid-template-columns:minmax(0,1.7fr) minmax(330px,.8fr)}
+    .bottom-grid{grid-template-columns:minmax(0,1.65fr) minmax(340px,.72fr)}
+    .card{
+      background:var(--surface);border:1px solid rgba(19,50,57,.075);
+      border-radius:var(--r-md);box-shadow:var(--shadow-sm)
+    }
+    .kpi{padding:17px 17px 15px;min-height:126px;position:relative;overflow:hidden}
+    .kpi::after{
+      content:"";position:absolute;width:95px;height:95px;border-radius:50%;
+      right:-35px;top:-38px;background:var(--tint,#eef8f6)
+    }
+    .kpi-top{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+    .icon-box{
+      width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+      background:var(--soft,var(--brand-soft));color:var(--color,var(--brand))
+    }
+    .icon-box svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.9}
+    .kpi-label{color:#51686c;font-size:12px;font-weight:650}
+    .kpi-value{margin-top:4px;font-size:28px;line-height:1;font-weight:800;letter-spacing:-.04em}
+    .kpi-foot{
+      margin-top:12px;display:flex;align-items:center;justify-content:space-between;
+      color:var(--muted);font-size:10.5px;font-weight:650
+    }
+    .trend.up{color:var(--success)}
+    .trend.warn{color:var(--danger)}
+
+    .section-card{padding:17px}
+    .section-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}
+    .section-head .head-icon{margin-top:1px;color:var(--brand)}
+    .section-head .head-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9}
+    .section-title{font-size:15px;font-weight:780;letter-spacing:-.02em}
+    .section-sub{margin-top:3px;color:var(--muted);font-size:10.5px;line-height:1.35}
+    .section-head .spacer{margin-left:auto}
+
+    .select-btn,.ghost-btn{
+      min-height:34px;border:1px solid var(--line);border-radius:10px;background:#fff;
+      color:#496065;padding:0 10px;font-size:10.5px;font-weight:700
+    }
+    .ghost-btn{color:var(--brand);background:var(--surface-2)}
+
+    /* ───────── Chart ───────── */
+    .chart-wrap{height:270px;display:flex;align-items:flex-end;position:relative;padding:10px 4px 26px 42px}
+    .chart-grid{position:absolute;inset:10px 0 30px 42px}
+    .chart-grid span{position:absolute;left:0;right:0;height:1px;background:#e8efed}
+    .chart-grid span:nth-child(1){top:0}
+    .chart-grid span:nth-child(2){top:25%}
+    .chart-grid span:nth-child(3){top:50%}
+    .chart-grid span:nth-child(4){top:75%}
+    .chart-grid span:nth-child(5){bottom:0}
+    .axis-y{
+      position:absolute;left:0;top:7px;bottom:26px;width:36px;
+      display:flex;flex-direction:column;justify-content:space-between;color:#8a9a9d;font-size:9px;text-align:right
+    }
+    .bars{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:space-around;gap:7px;position:relative;z-index:2}
+    .bar-col{height:100%;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;min-width:28px}
+    .bar-stack{width:min(34px,72%);display:flex;flex-direction:column;justify-content:flex-end;border-radius:6px 6px 2px 2px;overflow:hidden;box-shadow:0 3px 10px rgba(35,127,121,.09)}
+    .bar-old{background:#2f8f88}
+    .bar-new{background:#98d6cf}
+    .month{font-size:9px;color:#849497}
+    .chart-legend{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:-5px;color:#6f8184;font-size:9.5px}
+    .legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+
+    /* ───────── Health ───────── */
+    .health-list{display:grid}
+    .health-row{padding:13px 0;border-top:1px solid #edf2f1}
+    .health-row:first-child{border-top:0;padding-top:3px}
+    .health-top{display:flex;align-items:center;gap:10px}
+    .health-badge{
+      width:30px;height:30px;border-radius:10px;display:grid;place-items:center;
+      color:var(--hc);background:var(--hs)
+    }
+    .health-badge svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+    .health-name{font-size:11.5px;font-weight:760}
+    .health-meta{margin-left:auto;color:var(--muted);font-size:9.5px}
+    .progress{margin:8px 0 0 40px;height:6px;background:#edf2f1;border-radius:999px;overflow:hidden}
+    .progress span{display:block;height:100%;width:var(--p);background:var(--hc);border-radius:999px}
+
+    /* ───────── Table ───────── */
+    .table-wrap{overflow:auto;border-top:1px solid #edf2f1}
+    table{width:100%;border-collapse:collapse;min-width:760px}
+    th{text-align:left;padding:10px 8px;color:#7b8c90;font-size:9px;letter-spacing:.045em;text-transform:uppercase}
+    td{padding:11px 8px;border-top:1px solid #edf2f1;font-size:10.5px}
+    tbody tr:hover{background:#fbfdfc}
+    .client{display:flex;align-items:center;gap:9px;font-weight:700}
+    .client-avatar{
+      width:29px;height:29px;border-radius:10px;display:grid;place-items:center;
+      font-size:9px;font-weight:800;background:var(--ca,#e8f5f3);color:var(--cc,#267e78)
+    }
+    .pill{
+      display:inline-flex;align-items:center;gap:5px;min-height:22px;padding:0 8px;border-radius:999px;
+      font-size:9.5px;font-weight:760
+    }
+    .pill::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+    .pill.success{background:var(--success-soft);color:var(--success)}
+    .pill.danger{background:var(--danger-soft);color:var(--danger)}
+    .pill.info{background:var(--info-soft);color:var(--info)}
+    .pill.warning{background:var(--warning-soft);color:var(--warning)}
+    .health-text{display:flex;align-items:center;gap:6px}
+    .status-dot{width:7px;height:7px;border-radius:50%;background:var(--dot)}
+    .row-menu{border:0;background:transparent;color:#718286;font-size:18px;line-height:1}
+    .row-menu:hover{color:var(--brand)}
+
+    /* ───────── Right widgets ───────── */
+    .quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .quick{
+      min-height:80px;padding:11px;border:1px solid var(--line);border-radius:12px;background:#fbfdfc;
+      display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;
+      color:#355156;text-align:left;font-size:10px;font-weight:750
+    }
+    .quick:hover{border-color:#bdd7d3;background:#f6fbfa}
+    .quick svg{width:19px;height:19px;stroke:var(--brand);fill:none;stroke-width:1.8}
+    .audit{display:grid}
+    .audit-item{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 0;border-top:1px solid #edf2f1}
+    .audit-item:first-child{border-top:0}
+    .audit-icon{width:27px;height:27px;border-radius:9px;display:grid;place-items:center;background:var(--as);color:var(--ac)}
+    .audit-icon svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9}
+    .audit-text{font-size:10px;line-height:1.35}
+    .audit-time{font-size:9px;color:#90a0a3;white-space:nowrap}
+
+    /* ───────── Views ───────── */
+    .view{display:none}
+    .view.active{display:block}
+    .view-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .view-toolbar .spacer{margin-left:auto}
+    .primary-btn{
+      min-height:40px;border:0;border-radius:11px;padding:0 14px;background:var(--brand);color:white;
+      font-weight:760;font-size:11px;box-shadow:0 8px 20px rgba(35,127,121,.17)
+    }
+    .primary-btn:hover{background:#1d716c}
+    .filter-chip{
+      min-height:36px;padding:0 11px;border:1px solid var(--line);border-radius:999px;background:#fff;
+      color:#5c7175;font-size:10.5px;font-weight:700
+    }
+    .filter-chip.active{color:var(--brand);background:var(--brand-soft);border-color:#cfe6e2}
+    .placeholder{
+      min-height:440px;display:grid;place-items:center;text-align:center;padding:40px;
+      background:#fff;border:1px solid rgba(19,50,57,.075);border-radius:var(--r-lg);box-shadow:var(--shadow-sm)
+    }
+    .placeholder svg{width:42px;height:42px;stroke:var(--brand);fill:none;stroke-width:1.5;margin-bottom:14px}
+    .placeholder h2{margin:0;font-size:20px;letter-spacing:-.03em}
+    .placeholder p{max-width:470px;margin:8px auto 0;color:var(--muted);line-height:1.6;font-size:12px}
+
+    /* ───────── Drawer ───────── */
+    .drawer-backdrop{
+      position:fixed;inset:0;z-index:70;background:rgba(10,30,34,.3);backdrop-filter:blur(3px);
+      opacity:0;pointer-events:none;transition:.18s
+    }
+    .drawer{
+      position:fixed;right:0;top:0;bottom:0;z-index:80;width:min(460px,100%);
+      background:#fff;border-left:1px solid var(--line);box-shadow:-20px 0 50px rgba(19,50,57,.13);
+      transform:translateX(100%);transition:.2s ease;overflow:auto
+    }
+    .drawer.open{transform:none}
+    .drawer-backdrop.open{opacity:1;pointer-events:auto}
+    .drawer-head{position:sticky;top:0;background:rgba(255,255,255,.94);backdrop-filter:blur(16px);padding:18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;z-index:2}
+    .drawer-head h2{margin:0;font-size:18px;letter-spacing:-.025em}
+    .close-btn{margin-left:auto;width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:10px}
+    .drawer-body{padding:18px}
+    .detail-block{padding:14px 0;border-top:1px solid #edf2f1}
+    .detail-block:first-child{border-top:0;padding-top:0}
+    .detail-label{color:#839397;font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:800}
+    .detail-value{margin-top:5px;font-size:13px;font-weight:700}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .privacy-note{
+      margin-top:16px;padding:12px;border:1px solid #dce9e7;border-radius:12px;background:#f7fbfa;
+      color:#617579;font-size:10.5px;line-height:1.5
+    }
+
+    /* ───────── Mobile ───────── */
+    .bottom-nav{display:none}
+    @media(max-width:1180px){
+      .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .two-col,.bottom-grid{grid-template-columns:1fr}
+      .profile-meta,.top-chip.date{display:none}
+    }
+    @media(max-width:820px){
+      :root{--topbar:68px}
+      .sidebar{transform:translateX(-105%);transition:.2s ease;box-shadow:20px 0 50px rgba(19,50,57,.2)}
+      .sidebar.open{transform:none}
+      .main{margin-left:0}
+      .mobile-menu{
+        width:38px;height:38px;display:grid;place-items:center;border:1px solid var(--line);border-radius:11px;background:#fff
+      }
+      .mobile-menu svg{width:20px;height:20px;stroke:#51686c}
+      .page-heading{min-width:auto}
+      .page-heading h1{font-size:20px}
+      .page-heading p{display:none}
+      .search{width:min(360px,45vw)}
+      .content{padding:18px 14px 92px}
+      .bottom-nav{
+        position:fixed;z-index:35;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));
+        display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:7px;
+        background:rgba(255,255,255,.94);backdrop-filter:blur(18px);
+        border:1px solid var(--line);border-radius:17px;box-shadow:0 16px 42px rgba(19,50,57,.14)
+      }
+      .bottom-nav button{
+        min-height:50px;border:0;background:transparent;border-radius:12px;color:#718286;
+        display:grid;place-items:center;gap:3px;font-size:8px;font-weight:700
+      }
+      .bottom-nav button svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8}
+      .bottom-nav button.active{background:var(--brand-soft);color:var(--brand)}
+    }
+    @media(max-width:620px){
+      .topbar{padding:10px 12px}
+      .search{display:none}
+      .top-actions{gap:4px}
+      .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}
+      .kpi{min-height:116px;padding:14px}
+      .kpi-value{font-size:24px}
+      .kpi-foot{font-size:9px}
+      .section-card{padding:14px}
+      .chart-wrap{height:230px;padding-left:30px}
+      .chart-grid{left:30px}
+      .axis-y{width:26px}
+      .bar-col:nth-child(-n+2){display:none}
+      .quick-grid{grid-template-columns:1fr}
+      .quick{min-height:56px;flex-direction:row;align-items:center;justify-content:flex-start;gap:12px}
+      .detail-grid{grid-template-columns:1fr}
+      .top-chip{padding:0 8px}
+    }
+  
+  /* Demédico Admin · compléments v0.6.0 (accès, formulaires, notifications) */
+  html,body{overflow-x:hidden}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .adm-link{border:0;background:none;padding:0;color:var(--teal,#237F79);font:inherit;font-weight:700;cursor:pointer}
+  .adm-form{display:grid;gap:12px;margin-top:6px}
+  .adm-inline{grid-template-columns:repeat(3,minmax(0,1fr)) auto;align-items:end;margin-top:16px}
+  .adm-field{display:grid;gap:6px;font-size:11px;font-weight:700;color:#526268}
+  .adm-input{width:100%;box-sizing:border-box;border:1px solid #E1E8E8;border-radius:11px;padding:10px 12px;font:inherit;font-size:13px;color:#142226;background:#fff;outline:none}
+  .adm-input:focus{border-color:#8ABAB7;box-shadow:0 0 0 3px rgba(35,127,121,.1)}
+  textarea.adm-input{min-height:72px;resize:vertical}
+  .adm-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .adm-notice{padding:14px 16px;border-radius:14px;background:#FFF7E8;border:1px solid #F1DFC0;color:#6D4B22;font-size:13px;line-height:1.55}
+  .adm-empty{padding:26px;text-align:center;color:#849095;font-size:13px}
+  .adm-danger{color:#B24F56 !important;border-color:#EBCFD2 !important}
+  .adm-link-box{display:flex;gap:8px;margin-top:8px}.adm-link-box input{flex:1;min-width:0}
+  .adm-auth{position:fixed;inset:0;z-index:300;overflow-y:auto;display:flex;padding:24px 16px;background:radial-gradient(circle at 12% 10%,rgba(39,136,129,.14),transparent 34%),linear-gradient(145deg,#F8FAFA,#EEF4F3)}
+  .adm-auth[hidden]{display:none}
+  .adm-auth-card{margin:auto;width:min(420px,100%);background:#fff;border:1px solid #E4EAEA;border-radius:24px;padding:30px 26px;box-shadow:0 24px 80px rgba(18,34,38,.12)}
+  .adm-auth-card h1{margin:16px 0 4px;font-size:24px;letter-spacing:-.04em;color:#142226}
+  .adm-auth-card p{margin:0 0 6px;color:#526268;font-size:13px;line-height:1.5}
+  .adm-auth-brand{display:flex;align-items:center;gap:10px;font-weight:800;color:#133239;font-size:20px}
+  .adm-auth-brand small{font-size:10px;letter-spacing:.14em;color:#237F79;text-transform:uppercase;margin-left:2px}
+  .adm-check{display:flex;align-items:center;gap:8px;font-size:12px;color:#526268}
+  .adm-toasts{position:fixed;right:16px;bottom:16px;z-index:400;display:grid;gap:8px;width:min(380px,calc(100vw - 32px))}
+  .adm-toast{padding:12px 14px;border-radius:12px;background:#142226;color:#fff;font-size:12px;box-shadow:0 16px 40px rgba(18,34,38,.22)}
+  .adm-toast.error{background:#8F3D45}
+  .adm-loading{position:fixed;inset:0;z-index:350;display:grid;place-items:center;background:rgba(244,247,247,.7);backdrop-filter:blur(4px)}
+  .adm-loading[hidden]{display:none}
+  .adm-spinner{width:32px;height:32px;border:3px solid #D7E3E2;border-top-color:#237F79;border-radius:50%;animation:admspin .75s linear infinite}
+  @keyframes admspin{to{transform:rotate(360deg)}}
+  @media (max-width:760px){.adm-inline{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <!-- Monogramme Demédico stylisé ; à remplacer par le SVG officiel si souhaité. -->
+        <svg viewBox="0 0 64 64">
+          <defs>
+            <linearGradient id="dmG" x1="0" x2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#79d4cc"/></linearGradient>
+          </defs>
+          <path d="M12 9h20c16 0 26 9 26 23 0 14-10 23-26 23H12V43l13-10-13-8V9Z" fill="url(#dmG)" opacity=".98"/>
+          <path d="M12 25l13 8-13 10V25Z" fill="#0e4448"/>
+          <circle cx="39.5" cy="30" r="4.2" fill="#0e4448"/>
+        </svg>
+      </div>
+      <div class="brand-word">demédico<small>Admin</small></div>
+    </div>
+
+    <nav class="nav" aria-label="Navigation administrateur">
+      <button class="nav-btn active" data-view="overview"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/></svg>Vue d’ensemble</button>
+      <button class="nav-btn" data-view="clients"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 20v-2a5.5 5.5 0 0 1 11 0v2"/><circle cx="17" cy="9" r="2.2"/><path d="M15.5 14.5a4.3 4.3 0 0 1 5 4.2V20"/></svg>Clients</button>
+      <button class="nav-btn" data-view="subscriptions"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M7 15h4"/></svg>Abonnements</button>
+      <button class="nav-btn" data-view="billing"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 12h6M9 16h5"/></svg>Facturation</button>
+      <button class="nav-btn" data-view="trials"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/><path d="M8 15h8"/></svg>Essais</button>
+      <div class="nav-sep"></div>
+      <button class="nav-btn" data-view="support"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-10.4 8.3L4 21l1.2-5.2A8.5 8.5 0 1 1 21 11.5Z"/></svg>Support</button>
+      <button class="nav-btn" data-view="analytics"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Analytics</button>
+      <button class="nav-btn" data-view="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1-2.8 2.8-.1-.1a1.8 1.8 0 0 0-2-.4 1.8 1.8 0 0 0-1.1 1.6V21H10v-.1a1.8 1.8 0 0 0-1.1-1.6 1.8 1.8 0 0 0-2 .4l-.1.1L4 17l.1-.1a1.8 1.8 0 0 0 .4-2A1.8 1.8 0 0 0 3 13.9H3V10h.1a1.8 1.8 0 0 0 1.6-1.1 1.8 1.8 0 0 0-.4-2l-.1-.1L7 4l.1.1a1.8 1.8 0 0 0 2 .4A1.8 1.8 0 0 0 10.1 3H14v.1a1.8 1.8 0 0 0 1.1 1.6 1.8 1.8 0 0 0 2-.4l.1-.1L20 7l-.1.1a1.8 1.8 0 0 0-.4 2 1.8 1.8 0 0 0 1.6 1.1h.1V14h-.1A1.8 1.8 0 0 0 19.4 15Z"/></svg>Paramètres</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="support-card">
+        <strong>Besoin d’aide ?</strong>
+        <p>Documentation interne, incidents et outils de support éditeur.</p>
+        <button type="button" data-view="support">Ouvrir le support ↗</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="mobile-menu" id="mobileMenu" aria-label="Ouvrir le menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div class="page-heading">
+        <h1 id="pageTitle">Tableau de bord</h1>
+        <p id="pageSubtitle">Vue commerciale et opérationnelle de Demédico.</p>
+      </div>
+
+      <div class="top-actions">
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input id="globalSearch" placeholder="Rechercher un client, un abonnement…">
+        </label>
+        <div class="profile">
+          <div class="avatar" id="profileAvatar">·</div>
+          <div class="profile-meta"><strong id="profileName"></strong><span>Super admin · <button class="adm-link" type="button" data-action="logout">Déconnexion</button></span></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- VUE D'ENSEMBLE -->
+      <section class="view active" id="view-overview">
+        <div class="grid kpi-grid">
+          <article class="card kpi" style="--soft:#e8f7f2;--color:#1b9b73;--tint:#e9f8f4">
+            <div class="kpi-top"><div class="icon-box"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="9" r="2.5"/><path d="M2.5 20v-2a5.5 5.5 0 0 1 11 0v2M14 14a4.5 4.5 0 0 1 7.5 3.4V20"/></svg></div><div><div class="kpi-label">Clients actifs</div><div class="kpi-value" id="kpiActive">…</div></div></div>
+            <div class="kpi-foot" id="kpiActiveFoot"></div>
+          </article>
+          <article class="card kpi" style="--soft:#e8f7f2;--color:#1b9b73;--tint:#edf9f6">
+            <div class="kpi-top"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M18 7a7 7 0 1 0 0 10M4 10h11M4 14h9"/></svg></div><div><div class="kpi-label">MRR</div><div class="kpi-value" id="kpiMrr">…</div></div></div>
+            <div class="kpi-foot" id="kpiMrrFoot"></div>
+          </article>
+          <article class="card kpi" style="--soft:#edf5ff;--color:#4e87c7;--tint:#eff6ff">
+            <div class="kpi-top"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/><path d="M8 15h8"/></svg></div><div><div class="kpi-label">Essais en cours</div><div class="kpi-value" id="kpiTrials">…</div></div></div>
+            <div class="kpi-foot" id="kpiTrialsFoot"></div>
+          </article>
+          <article class="card kpi" style="--soft:#fff0f1;--color:#ce5a64;--tint:#fff3f3">
+            <div class="kpi-top"><div class="icon-box"><svg viewBox="0 0 24 24"><path d="M12 3 22 20H2L12 3Z"/><path d="M12 9v5M12 17.5v.1"/></svg></div><div><div class="kpi-label">Impayés</div><div class="kpi-value" id="kpiRisk">…</div></div></div>
+            <div class="kpi-foot" id="kpiRiskFoot"></div>
+          </article>
+        </div>
+
+        <div class="grid two-col" style="margin-top:14px">
+          <article class="card section-card">
+            <div class="section-head">
+              <div class="head-icon"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-8M22 19V3"/></svg></div>
+              <div><div class="section-title">Croissance des cabinets</div><div class="section-sub">Cabinets inscrits par mois, sur 12 mois.</div></div>
+            </div>
+            <div class="chart-wrap">
+              <div class="axis-y" id="axisY"></div>
+              <div class="chart-grid"><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="bars" id="bars"></div>
+            </div>
+            <div class="chart-legend">
+              <span><i class="legend-dot" style="background:#98d6cf"></i>Nouveaux cabinets</span>
+              <span><i class="legend-dot" style="background:#2f8f88"></i>Cabinets existants</span>
+            </div>
+          </article>
+
+          <article class="card section-card">
+            <div class="section-head">
+              <div class="head-icon"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg></div>
+              <div><div class="section-title">Santé des comptes</div><div class="section-sub">Calculée sur l’usage et le statut, jamais sur les données cliniques.</div></div>
+            </div>
+            <div class="health-list" id="healthList"></div>
+          </article>
+        </div>
+
+        <div class="grid bottom-grid" style="margin-top:14px">
+          <article class="card section-card">
+            <div class="section-head">
+              <div class="head-icon"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="9" r="2.5"/><path d="M2.5 20v-2a5.5 5.5 0 0 1 11 0v2M14 14a4.5 4.5 0 0 1 7.5 3.4V20"/></svg></div>
+              <div><div class="section-title">Clients récents</div><div class="section-sub">Derniers cabinets inscrits.</div></div>
+              <div class="spacer"></div><button class="ghost-btn" data-view="clients">Voir tous les clients →</button>
+            </div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Cabinet</th><th>Offre</th><th>Statut</th><th>Utilisateurs</th><th>Échéance</th><th>Santé</th><th></th></tr></thead>
+              <tbody id="recentClients"></tbody>
+            </table></div>
+          </article>
+
+          <div class="grid">
+            <article class="card section-card">
+              <div class="section-head"><div class="head-icon"><svg viewBox="0 0 24 24"><path d="m13 2-7 11h6l-1 9 7-12h-6z"/></svg></div><div><div class="section-title">Actions rapides</div></div></div>
+              <div class="quick-grid">
+                <button class="quick" data-action="create"><svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="3"/><path d="M4 20v-2a6 6 0 0 1 12 0v2M19 8v6M16 11h6"/></svg>Ajouter un client</button>
+                <button class="quick" data-action="unpaid"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M7 15h4"/></svg>Voir les impayés</button>
+                <button class="quick" data-view="support"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-10.4 8.3L4 21l1.2-5.2A8.5 8.5 0 1 1 21 11.5Z"/></svg>Ouvrir le support</button>
+              </div>
+            </article>
+            <article class="card section-card">
+              <div class="section-head"><div class="head-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><div class="section-title">Audit récent</div></div><div class="spacer"></div><button class="ghost-btn" data-view="support">Voir tout</button></div>
+              <div class="audit" id="auditList"></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- CLIENTS -->
+      <section class="view" id="view-clients">
+        <div class="view-toolbar" id="clientFilters">
+          <button class="filter-chip active" data-status="">Tous</button><button class="filter-chip" data-status="ACTIVE">Actifs</button><button class="filter-chip" data-status="TRIALING">Essai</button><button class="filter-chip" data-status="PAST_DUE">Impayés</button><button class="filter-chip" data-status="SUSPENDED">Suspendus</button><button class="filter-chip" data-status="CANCELED">Résiliés</button>
+          <div class="spacer"></div><button class="primary-btn" data-action="create">+ Ajouter un client</button>
+        </div>
+        <article class="card section-card">
+          <div class="section-head"><div><div class="section-title">Tous les clients</div><div class="section-sub">Données commerciales et techniques uniquement.</div></div></div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Cabinet</th><th>Offre</th><th>Statut</th><th>Utilisateurs</th><th>Patients</th><th>Échéance</th><th>Santé</th><th></th></tr></thead>
+            <tbody id="allClients"></tbody>
+          </table></div>
+        </article>
+      </section>
+
+      <!-- AUTRES VUES : maquettes prévues pour le branchement backend -->
+      <section class="view" id="view-subscriptions">
+        <article class="card section-card"><div class="section-head"><div><div class="section-title">Répartition par offre</div><div class="section-sub">Les prix se règlent dans Paramètres. Les identifiants d’offre ne changent jamais.</div></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Offre</th><th>Prix / mois</th><th>Actifs</th><th>Essais</th><th>Impayés</th><th>MRR</th></tr></thead><tbody id="planTable"></tbody></table></div></article>
+        <article class="card section-card" style="margin-top:14px"><div class="section-head"><div><div class="section-title">Échéances des 30 prochains jours</div><div class="section-sub">Fins de période et fins d’essai.</div></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Cabinet</th><th>Offre</th><th>Statut</th><th>Date</th><th>Dans</th><th></th></tr></thead><tbody id="dueTable"></tbody></table></div></article>
+      </section>
+      <section class="view" id="view-billing">
+        <article class="card section-card"><div class="adm-notice"><strong>Paiement en ligne pas encore branché.</strong> Les statuts « Actif » et « Impayé » sont pour l’instant mis à jour à la main depuis la fiche client. Le prestataire de paiement (Stripe, par exemple) deviendra la source de vérité une fois connecté. Aucune donnée bancaire n’est stockée dans Demédico.</div></article>
+        <article class="card section-card" style="margin-top:14px"><div class="section-head"><div><div class="section-title">Impayés</div><div class="section-sub">Cabinets au statut « Impayé ».</div></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Cabinet</th><th>Offre</th><th>Responsable</th><th>Montant mensuel</th><th>Dernière activité</th><th></th></tr></thead><tbody id="unpaidTable"></tbody></table></div></article>
+      </section>
+      <section class="view" id="view-trials">
+        <article class="card section-card"><div class="section-head"><div><div class="section-title">Essais en cours</div><div class="section-sub">Du plus urgent au plus lointain. L’activité se mesure aux connexions et actions, jamais au contenu.</div></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Cabinet</th><th>Offre</th><th>Jours restants</th><th>Utilisateurs</th><th>RDV 30 j</th><th>Activité</th><th></th></tr></thead><tbody id="trialTable"></tbody></table></div></article>
+      </section>
+      <section class="view" id="view-support">
+        <article class="card section-card"><div class="section-head"><div><div class="section-title">Points d’attention</div><div class="section-sub">Comptes inactifs, invitations en attente, fichiers inaccessibles.</div></div></div><div class="audit" id="attentionList"></div></article>
+        <article class="card section-card" style="margin-top:14px"><div class="section-head"><div><div class="section-title">Journal d’administration</div><div class="section-sub">Toutes les actions du Super Admin, horodatées.</div></div></div><div class="audit" id="auditFull"></div></article>
+      </section>
+      <section class="view" id="view-analytics">
+        <div class="grid kpi-grid" id="analyticsKpis"></div>
+        <article class="card section-card" style="margin-top:14px"><div class="section-head"><div><div class="section-title">Répartition des statuts</div><div class="section-sub">Sur l’ensemble des cabinets.</div></div></div><div class="health-list" id="statusBars"></div></article>
+      </section>
+      <section class="view" id="view-settings">
+        <div class="grid two-col">
+          <article class="card section-card"><div class="section-head"><div><div class="section-title">Offres et essai</div><div class="section-sub">Prix mensuels HT en euros. Laisse vide si le prix n’est pas encore fixé.</div></div></div>
+            <form id="settingsForm" class="adm-form"></form></article>
+          <article class="card section-card"><div class="section-head"><div><div class="section-title">Mon compte</div><div class="section-sub" id="meLine"></div></div></div>
+            <form id="pwForm" class="adm-form">
+              <label class="adm-field"><span>Mot de passe actuel</span><input class="adm-input" type="password" id="pwCurrent" autocomplete="current-password"></label>
+              <label class="adm-field"><span>Nouveau mot de passe</span><input class="adm-input" type="password" id="pwNew" autocomplete="new-password" minlength="8"></label>
+              <div class="adm-actions"><button class="primary-btn" type="submit">Changer mon mot de passe</button><button class="ghost-btn" type="button" data-action="logout">Se déconnecter</button></div>
+            </form></article>
+        </div>
+        <article class="card section-card" style="margin-top:14px"><div class="section-head"><div><div class="section-title">Administrateurs Demédico</div><div class="section-sub">Comptes éditeur. Ils ne donnent accès à aucune donnée clinique.</div></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Email</th><th>Nom</th><th>Statut</th><th>Dernière connexion</th></tr></thead><tbody id="adminsTable"></tbody></table></div>
+          <form id="addAdminForm" class="adm-form adm-inline">
+            <label class="adm-field"><span>Email</span><input class="adm-input" type="email" id="newAdminEmail" required></label>
+            <label class="adm-field"><span>Nom</span><input class="adm-input" id="newAdminName"></label>
+            <label class="adm-field"><span>Mot de passe provisoire</span><input class="adm-input" type="password" id="newAdminPw" minlength="8" required></label>
+            <div class="adm-actions"><button class="ghost-btn" type="submit">Ajouter un administrateur</button></div>
+          </form></article>
+      </section>
+    </div>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navigation mobile">
+    <button class="active" data-view="overview"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/></svg>Accueil</button>
+    <button data-view="clients"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 20v-2a5.5 5.5 0 0 1 11 0v2"/></svg>Clients</button>
+    <button data-view="subscriptions"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>Abonn.</button>
+    <button data-view="billing"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/></svg>Factures</button>
+    <button data-view="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg>Plus</button>
+  </nav>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="clientDrawer" aria-label="Détail client">
+    <div class="drawer-head"><div><div class="detail-label" id="drawerKicker">Client</div><h2 id="drawerName">Cabinet</h2></div><button class="close-btn" id="closeDrawer">×</button></div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </aside>
+</div>
+
+<div class="adm-auth" id="admAuth" hidden><div class="adm-auth-card"><div class="adm-auth-brand">demédico<small>Admin</small></div><div id="admAuthBody"></div></div></div>
+<div class="adm-loading" id="admLoading" hidden><div class="adm-spinner"></div></div>
+<div class="adm-toasts" id="admToasts"></div>
+<script>
+(() => {
+  "use strict";
+  // Demédico Admin · v0.6.0 · données réelles (aucune donnée clinique n'est jamais demandée au serveur)
+  const IN_GAS = !!(window.google && google.script && google.script.run);
+  const API_URL = window.DEMEDICO_API || '';
+  const TOKEN_KEY = 'dm_admin_session';
+  let memToken = '', DATA = {dash:null, orgs:[], settings:null, filter:'', q:''};
+
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const eur = n => n === null || n === undefined || n === '' ? '—' : Number(n).toLocaleString('fr-FR', {style:'currency', currency:'EUR', maximumFractionDigits:2});
+  const dShort = v => { if (!v) return '—'; const d = new Date(String(v).length === 10 ? v + 'T12:00:00' : v); return isNaN(d) ? '—' : d.toLocaleDateString('fr-FR', {day:'2-digit', month:'short', year:'numeric'}); };
+  const ago = v => { if (!v) return 'Jamais'; const d = new Date(v); if (isNaN(d)) return '—'; const days = Math.floor((Date.now() - d) / 864e5); if (days <= 0) { const h = Math.floor((Date.now() - d) / 36e5); return h <= 0 ? 'À l’instant' : `Il y a ${h} h`; } return days === 1 ? 'Hier' : `Il y a ${days} j`; };
+  const initials = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const HEALTH = {good:'#1b9b73', normal:'#4e87c7', watch:'#d79834', risk:'#ce5a64', new:'#849095', inactive:'#A9B4B7'};
+  const PILL = {ACTIVE:'success', TRIALING:'info', PAST_DUE:'danger', SUSPENDED:'warning', CANCELED:'warning'};
+  const AV = [['#e8f5f3','#267e78'],['#f1efff','#7567d7'],['#edf5ff','#4e87c7'],['#fff4df','#b67a22'],['#eaf6ef','#348461'],['#fff0f1','#ce5a64']];
+  const ACTIONS = {SUBSCRIPTION_UPDATED:'Abonnement modifié', CABINET_CREATED:'Cabinet créé', OWNER_INVITE_RENEWED:'Nouveau lien envoyé', ADMIN_LOGIN:'Connexion admin', ADMIN_CREATED:'Compte admin créé', ADMIN_ADDED:'Administrateur ajouté', ADMIN_PASSWORD_CHANGED:'Mot de passe admin changé', SETTINGS_UPDATED:'Paramètres modifiés'};
+  const FIELDS = {planId:'Offre', subscriptionStatus:'Statut', trialEndsAt:'Fin d’essai', currentPeriodEnd:'Échéance', adminNote:'Note'};
+
+  // ── Session et appels serveur ──────────────────────────────────────────────
+  function token() { try { return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || memToken; } catch (e) { return memToken; } }
+  function setToken(t, remember) {
+    memToken = t || '';
+    try { localStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(TOKEN_KEY); if (t) (remember ? localStorage : sessionStorage).setItem(TOKEN_KEY, t); } catch (e) {}
+  }
+  function call(fn, ...args) {
+    return new Promise((resolve, reject) => {
+      const done = r => {
+        if (r && r.ok) return resolve(r.result);
+        const err = new Error((r && r.error) || 'Erreur serveur.'); err.code = (r && r.code) || '';
+        if (err.code === 'AUTH') { setToken(''); showAuth('login', err.message); }
+        reject(err);
+      };
+      if (IN_GAS) return google.script.run.withSuccessHandler(done).withFailureHandler(e => reject(new Error(e && e.message || String(e)))).api(fn, args, token());
+      if (!API_URL) return reject(new Error('Adresse du serveur absente (app-config.js).'));
+      fetch(API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({fn, args, token:token()})})
+        .then(r => r.json()).then(done).catch(() => reject(new Error('Le serveur Demédico ne répond pas. Vérifie ta connexion.')));
+    });
+  }
+  function toast(msg, type) { const el = document.createElement('div'); el.className = 'adm-toast ' + (type || ''); el.textContent = msg; $('admToasts').appendChild(el); setTimeout(() => el.remove(), 4200); }
+  function loading(on) { $('admLoading').hidden = !on; }
+  async function run(fn, okMsg) { loading(true); try { const r = await fn(); if (okMsg) toast(okMsg); return r; } catch (e) { if (e.code !== 'AUTH') toast(e.message, 'error'); throw e; } finally { loading(false); } }
+
+  // ── Accès ──────────────────────────────────────────────────────────────────
+  async function showAuth(view, message) {
+    const box = $('admAuth'), body = $('admAuthBody');
+    box.hidden = false;
+    let info = {};
+    try { info = await call('adminInfo'); } catch (e) { info = {down:e.message}; }
+    if (info.needsSetup && view !== 'login') view = 'setup';
+    const note = (message && !/expirée/.test(message)) || info.down ? `<p style="color:#8F3D45">${esc(message || info.down)}</p>` : '';
+    if (view === 'setup' || (info.needsSetup && view === 'login')) {
+      body.innerHTML = `<h1>Créer le compte Super Admin</h1><p>Première installation. Le code se trouve dans Apps Script, propriété <code>ADMIN_SETUP_CODE</code>.</p>${note}
+        <form class="adm-form" id="setupForm">
+          <label class="adm-field"><span>Code d’installation</span><input class="adm-input" id="sCode" required autocomplete="off"></label>
+          <label class="adm-field"><span>Ton nom</span><input class="adm-input" id="sName" placeholder="Demphis"></label>
+          <label class="adm-field"><span>Email administrateur</span><input class="adm-input" id="sEmail" type="email" required autocomplete="username"></label>
+          <label class="adm-field"><span>Mot de passe (8 caractères minimum)</span><input class="adm-input" id="sPw" type="password" minlength="8" required autocomplete="new-password"></label>
+          <label class="adm-field"><span>Confirme le mot de passe</span><input class="adm-input" id="sPw2" type="password" minlength="8" required autocomplete="new-password"></label>
+          <button class="primary-btn" type="submit">Créer le compte et entrer</button></form>`;
+      $('setupForm').onsubmit = async e => {
+        e.preventDefault();
+        if ($('sPw').value !== $('sPw2').value) return toast('Les deux mots de passe ne sont pas identiques.', 'error');
+        const r = await run(() => call('adminSetup', {code:$('sCode').value.trim(), displayName:$('sName').value.trim(), email:$('sEmail').value.trim(), password:$('sPw').value}));
+        setToken(r.token, false); box.hidden = true; load();
+      };
+    } else {
+      body.innerHTML = `<h1>Connexion administrateur</h1><p>Accès réservé à l’éditeur Demédico. Les comptes des cabinets ne fonctionnent pas ici.</p>${note}
+        <form class="adm-form" id="loginForm">
+          <label class="adm-field"><span>Email</span><input class="adm-input" id="lEmail" type="email" required autocomplete="username"></label>
+          <label class="adm-field"><span>Mot de passe</span><input class="adm-input" id="lPw" type="password" required autocomplete="current-password"></label>
+          <label class="adm-check"><input type="checkbox" id="lRemember"> Rester connecté 7 jours (appareil personnel)</label>
+          <button class="primary-btn" type="submit">Se connecter</button></form>`;
+      $('loginForm').onsubmit = async e => {
+        e.preventDefault();
+        const r = await run(() => call('adminLogin', {email:$('lEmail').value.trim(), password:$('lPw').value, remember:$('lRemember').checked}));
+        setToken(r.token, $('lRemember').checked); box.hidden = true; load();
+      };
+    }
+    const first = body.querySelector('input'); if (first) setTimeout(() => first.focus(), 50);
+  }
+  async function logout() { const t = token(); setToken(''); try { await call('adminLogout', t); } catch (e) {} showAuth('login'); }
+
+  // ── Rendu ──────────────────────────────────────────────────────────────────
+  function avatar(o, i) { const c = AV[i % AV.length]; return `<span class="client-avatar" style="--ca:${c[0]};--cc:${c[1]}">${esc(initials(o.name))}</span>`; }
+  function due(o) {
+    if (o.subscriptionStatus === 'TRIALING') return o.trialDaysLeft === null ? '—' : o.trialDaysLeft < 0 ? 'Essai expiré' : `${o.trialDaysLeft} j d’essai`;
+    return o.currentPeriodEnd ? dShort(o.currentPeriodEnd) : '—';
+  }
+  function row(o, i, withPatients) {
+    return `<tr data-client="${esc(o.id)}">
+      <td><div class="client">${avatar(o, i)}${esc(o.name)}</div></td>
+      <td>${esc(o.planLabel)}</td>
+      <td><span class="pill ${PILL[o.subscriptionStatus] || 'warning'}">${esc(o.statusLabel)}</span></td>
+      <td>${o.usersCount}${o.usersInvited ? ` <small style="color:#849095">+${o.usersInvited}</small>` : ''}</td>
+      ${withPatients ? `<td>${o.patientCount}</td>` : ''}
+      <td>${esc(due(o))}</td>
+      <td><span class="health-text"><i class="status-dot" style="--dot:${HEALTH[o.health.key]}"></i>${esc(o.health.label)}</span></td>
+      <td><button class="row-menu" type="button" data-open="${esc(o.id)}" aria-label="Ouvrir ${esc(o.name)}">···</button></td></tr>`;
+  }
+  const empty = (cols, msg) => `<tr><td colspan="${cols}"><div class="adm-empty">${esc(msg)}</div></td></tr>`;
+
+  function auditHtml(list) {
+    if (!list.length) return '<div class="adm-empty">Aucune action enregistrée.</div>';
+    return list.map(a => {
+      const changes = a.payload && a.action === 'SUBSCRIPTION_UPDATED' ? Object.keys(a.payload).map(k => `${FIELDS[k] || k} : ${esc(a.payload[k].from || '∅')} → ${esc(a.payload[k].to || '∅')}`).join(' · ') : '';
+      return `<div class="audit-item"><div class="audit-icon" style="--ac:#237F79;--as:#e8f5f3"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <div class="audit-text">${esc(ACTIONS[a.action] || a.action)}${a.cabinetName ? ' · ' + esc(a.cabinetName) : ''}<br><small style="color:#849095">${esc(a.actor)}${changes ? ' · ' + changes : ''}</small></div><div class="audit-time">${esc(ago(a.timestamp))}</div></div>`;
+    }).join('');
+  }
+
+  function renderOverview() {
+    const d = DATA.dash, k = d.kpis;
+    $('profileName').textContent = (d.me && (d.me.displayName || d.me.email)) || '';
+    $('profileAvatar').textContent = initials((d.me && (d.me.displayName || d.me.email)) || 'A');
+    $('kpiActive').textContent = k.activeClients;
+    $('kpiActiveFoot').innerHTML = `<span class="trend up">+${k.activeClientsDelta} inscrit${k.activeClientsDelta > 1 ? 's' : ''} ce mois</span><span>${k.total} au total</span>`;
+    $('kpiMrr').textContent = k.mrr === null ? '—' : eur(k.mrr);
+    $('kpiMrrFoot').innerHTML = k.mrr === null ? '<span>Prix à saisir dans Paramètres</span>' : '<span>Abonnements actifs × prix</span>';
+    $('kpiTrials').textContent = k.trials;
+    $('kpiTrialsFoot').innerHTML = `<span>${k.trialsEndingSoon} finissent sous 7 jours</span>`;
+    $('kpiRisk').textContent = k.paymentRisks;
+    $('kpiRiskFoot').innerHTML = k.paymentRisks ? '<span class="trend warn">À relancer</span>' : '<span>Aucun</span>';
+
+    const max = Math.max(4, ...d.growth.map(g => g.new + g.existing));
+    const top = Math.ceil(max / 4) * 4;
+    $('axisY').innerHTML = [top, top * .75, top * .5, top * .25, 0].map(v => `<span>${Math.round(v)}</span>`).join('');
+    $('bars').innerHTML = d.growth.map(g => {
+      const total = g.new + g.existing, h = total ? Math.max(4, total / top * 100) : 0, nPct = total ? g.new / total * 100 : 0;
+      return `<div class="bar-col"><div class="bar-stack" style="height:${h}%" title="${total} cabinet(s)"><div class="bar-new" style="height:${nPct}%"></div><div class="bar-old" style="height:${100 - nPct}%"></div></div><span class="month">${esc(g.month)}</span></div>`;
+    }).join('');
+
+    const h = d.health, t = Math.max(1, h.total);
+    const rows = [['Excellent ou prometteur', h.good, '#1b9b73', '#e7f7f1'], ['Normal', h.normal, '#4e87c7', '#edf5ff'], ['À surveiller', h.watch, '#d79834', '#fff4df'], ['Risque de départ', h.risk, '#ce5a64', '#fff0f1'], ['Pas encore actifs', h.newcomers, '#849095', '#f1f4f4']];
+    $('healthList').innerHTML = rows.map(([label, n, c, bg]) => `<div class="health-row" style="--hc:${c};--hs:${bg};--p:${Math.round(n / t * 100)}%"><div class="health-top"><div class="health-badge"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg></div><div class="health-name">${label}</div><div class="health-meta">${n} cabinet${n > 1 ? 's' : ''}</div></div><div class="progress"><span></span></div></div>`).join('');
+
+    $('recentClients').innerHTML = d.recentClients.length ? d.recentClients.map((o, i) => row(o, i, false)).join('') : empty(7, 'Aucun cabinet pour l’instant.');
+    $('auditList').innerHTML = auditHtml(d.audit.slice(0, 4));
+  }
+
+  function renderClients() {
+    const list = DATA.orgs.filter(o => (!DATA.filter || o.subscriptionStatus === DATA.filter) && (!DATA.q || (o.name + ' ' + o.ownerEmail + ' ' + o.planLabel).toLowerCase().includes(DATA.q)));
+    $('allClients').innerHTML = list.length ? list.map((o, i) => row(o, i, true)).join('') : empty(8, 'Aucun cabinet ne correspond.');
+    document.querySelectorAll('#clientFilters .filter-chip').forEach(c => c.classList.toggle('active', c.dataset.status === DATA.filter));
+  }
+
+  function renderSubscriptions() {
+    const s = DATA.settings, orgs = DATA.orgs;
+    $('planTable').innerHTML = s.plans.map(p => {
+      const of = st => orgs.filter(o => o.planId === p.id && o.subscriptionStatus === st).length;
+      const active = of('ACTIVE');
+      return `<tr><td><strong>${esc(p.label)}</strong> <small style="color:#849095">${p.id}</small></td><td>${p.price === '' ? '—' : eur(p.price)}</td><td>${active}</td><td>${of('TRIALING')}</td><td>${of('PAST_DUE')}</td><td>${p.price === '' ? '—' : eur(active * p.price)}</td></tr>`;
+    }).join('');
+    const soon = orgs.map(o => {
+      const date = o.subscriptionStatus === 'TRIALING' ? o.trialEndsAt : o.currentPeriodEnd;
+      const days = date ? Math.ceil((new Date(date + 'T12:00:00') - Date.now()) / 864e5) : null;
+      return {o, date, days};
+    }).filter(x => x.days !== null && x.days <= 30 && !['CANCELED', 'SUSPENDED'].includes(x.o.subscriptionStatus)).sort((a, b) => a.days - b.days);
+    $('dueTable').innerHTML = soon.length ? soon.map((x, i) => `<tr><td><div class="client">${avatar(x.o, i)}${esc(x.o.name)}</div></td><td>${esc(x.o.planLabel)}</td><td><span class="pill ${PILL[x.o.subscriptionStatus]}">${esc(x.o.statusLabel)}</span></td><td>${dShort(x.date)}</td><td>${x.days < 0 ? 'Dépassée' : x.days + ' j'}</td><td><button class="row-menu" data-open="${esc(x.o.id)}">···</button></td></tr>`).join('') : empty(6, 'Aucune échéance dans les 30 jours.');
+
+    const unpaid = orgs.filter(o => o.subscriptionStatus === 'PAST_DUE');
+    $('unpaidTable').innerHTML = unpaid.length ? unpaid.map((o, i) => `<tr><td><div class="client">${avatar(o, i)}${esc(o.name)}</div></td><td>${esc(o.planLabel)}</td><td>${esc(o.ownerEmail)}</td><td>${eur(o.monthlyPrice)}</td><td>${ago(o.lastActivityAt)}</td><td><button class="row-menu" data-open="${esc(o.id)}">···</button></td></tr>`).join('') : empty(6, 'Aucun impayé.');
+
+    const trials = orgs.filter(o => o.subscriptionStatus === 'TRIALING').sort((a, b) => (a.trialDaysLeft ?? 999) - (b.trialDaysLeft ?? 999));
+    $('trialTable').innerHTML = trials.length ? trials.map((o, i) => `<tr><td><div class="client">${avatar(o, i)}${esc(o.name)}</div></td><td>${esc(o.planLabel)}</td><td>${o.trialDaysLeft === null ? '—' : o.trialDaysLeft < 0 ? 'Expiré' : o.trialDaysLeft}</td><td>${o.usersCount}</td><td>${o.appointments30d}</td><td><span class="health-text"><i class="status-dot" style="--dot:${HEALTH[o.health.key]}"></i>${esc(o.health.label)}</span></td><td><button class="row-menu" data-open="${esc(o.id)}">···</button></td></tr>`).join('') : empty(7, 'Aucun essai en cours.');
+  }
+
+  function renderSupport(audit) {
+    const items = [];
+    DATA.orgs.forEach(o => {
+      if (o.health.label === 'Fichiers inaccessibles') items.push([o, 'Fichiers du cabinet inaccessibles depuis le serveur', '#ce5a64']);
+      if (o.usersInvited) items.push([o, `${o.usersInvited} invitation(s) en attente`, '#4e87c7']);
+      if (o.health.key === 'risk' && o.health.label !== 'Fichiers inaccessibles') items.push([o, 'Aucune activité depuis plus de 30 jours', '#ce5a64']);
+      if (o.health.key === 'new') items.push([o, 'Compte créé mais jamais utilisé', '#849095']);
+      if (o.subscriptionStatus === 'TRIALING' && o.trialDaysLeft !== null && o.trialDaysLeft <= 3) items.push([o, o.trialDaysLeft < 0 ? 'Essai expiré' : `Essai : ${o.trialDaysLeft} jour(s) restant(s)`, '#d79834']);
+    });
+    $('attentionList').innerHTML = items.length ? items.map(([o, msg, c]) => `<div class="audit-item"><div class="audit-icon" style="--ac:${c};--as:#f4f7f7"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v5M12 16v.1"/></svg></div><div class="audit-text"><strong>${esc(o.name)}</strong><br><small style="color:#526268">${esc(msg)}</small></div><button class="ghost-btn" data-open="${esc(o.id)}">Ouvrir</button></div>`).join('') : '<div class="adm-empty">Rien à signaler.</div>';
+    if (audit) $('auditFull').innerHTML = auditHtml(audit);
+  }
+
+  function renderAnalytics() {
+    const orgs = DATA.orgs, sum = k => orgs.reduce((a, o) => a + (Number(o[k]) || 0), 0);
+    const kpi = (label, value, sub) => `<article class="card kpi" style="--soft:#e8f7f2;--color:#1b9b73;--tint:#f4faf9"><div class="kpi-top"><div><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div></div></div><div class="kpi-foot"><span>${sub}</span></div></article>`;
+    const used = orgs.filter(o => o.health.key === 'good' || o.health.key === 'normal').length;
+    $('analyticsKpis').innerHTML = kpi('Cabinets', orgs.length, 'tous statuts') + kpi('Utilisateurs actifs', sum('usersCount'), 'praticiens et secrétariat') + kpi('RDV sur 30 jours', sum('appointments30d'), `${sum('appointmentsNext30d')} à venir`) + kpi('Cabinets utilisés', orgs.length ? Math.round(used / orgs.length * 100) + ' %' : '—', 'actifs sur les 14 derniers jours');
+    const t = Math.max(1, orgs.length);
+    $('statusBars').innerHTML = DATA.settings.statuses.map(s => { const n = orgs.filter(o => o.subscriptionStatus === s.id).length; return `<div class="health-row" style="--hc:#237F79;--hs:#e8f5f3;--p:${Math.round(n / t * 100)}%"><div class="health-top"><div class="health-name">${esc(s.label)}</div><div class="health-meta">${n}</div></div><div class="progress"><span></span></div></div>`; }).join('');
+  }
+
+  function renderSettings() {
+    const s = DATA.settings;
+    $('meLine').textContent = s.me ? `${s.me.displayName || ''} ${s.me.email}`.trim() : '';
+    $('settingsForm').innerHTML = s.plans.map(p => `<label class="adm-field"><span>${esc(p.label)} (${p.id}) · € / mois</span><input class="adm-input" inputmode="decimal" data-price="${p.id}" value="${esc(p.price)}" placeholder="Non fixé"></label>`).join('') +
+      `<label class="adm-field"><span>Durée de l’essai gratuit (jours)</span><input class="adm-input" type="number" min="1" max="90" id="trialDays" value="${s.trialDays}"></label>
+       <p style="margin:0;font-size:12px;color:#849095">Ouverture de cabinet par les clients eux-mêmes : ${s.signupOpen ? 'active (code SIGNUP_CODE)' : 'fermée'}. Appli : ${esc(s.appUrl)}</p>
+       <div class="adm-actions"><button class="primary-btn" type="submit">Enregistrer</button></div>`;
+    $('adminsTable').innerHTML = s.admins.map(a => `<tr><td>${esc(a.email)}</td><td>${esc(a.displayName)}</td><td><span class="pill ${a.active ? 'success' : 'warning'}">${a.active ? 'Actif' : 'Inactif'}</span></td><td>${a.lastLoginAt ? ago(a.lastLoginAt) : 'Jamais'}</td></tr>`).join('');
+  }
+
+  // ── Fiche client (tiroir) ─────────────────────────────────────────────────
+  const drawer = $('clientDrawer'), backdrop = $('drawerBackdrop');
+  function openDrawer() { drawer.classList.add('open'); backdrop.classList.add('open'); }
+  function closeDrawer() { drawer.classList.remove('open'); backdrop.classList.remove('open'); }
+
+  async function openClient(id) {
+    const o = await run(() => call('adminGetOrganization', id));
+    const s = DATA.settings;
+    $('drawerKicker').textContent = 'Client';
+    $('drawerName').textContent = o.name;
+    const opt = (list, cur) => list.map(x => `<option value="${x.id}" ${x.id === cur ? 'selected' : ''}>${esc(x.label)}</option>`).join('');
+    $('drawerBody').innerHTML = `
+      <div class="detail-block"><div class="detail-label">Responsable</div><div class="detail-value" style="margin-top:6px">${esc(o.ownerEmail)}</div><div style="font-size:12px;color:#849095;margin-top:4px">Inscrit le ${dShort(o.createdAt)}</div></div>
+      <div class="detail-block"><div class="detail-label">Abonnement</div>
+        <form class="adm-form" id="subForm" style="margin-top:10px">
+          <label class="adm-field"><span>Offre</span><select class="adm-input" id="fPlan">${opt(s.plans, o.planId)}</select></label>
+          <label class="adm-field"><span>Statut</span><select class="adm-input" id="fStatus">${opt(s.statuses, o.subscriptionStatus)}</select></label>
+          <label class="adm-field"><span>Fin d’essai</span><input class="adm-input" type="date" id="fTrial" value="${esc(o.trialEndsAt)}"></label>
+          <label class="adm-field"><span>Prochaine échéance</span><input class="adm-input" type="date" id="fPeriod" value="${esc(o.currentPeriodEnd)}"></label>
+          <label class="adm-field"><span>Note interne</span><textarea class="adm-input" id="fNote" maxlength="500">${esc(o.adminNote)}</textarea></label>
+          <div class="adm-actions"><button class="primary-btn" type="submit">Enregistrer</button>
+            ${o.subscriptionStatus === 'SUSPENDED' ? '<button class="ghost-btn" type="button" data-sub="ACTIVE">Réactiver</button>' : '<button class="ghost-btn adm-danger" type="button" data-sub="SUSPENDED">Suspendre l’accès</button>'}</div>
+        </form></div>
+      <div class="detail-block"><div class="detail-label">Utilisation agrégée</div><div class="detail-grid" style="margin-top:10px">
+        <div><div class="detail-label">Utilisateurs actifs</div><div class="detail-value">${o.usersCount}${o.usersInvited ? ` (+${o.usersInvited} invité${o.usersInvited > 1 ? 's' : ''})` : ''}</div></div>
+        <div><div class="detail-label">Patients</div><div class="detail-value">${o.patientCount} <small style="color:#849095">(compteur seul)</small></div></div>
+        <div><div class="detail-label">RDV 30 derniers jours</div><div class="detail-value">${o.appointments30d}</div></div>
+        <div><div class="detail-label">Dernière activité</div><div class="detail-value">${ago(o.lastActivityAt)}</div></div>
+        <div><div class="detail-label">Santé du compte</div><div class="detail-value">${esc(o.health.label)}</div></div>
+        <div><div class="detail-label">Prix mensuel</div><div class="detail-value">${eur(o.monthlyPrice)}</div></div></div></div>
+      ${o.health.key === 'new' ? `<div class="detail-block"><div class="detail-label">Activation</div><p style="font-size:12px;color:#526268;margin:6px 0">Le responsable n’a pas encore créé son mot de passe ?</p><button class="ghost-btn" type="button" id="resendBtn">Générer un nouveau lien</button><div id="resendBox"></div></div>` : ''}
+      <div class="detail-block"><div class="detail-label">Historique admin</div><div class="audit" style="margin-top:8px">${auditHtml(o.audit)}</div></div>
+      <div class="privacy-note"><strong>Confidentialité :</strong> le Super Admin voit les données commerciales et des compteurs. Jamais l’identité des patients, les consultations ni les notes cliniques.</div>`;
+    const save = async patch => { await run(() => call('adminUpdateSubscription', o.id, patch), 'Abonnement mis à jour.'); await load(true); openClient(o.id); };
+    $('subForm').onsubmit = e => { e.preventDefault(); save({planId:$('fPlan').value, subscriptionStatus:$('fStatus').value, trialEndsAt:$('fTrial').value, currentPeriodEnd:$('fPeriod').value, adminNote:$('fNote').value}); };
+    $('drawerBody').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => {
+      if (b.dataset.sub === 'SUSPENDED' && !confirm(`Suspendre ${o.name} ? Toute l’équipe du cabinet sera déconnectée immédiatement.`)) return;
+      save({subscriptionStatus:b.dataset.sub});
+    });
+    if ($('resendBtn')) $('resendBtn').onclick = async () => { const r = await run(() => call('adminResendOwnerInvite', o.id)); $('resendBox').innerHTML = linkBox(r.link); };
+    openDrawer();
+  }
+
+  function linkBox(link) { return `<div class="adm-link-box"><input class="adm-input" readonly value="${esc(link)}" onclick="this.select()"><button class="ghost-btn" type="button" onclick="navigator.clipboard&&navigator.clipboard.writeText(this.previousElementSibling.value);this.textContent='Copié'">Copier</button></div><p style="font-size:12px;color:#849095;margin:6px 0 0">À envoyer au responsable du cabinet. Valable 7 jours, une seule utilisation.</p>`; }
+
+  function openCreate() {
+    const s = DATA.settings;
+    $('drawerKicker').textContent = 'Nouveau client';
+    $('drawerName').textContent = 'Ouvrir un cabinet';
+    $('drawerBody').innerHTML = `<form class="adm-form" id="createForm">
+      <label class="adm-field"><span>Nom du cabinet</span><input class="adm-input" id="cName" required maxlength="120"></label>
+      <label class="adm-field"><span>Email du responsable</span><input class="adm-input" id="cEmail" type="email" required></label>
+      <label class="adm-field"><span>Nom du responsable</span><input class="adm-input" id="cOwner" maxlength="120"></label>
+      <label class="adm-field"><span>Offre</span><select class="adm-input" id="cPlan">${s.plans.map(p => `<option value="${p.id}">${esc(p.label)}</option>`).join('')}</select></label>
+      <label class="adm-field"><span>Jours d’essai</span><input class="adm-input" id="cTrial" type="number" min="1" max="90" value="${s.trialDays}"></label>
+      <label class="adm-field"><span>Note interne</span><textarea class="adm-input" id="cNote" maxlength="500"></textarea></label>
+      <div class="adm-actions"><button class="primary-btn" type="submit">Créer le cabinet</button></div></form><div id="createResult"></div>
+      <div class="privacy-note" style="margin-top:14px">Le cabinet démarre en essai. Le responsable reçoit un lien pour choisir son mot de passe, puis invite son équipe lui-même.</div>`;
+    $('createForm').onsubmit = async e => {
+      e.preventDefault();
+      const r = await run(() => call('adminCreateCabinet', {name:$('cName').value.trim(), ownerEmail:$('cEmail').value.trim(), ownerName:$('cOwner').value.trim(), planId:$('cPlan').value, trialDays:$('cTrial').value, adminNote:$('cNote').value}), 'Cabinet créé.');
+      $('createForm').remove();
+      $('createResult').innerHTML = `<div class="detail-block"><div class="detail-label">Lien d’activation</div>${linkBox(r.link)}</div>`;
+      load(true);
+    };
+    openDrawer();
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────────────────
+  const titles = {overview:['Tableau de bord','Vue commerciale et opérationnelle de Demédico.'], clients:['Clients','Cabinets, abonnements et santé des comptes.'], subscriptions:['Abonnements','Offres, prix et échéances.'], billing:['Facturation','Impayés et revenus récurrents.'], trials:['Essais','Essais en cours, du plus urgent au plus lointain.'], support:['Support','Points d’attention et journal d’administration.'], analytics:['Analytics','Usage agrégé, sans aucun contenu clinique.'], settings:['Paramètres','Offres, prix, administrateurs.']};
+  async function setView(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+    document.querySelectorAll('.nav-btn,.bottom-nav button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+    const t = titles[name] || titles.overview;
+    $('pageTitle').textContent = t[0]; $('pageSubtitle').textContent = t[1];
+    $('sidebar').classList.remove('open');
+    window.scrollTo({top:0, behavior:'smooth'});
+    if (name === 'support') { try { renderSupport(await call('adminListAuditLogs', 100)); } catch (e) {} }
+  }
+
+  document.addEventListener('click', e => {
+    const v = e.target.closest('[data-view]'); if (v) return setView(v.dataset.view);
+    const o = e.target.closest('[data-open]'); if (o) return openClient(o.dataset.open);
+    const a = e.target.closest('[data-action]');
+    if (a) {
+      if (a.dataset.action === 'create') return openCreate();
+      if (a.dataset.action === 'logout') return logout();
+      if (a.dataset.action === 'unpaid') { DATA.filter = 'PAST_DUE'; renderClients(); return setView('clients'); }
+    }
+    const f = e.target.closest('#clientFilters .filter-chip'); if (f) { DATA.filter = f.dataset.status; renderClients(); }
+  });
+  $('mobileMenu').addEventListener('click', () => $('sidebar').classList.toggle('open'));
+  $('closeDrawer').addEventListener('click', closeDrawer);
+  backdrop.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+  $('globalSearch').addEventListener('input', e => { DATA.q = e.target.value.trim().toLowerCase(); renderClients(); if (DATA.q) setView('clients'); });
+
+  $('settingsForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const prices = {}; document.querySelectorAll('[data-price]').forEach(i => prices[i.dataset.price] = i.value.trim());
+    DATA.settings = await run(() => call('adminSaveSettings', {prices, trialDays:$('trialDays').value}), 'Paramètres enregistrés.');
+    load(true);
+  });
+  $('pwForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const r = await run(() => call('adminChangePassword', {current:$('pwCurrent').value, password:$('pwNew').value}), 'Mot de passe modifié. Les autres sessions sont fermées.');
+    setToken(r.token, false); $('pwCurrent').value = ''; $('pwNew').value = '';
+  });
+  $('addAdminForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    await run(() => call('adminAddAdmin', {email:$('newAdminEmail').value.trim(), displayName:$('newAdminName').value.trim(), password:$('newAdminPw').value}), 'Administrateur ajouté.');
+    e.target.reset(); load(true);
+  });
+
+  async function load(silent) {
+    if (!token()) return showAuth('login');
+    if (!silent) loading(true);
+    try {
+      const [dash, orgs, settings] = await Promise.all([call('adminGetDashboard'), call('adminListOrganizations', {}), call('adminGetSettings')]);
+      Object.assign(DATA, {dash, orgs, settings});
+      renderOverview(); renderClients(); renderSubscriptions(); renderSupport(dash.audit); renderAnalytics(); renderSettings();
+    } catch (e) { if (e.code !== 'AUTH') toast(e.message, 'error'); }
+    finally { loading(false); }
+  }
+  load();
+})();
+</script>
+
+</body>
+</html>
