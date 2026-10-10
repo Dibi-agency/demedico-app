@@ -548,7 +548,7 @@
 
       <!-- AUTRES VUES : maquettes prévues pour le branchement backend -->
       <section class="view" id="view-subscriptions">
-        <article class="card section-card"><div class="section-head"><div><div class="section-title">Répartition par offre</div><div class="section-sub">Les prix se règlent dans Paramètres. Les identifiants d’offre ne changent jamais.</div></div></div>
+        <article class="card section-card"><div class="section-head"><div><div class="section-title">Répartition par offre</div><div class="section-sub">Prix par défaut de la grille, modifiables dans Paramètres. Les identifiants d’offre ne changent jamais.</div></div></div>
           <div class="table-wrap"><table><thead><tr><th>Offre</th><th>Prix / mois</th><th>Actifs payants</th><th>Offerts</th><th>Essais</th><th>Impayés</th><th>MRR</th></tr></thead><tbody id="planTable"></tbody></table></div></article>
         <article class="card section-card" style="margin-top:14px"><div class="section-head"><div><div class="section-title">Échéances des 30 prochains jours</div><div class="section-sub">Fins de période et fins d’essai.</div></div></div>
           <div class="table-wrap"><table><thead><tr><th>Cabinet</th><th>Offre</th><th>Statut</th><th>Date</th><th>Dans</th><th></th></tr></thead><tbody id="dueTable"></tbody></table></div></article>
@@ -630,7 +630,7 @@
   const PILL = {ACTIVE:'success', TRIALING:'info', PAST_DUE:'danger', SUSPENDED:'warning', CANCELED:'warning'};
   const AV = [['#e8f5f3','#267e78'],['#f1efff','#7567d7'],['#edf5ff','#4e87c7'],['#fff4df','#b67a22'],['#eaf6ef','#348461'],['#fff0f1','#ce5a64']];
   const ACTIONS = {SUBSCRIPTION_UPDATED:'Abonnement modifié', CABINET_CREATED:'Cabinet créé', OWNER_INVITE_RENEWED:'Nouveau lien envoyé', ADMIN_LOGIN:'Connexion admin', ADMIN_CREATED:'Compte admin créé', ADMIN_ADDED:'Administrateur ajouté', ADMIN_PASSWORD_CHANGED:'Mot de passe admin changé', SETTINGS_UPDATED:'Paramètres modifiés'};
-  const FIELDS = {planId:'Offre', subscriptionStatus:'Statut', trialEndsAt:'Fin d’essai', currentPeriodEnd:'Échéance', adminNote:'Note', complimentary:'Compte offert'};
+  const FIELDS = {founder:'Tarif fondateur', billingCycle:'Facturation', requestedPlanId:'Demande', planId:'Offre', subscriptionStatus:'Statut', trialEndsAt:'Fin d’essai', currentPeriodEnd:'Échéance', adminNote:'Note', complimentary:'Compte offert'};
 
   // ── Session et appels serveur ──────────────────────────────────────────────
   function token() { try { return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || memToken; } catch (e) { return memToken; } }
@@ -730,8 +730,8 @@
     $('profileAvatar').textContent = initials((d.me && (d.me.displayName || d.me.email)) || 'A');
     $('kpiActive').textContent = k.activeClients;
     $('kpiActiveFoot').innerHTML = `<span class="trend up">+${k.activeClientsDelta} inscrit${k.activeClientsDelta > 1 ? 's' : ''} ce mois</span><span>${k.total} au total</span>`;
-    $('kpiMrr').textContent = k.mrr === null ? '—' : eur(k.mrr);
-    $('kpiMrrFoot').innerHTML = k.mrr === null ? '<span>Prix à saisir dans Paramètres</span>' : `<span>Actifs payants × prix</span><span>${k.complimentary} offert${k.complimentary > 1 ? 's' : ''}</span>`;
+    $('kpiMrr').textContent = eur(k.mrr);
+    $('kpiMrrFoot').innerHTML = `<span>${k.requests ? `<span class="trend warn">${k.requests} demande${k.requests > 1 ? 's' : ''} à valider</span>` : 'Actifs payants × prix'}</span><span>${k.complimentary} offert${k.complimentary > 1 ? 's' : ''}</span>`;
     $('kpiTrials').textContent = k.trials;
     $('kpiTrialsFoot').innerHTML = `<span>${k.trialsEndingSoon} finissent sous 7 jours</span>`;
     $('kpiRisk').textContent = k.paymentRisks;
@@ -783,6 +783,7 @@
   function renderSupport(audit) {
     const items = [];
     DATA.orgs.forEach(o => {
+      if (o.request) items.push([o, `Demande de passage à ${o.request.label} (${o.request.cycle === 'YEARLY' ? 'annuel' : 'mensuel'}) à valider`, '#4e87c7']);
       if (o.health.label === 'Fichiers inaccessibles') items.push([o, 'Fichiers du cabinet inaccessibles depuis le serveur', '#ce5a64']);
       if (o.usersInvited) items.push([o, `${o.usersInvited} invitation(s) en attente`, '#4e87c7']);
       if (o.health.key === 'risk' && o.health.label !== 'Fichiers inaccessibles') items.push([o, 'Aucune activité depuis plus de 30 jours', '#ce5a64']);
@@ -805,9 +806,14 @@
   function renderSettings() {
     const s = DATA.settings;
     $('meLine').textContent = s.me ? `${s.me.displayName || ''} ${s.me.email}`.trim() : '';
-    $('settingsForm').innerHTML = s.plans.map(p => `<label class="adm-field"><span>${esc(p.label)} (${p.id}) · € / mois</span><input class="adm-input" inputmode="decimal" data-price="${p.id}" value="${esc(p.price)}" placeholder="Non fixé"></label>`).join('') +
+    $('settingsForm').innerHTML = s.plans.map(p => `<label class="adm-field"><span>${esc(p.label)} (${p.id}) · € / mois</span><input class="adm-input" inputmode="decimal" data-price="${p.id}" value="${esc(p.price)}" placeholder="${p.defaultPrice}"></label>`).join('') +
       `<label class="adm-field"><span>Durée de l’essai gratuit (jours)</span><input class="adm-input" type="number" min="1" max="90" id="trialDays" value="${s.trialDays}"></label>
-       <p style="margin:0;font-size:12px;color:#849095">Ouverture de cabinet par les clients eux-mêmes : ${s.signupOpen ? 'active (code SIGNUP_CODE)' : 'fermée'}. Appli : ${esc(s.appUrl)}</p>
+       <label class="adm-field"><span>Places au tarif fondateur (Pro à ${eur(s.founder.price)})</span><input class="adm-input" type="number" min="0" id="founderLimit" value="${s.founder.limit}"></label>
+       <label class="adm-field"><span>Inscription des nouveaux cabinets</span><select class="adm-input" id="signupMode">
+         <option value="OPEN" ${s.signupMode === 'OPEN' ? 'selected' : ''}>Ouverte à tous (vérification par email)</option>
+         <option value="CODE" ${s.signupMode === 'CODE' ? 'selected' : ''}>Sur code d’ouverture (SIGNUP_CODE)</option>
+         <option value="CLOSED" ${s.signupMode === 'CLOSED' ? 'selected' : ''}>Fermée (clients créés depuis l’Admin)</option></select></label>
+       <p style="margin:0;font-size:12px;color:#849095">Appli : ${esc(s.appUrl)}</p>
        <div class="adm-actions"><button class="primary-btn" type="submit">Enregistrer</button></div>`;
     $('adminsTable').innerHTML = s.admins.map(a => `<tr><td>${esc(a.email)}</td><td>${esc(a.displayName)}</td><td><span class="pill ${a.active ? 'success' : 'warning'}">${a.active ? 'Actif' : 'Inactif'}</span></td><td>${a.lastLoginAt ? ago(a.lastLoginAt) : 'Jamais'}</td></tr>`).join('');
   }
@@ -825,12 +831,15 @@
     const opt = (list, cur) => list.map(x => `<option value="${x.id}" ${x.id === cur ? 'selected' : ''}>${esc(x.label)}</option>`).join('');
     $('drawerBody').innerHTML = `
       <div class="detail-block"><div class="detail-label">Responsable</div><div class="detail-value" style="margin-top:6px">${esc(o.ownerEmail)}</div><div style="font-size:12px;color:#849095;margin-top:4px">Inscrit le ${dShort(o.createdAt)}</div></div>
+      ${o.request ? `<div class="detail-block" style="background:#EEF6FF;border-radius:14px;padding:14px"><div class="detail-label">Demande du client</div><p style="margin:6px 0 10px;font-size:13px">Passage à <strong>${esc(o.request.label)}</strong> (${o.request.cycle === 'YEARLY' ? 'annuel' : 'mensuel'}), demandé ${esc(ago(o.request.at)).toLowerCase()}.</p><div class="adm-actions"><button class="primary-btn" type="button" id="applyReq">Valider : passer en ${esc(o.request.label)}</button><button class="ghost-btn" type="button" id="dropReq">Refuser</button></div></div>` : ''}
       <div class="detail-block"><div class="detail-label">Abonnement</div>
         <form class="adm-form" id="subForm" style="margin-top:10px">
           <label class="adm-field"><span>Offre</span><select class="adm-input" id="fPlan">${opt(s.plans, o.planId)}</select></label>
           <label class="adm-field"><span>Statut</span><select class="adm-input" id="fStatus">${opt(s.statuses, o.subscriptionStatus)}</select></label>
           <label class="adm-field"><span>Fin d’essai</span><input class="adm-input" type="date" id="fTrial" value="${esc(o.trialEndsAt)}"></label>
           <label class="adm-field"><span>Prochaine échéance</span><input class="adm-input" type="date" id="fPeriod" value="${esc(o.currentPeriodEnd)}"></label>
+          <label class="adm-field"><span>Facturation</span><select class="adm-input" id="fCycle"><option value="MONTHLY" ${o.billingCycle !== 'YEARLY' ? 'selected' : ''}>Mensuelle</option><option value="YEARLY" ${o.billingCycle === 'YEARLY' ? 'selected' : ''}>Annuelle</option></select></label>
+          <label class="adm-check"><input type="checkbox" id="fFounder" ${o.founder ? 'checked' : ''}> Tarif fondateur (Pro à ${eur(s.founder.price)} / mois, ${s.founder.used} / ${s.founder.limit} utilisés)</label>
           <label class="adm-check"><input type="checkbox" id="fFree" ${o.complimentary ? 'checked' : ''}> Compte offert : accès complet, jamais facturé, exclu du MRR</label>
           <label class="adm-field"><span>Note interne</span><textarea class="adm-input" id="fNote" maxlength="500">${esc(o.adminNote)}</textarea></label>
           <div class="adm-actions"><button class="primary-btn" type="submit">Enregistrer</button>
@@ -847,11 +856,13 @@
       <div class="detail-block"><div class="detail-label">Historique admin</div><div class="audit" style="margin-top:8px">${auditHtml(o.audit)}</div></div>
       <div class="privacy-note"><strong>Confidentialité :</strong> le Super Admin voit les données commerciales et des compteurs. Jamais l’identité des patients, les consultations ni les notes cliniques.</div>`;
     const save = async patch => { await run(() => call('adminUpdateSubscription', o.id, patch), 'Abonnement mis à jour.'); await load(true); openClient(o.id); };
-    $('subForm').onsubmit = e => { e.preventDefault(); const free = $('fFree').checked; save({planId:$('fPlan').value, subscriptionStatus:free && $('fStatus').value === 'TRIALING' ? 'ACTIVE' : $('fStatus').value, trialEndsAt:$('fTrial').value, currentPeriodEnd:$('fPeriod').value, adminNote:$('fNote').value, complimentary:free}); };
+    $('subForm').onsubmit = e => { e.preventDefault(); const free = $('fFree').checked; save({planId:$('fPlan').value, subscriptionStatus:free && $('fStatus').value === 'TRIALING' ? 'ACTIVE' : $('fStatus').value, trialEndsAt:$('fTrial').value, currentPeriodEnd:$('fPeriod').value, adminNote:$('fNote').value, complimentary:free, founder:$('fFounder').checked, billingCycle:$('fCycle').value}); };
     $('drawerBody').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => {
       if (b.dataset.sub === 'SUSPENDED' && !confirm(`Suspendre ${o.name} ? Toute l’équipe du cabinet sera déconnectée immédiatement.`)) return;
       save({subscriptionStatus:b.dataset.sub});
     });
+    if ($('applyReq')) $('applyReq').onclick = () => save({planId:o.request.planId, subscriptionStatus:'ACTIVE', billingCycle:o.request.cycle, trialEndsAt:'', founder:o.request.planId === s.founder.plan && s.founder.used < s.founder.limit ? true : o.founder, clearRequest:true});
+    if ($('dropReq')) $('dropReq').onclick = () => save({clearRequest:true});
     if ($('resendBtn')) $('resendBtn').onclick = async () => { const r = await run(() => call('adminResendOwnerInvite', o.id)); $('resendBox').innerHTML = linkBox(r.link); };
     openDrawer();
   }
@@ -914,7 +925,7 @@
   $('settingsForm').addEventListener('submit', async e => {
     e.preventDefault();
     const prices = {}; document.querySelectorAll('[data-price]').forEach(i => prices[i.dataset.price] = i.value.trim());
-    DATA.settings = await run(() => call('adminSaveSettings', {prices, trialDays:$('trialDays').value}), 'Paramètres enregistrés.');
+    DATA.settings = await run(() => call('adminSaveSettings', {prices, trialDays:$('trialDays').value, signupMode:$('signupMode').value, founderLimit:$('founderLimit').value}), 'Paramètres enregistrés.');
     load(true);
   });
   $('pwForm').addEventListener('submit', async e => {

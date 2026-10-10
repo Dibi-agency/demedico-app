@@ -2117,7 +2117,9 @@
         if (res && res.ok) return resolve(res.result);
         const err = new Error((res && res.error) || 'Erreur serveur.');
         err.code = (res && res.code) || '';
+        err.detail = (res && res.detail) || null;
         if (err.code === 'AUTH') dmSetToken('');
+        if (err.code === 'LIMIT' && typeof dmShowUpgrade === 'function') { dmShowUpgrade(err.message, err.detail); err.message = ''; }
         reject(err);
       };
       if (DM_IN_GAS) {
@@ -2671,6 +2673,387 @@
       showLoading(false);
     }
   }
+</script>
+
+<!-- ═════════════════════════════════════════════════════════════════════════
+     Demédico · Abonnement et facturation (v0.7.0)
+     Offres Free / Starter / Pro / Cabinet, usage, limites, demandes de changement.
+     Aucun moyen de paiement affiché tant qu'aucun prestataire n'est branché.
+     ═════════════════════════════════════════════════════════════════════════ -->
+<style>
+  .bl-wrap { display:grid; gap:18px; }
+  .bl-banner { display:flex; align-items:flex-start; gap:12px; padding:14px 16px; border-radius:16px; border:1px solid var(--line); background:var(--surface); font-size:12.5px; line-height:1.5; color:var(--text-2); }
+  .bl-banner strong { color:var(--text); }
+  .bl-banner.info { background:#EEF6FF; border-color:#D7E7FA; }
+  .bl-banner.warn { background:var(--warning-soft); border-color:#EED9BE; color:#6D4B22; }
+  .bl-banner.danger { background:var(--danger-soft); border-color:#EBCFD2; color:#7A3138; }
+  .bl-banner.ok { background:var(--success-soft); border-color:#CDE8D9; }
+  .bl-banner .spacer { flex:1; }
+  .bl-dot { width:9px; height:9px; border-radius:50%; margin-top:5px; flex:0 0 9px; background:currentColor; opacity:.7; }
+  .bl-top { display:grid; grid-template-columns:1.25fr 1fr .9fr; gap:16px; }
+  .bl-card { background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:22px; box-shadow:0 1px 1px rgba(20,34,38,.015); min-width:0; }
+  .bl-plan-head { display:flex; align-items:flex-start; gap:14px; }
+  .bl-crown { width:52px; height:52px; border-radius:16px; display:grid; place-items:center; flex:0 0 52px; background:#FFF4DF; color:#B67A22; }
+  .bl-crown svg { width:24px; height:24px; }
+  .bl-eyebrow { font-size:11px; color:var(--text-3); font-weight:700; }
+  .bl-plan-name { font-size:26px; font-weight:800; letter-spacing:-.04em; margin-top:2px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .bl-badge { font-size:10px; font-weight:800; padding:4px 8px; border-radius:999px; background:#FFF4DF; color:#9A6418; letter-spacing:0; }
+  .bl-badge.teal { background:var(--primary-soft); color:var(--primary); }
+  .bl-price { margin-top:18px; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .bl-price b { font-size:34px; letter-spacing:-.05em; }
+  .bl-price span { color:var(--text-2); font-size:14px; font-weight:700; }
+  .bl-price s { color:var(--text-3); font-size:13px; }
+  .bl-pct { font-size:11px; font-weight:800; color:#B0661C; background:#FFF0DF; padding:3px 7px; border-radius:8px; }
+  .bl-sub { color:var(--text-3); font-size:12px; margin-top:6px; }
+  .bl-actions { display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+  .bl-actions .btn { min-height:44px; padding:0 18px; }
+  .bl-title { font-size:15px; font-weight:800; letter-spacing:-.02em; margin:0; }
+  .bl-gauge { display:grid; grid-template-columns:38px 1fr; gap:12px; align-items:center; margin-top:16px; }
+  .bl-gauge-ico { width:38px; height:38px; border-radius:12px; background:var(--primary-soft); color:var(--primary); display:grid; place-items:center; }
+  .bl-gauge-ico svg { width:17px; height:17px; }
+  .bl-gauge-top { display:flex; justify-content:space-between; font-size:12px; font-weight:700; gap:10px; }
+  .bl-gauge-top span:last-child { color:var(--text-2); font-weight:700; white-space:nowrap; }
+  .bl-bar { height:7px; border-radius:999px; background:var(--surface-3); margin-top:8px; overflow:hidden; }
+  .bl-bar i { display:block; height:100%; border-radius:999px; background:var(--primary); transition:width .4s var(--ease); }
+  .bl-bar i.warn { background:#D79834; } .bl-bar i.full { background:var(--danger); }
+  .bl-pay { display:grid; gap:12px; font-size:12.5px; color:var(--text-2); line-height:1.55; }
+  .bl-pay .bl-lock { display:flex; gap:10px; align-items:flex-start; padding:12px; border-radius:12px; background:var(--surface-2); border:1px solid var(--line); }
+  .bl-section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .bl-h2 { margin:0; font-size:22px; letter-spacing:-.04em; }
+  .bl-toggle { display:inline-flex; padding:4px; border-radius:12px; background:var(--surface-3); gap:4px; }
+  .bl-toggle button { border:0; background:transparent; padding:8px 14px; border-radius:9px; font-size:12px; font-weight:800; color:var(--text-2); display:flex; align-items:center; gap:6px; }
+  .bl-toggle button.active { background:var(--primary); color:#fff; }
+  .bl-toggle em { font-style:normal; font-size:10px; background:#E3F5EC; color:var(--success); padding:2px 6px; border-radius:7px; }
+  .bl-toggle button.active em { background:rgba(255,255,255,.18); color:#fff; }
+  .bl-plans { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-top:16px; align-items:stretch; }
+  .bl-offer { position:relative; display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:22px 20px; min-width:0; }
+  .bl-offer.reco { border:2px solid var(--primary); background:linear-gradient(180deg,#F5FBFA 0%, #FFFFFF 46%); box-shadow:0 18px 50px rgba(36,135,128,.12); }
+  .bl-offer.current { box-shadow:inset 0 0 0 2px var(--primary-soft); }
+  .bl-ribbon { position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--primary); color:#fff; font-size:10.5px; font-weight:800; padding:5px 12px; border-radius:999px; white-space:nowrap; }
+  .bl-offer-name { font-size:13px; font-weight:900; letter-spacing:.08em; }
+  .bl-offer-price { margin-top:10px; display:flex; align-items:baseline; gap:4px; flex-wrap:wrap; }
+  .bl-offer-price b { font-size:30px; letter-spacing:-.05em; }
+  .bl-offer-price span { font-size:13px; color:var(--text-2); font-weight:700; }
+  .bl-offer-note { font-size:11px; color:var(--text-3); min-height:16px; margin-top:2px; }
+  .bl-offer-note.gold { color:#9A6418; font-weight:700; }
+  .bl-offer-tag { font-size:12px; color:var(--text-2); margin:10px 0 14px; line-height:1.45; min-height:34px; }
+  .bl-list { list-style:none; padding:0; margin:0 0 18px; display:grid; gap:8px; font-size:12.5px; color:var(--text); flex:1; }
+  .bl-list li { display:grid; grid-template-columns:16px 1fr; gap:8px; align-items:start; line-height:1.35; }
+  .bl-list li svg { width:15px; height:15px; color:var(--success); margin-top:1px; }
+  .bl-list li.soon { color:var(--text-3); }
+  .bl-offer .btn { width:100%; min-height:44px; }
+  .bl-extra { font-size:11px; color:var(--text-3); margin:-8px 0 14px; }
+  .bl-launch { display:grid; grid-template-columns:52px 1fr minmax(180px,260px) auto; gap:16px; align-items:center; padding:18px 20px; border-radius:18px; background:linear-gradient(90deg,#FFF8EC,#FFFDF8); border:1px solid #F2E2C4; }
+  .bl-launch .bl-crown { background:#FFEBC8; }
+  .bl-launch-txt strong { display:block; font-size:14px; }
+  .bl-launch-txt span { font-size:12px; color:var(--text-2); }
+  .bl-launch-meter { font-size:11px; color:var(--text-2); font-weight:700; text-align:right; }
+  .bl-launch-meter .bl-bar { margin-top:6px; } .bl-launch-meter .bl-bar i { background:#D79834; }
+  .bl-places { font-size:11.5px; font-weight:800; color:#B0661C; background:#FFEEDC; padding:8px 12px; border-radius:12px; white-space:nowrap; }
+  .bl-reassure { display:flex; flex-wrap:wrap; gap:8px 22px; font-size:12px; color:var(--text-3); justify-content:center; padding:4px 0 8px; }
+  .bl-reassure span::before { content:"✓ "; color:var(--success); font-weight:800; }
+  .bl-mini { margin:0 10px 12px; padding:13px; border-radius:16px; border:1px solid var(--line); background:var(--surface); }
+  .bl-mini-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .bl-mini-top strong { font-size:12.5px; }
+  .bl-mini .bl-bar { margin-top:10px; height:5px; }
+  .bl-mini small { display:block; color:var(--text-3); font-size:10.5px; margin-top:6px; }
+  .bl-mini button { margin-top:10px; width:100%; }
+  .bl-up-ico { width:56px; height:56px; border-radius:18px; display:grid; place-items:center; background:#FFF4DF; color:#B67A22; margin-bottom:12px; }
+  .bl-up-ico svg { width:26px; height:26px; }
+  .bl-up-compare { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  .bl-up-compare div { padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--surface-2); font-size:12px; }
+  .bl-up-compare div.target { border-color:var(--primary); background:#F5FBFA; }
+  .bl-up-compare b { display:block; font-size:13px; margin-bottom:4px; }
+  .bl-lockchip { display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:800; color:#9A6418; background:#FFF4DF; padding:3px 7px; border-radius:7px; }
+  @media (max-width:1180px) { .bl-top { grid-template-columns:1fr 1fr; } .bl-top > :last-child { grid-column:1 / -1; } .bl-plans { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:820px) { .bl-launch { grid-template-columns:44px 1fr; } .bl-launch-meter, .bl-places { grid-column:1 / -1; text-align:left; } }
+  @media (max-width:640px) { .bl-top, .bl-plans { grid-template-columns:1fr; } .bl-offer.reco { order:-1; } .bl-plan-name { font-size:22px; } .bl-price b { font-size:30px; } .bl-card { padding:18px; } }
+</style>
+
+<script>
+  // ── Données de présentation des offres (textes produit) ────────────────────
+  const BL_COPY = {
+    FREE:{tag:'Pour découvrir Demédico sereinement.', items:['1 utilisateur','20 patients actifs','30 rendez-vous par mois','Agenda','Fiches patients','Tâches','Tableau de bord'], soon:[]},
+    STARTER:{tag:'Pour les praticiens indépendants.', items:['1 utilisateur','150 patients','Rendez-vous illimités','Consultations et notes cliniques','Tâches','Statistiques simples'], soon:['Exports']},
+    PRO:{tag:'L’offre la plus complète pour développer ton activité.', items:['2 utilisateurs','Patients illimités','Rendez-vous illimités','Statistiques complètes','Google Agenda et Outlook','Support prioritaire'], soon:['Exports avancés','Automatisations']},
+    CABINET_PLUS:{tag:'Pour les cabinets et les équipes.', items:['5 utilisateurs inclus','Multi-praticiens','Gestion des rôles (secrétariat)','Statistiques du cabinet','Gestion centralisée','Support dédié'], soon:['Plusieurs agendas','Exports']}
+  };
+  const BL_STATUS = {
+    TRIALING:['Essai','info'], ACTIVE:['Actif','success'], PAST_DUE:['Paiement en attente','danger'], CANCELED:['Résilié','warning'], SUSPENDED:['Suspendu','danger'], TRIAL_ENDED:['Essai terminé','warning']
+  };
+  const BL_ICON = {
+    crown:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 11H5L3 7Z"/></svg>',
+    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12.5 4.2 4.2L19 7"/></svg>',
+    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a5.5 5.5 0 0 1 3.5 6"/></svg>',
+    cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+    user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+    lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+    gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8S10.5 3 7.5 4.5 9 8 12 8Zm0 0s1.5-5 4.5-3.5S15 8 12 8Z"/></svg>'
+  };
+  ICONS.plug = ICONS.plug || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 7V3M15 7V3M7 7h10v4a5 5 0 0 1-10 0V7ZM12 16v5"/></svg>';
+  ICONS.shield = ICONS.shield || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"/></svg>';
+  ICONS.link = ICONS.link || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>';
+  ICONS.crown = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 11H5L3 7Z"/></svg>';
+  VIEW_META.billing = ['Abonnement', 'Ton offre, ton utilisation et les offres disponibles.'];
+  const blState = {cycle:'MONTHLY'};
+
+  const blEur = n => Number(n || 0).toLocaleString('fr-FR', {minimumFractionDigits:n % 1 ? 2 : 0, maximumFractionDigits:2}) + ' €';
+  const blDate = v => { if (!v) return ''; const d = new Date(String(v).length === 10 ? v + 'T12:00:00' : v); return isNaN(d) ? '' : d.toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'}); };
+  const blDays = v => { const d = new Date(String(v) + 'T12:00:00'); return isNaN(d) ? null : Math.ceil((d - Date.now()) / 864e5); };
+  function blData() { return (state.data && state.data.billing) || null; }
+  function blPlan(id) { const b = blData(); return b && b.catalog.plans.find(p => p.id === id); }
+
+  // ── Injection : menu, vue, mini-carte, fenêtre de limite ──────────────────
+  (function blInject() {
+    const nav = document.getElementById('desktopNav');
+    if (nav && !nav.querySelector('[data-view="billing"]')) {
+      const btn = document.createElement('button');
+      btn.className = 'nav-btn'; btn.dataset.view = 'billing';
+      btn.innerHTML = '<span data-icon="crown"></span><span>Abonnement</span>';
+      const settingsBtn = nav.querySelector('[data-view="settings"]');
+      nav.insertBefore(btn, settingsBtn || null);
+    }
+    const content = document.querySelector('.content');
+    if (content && !document.getElementById('view-billing')) {
+      const sec = document.createElement('section');
+      sec.id = 'view-billing'; sec.className = 'section';
+      sec.innerHTML = '<div class="bl-wrap" id="blRoot"></div>';
+      content.appendChild(sec);
+    }
+    const settings = document.getElementById('view-settings');
+    if (settings && !document.getElementById('blSettingsCard')) {
+      settings.insertAdjacentHTML('afterbegin', '<section class="panel" id="blSettingsCard" style="margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap"><div class="bl-crown" style="width:42px;height:42px;flex-basis:42px">' + BL_ICON.crown + '</div><div style="flex:1;min-width:180px"><h3 class="panel-title">Abonnement</h3><p class="panel-sub" id="blSettingsLine">Ton offre et ton utilisation.</p></div><button class="btn btn-primary" onclick="navigate(\'billing\')">Gérer mon abonnement</button></section>');
+    }
+    const sideCard = document.querySelector('.sidebar .side-card');
+    if (sideCard && !document.getElementById('blMini')) sideCard.insertAdjacentHTML('beforebegin', '<div class="bl-mini" id="blMini" hidden></div>');
+    if (!document.getElementById('upgradeModal')) {
+      document.body.insertAdjacentHTML('beforeend', '<section id="upgradeModal" class="modal" aria-hidden="true"><div class="modal-head"><div><div class="eyebrow">Limite de ton offre</div><h2 class="drawer-title" id="upTitle">Passe à l’offre supérieure</h2></div><button class="icon-btn" onclick="closeModal()" aria-label="Fermer"><span data-icon="x"></span></button></div><div class="modal-body" id="upBody"></div><div class="modal-foot" id="upFoot"></div></section>');
+    }
+  })();
+
+  // ── Fenêtre « limite atteinte » / « fonction verrouillée » ─────────────────
+  function dmShowUpgrade(message, detail) {
+    const d = detail || {}, b = blData();
+    const cur = blPlan(d.current) || {label:'actuelle'}, tgt = blPlan(d.target) || blPlan('PRO');
+    const isAdmin = dmIsAdmin();
+    const what = d.kind === 'patients' ? 'patients actifs' : d.kind === 'appointments' ? 'rendez-vous ce mois-ci' : d.kind === 'users' ? 'utilisateurs' : '';
+    const lim = p => d.kind === 'patients' ? (p.patients === null ? 'Illimités' : p.patients + ' patients') : d.kind === 'appointments' ? (p.apptsPerMonth === null ? 'Illimités' : p.apptsPerMonth + ' / mois') : d.kind === 'users' ? p.users + ' utilisateur' + (p.users > 1 ? 's' : '') : (p.features && p.features.indexOf(d.feature) >= 0 ? 'Inclus' : 'Non inclus');
+    document.getElementById('upTitle').textContent = d.kind === 'feature' ? 'Fonction réservée à l’offre ' + tgt.label : 'Tu as atteint la limite de ton offre';
+    document.getElementById('upBody').innerHTML =
+      '<div class="bl-up-ico">' + (d.kind === 'feature' ? BL_ICON.lock : BL_ICON.crown) + '</div>' +
+      '<p style="margin:0;font-size:13px;line-height:1.6;color:var(--text-2)">' + escapeHtml(message || '') + '</p>' +
+      '<p style="margin:10px 0 0;font-size:12px;color:var(--text-3)">Tes données restent intactes. ' + (what ? 'Tu peux aussi libérer de la place (patients inactifs, rendez-vous annulés).' : '') + '</p>' +
+      '<div class="bl-up-compare"><div><b>' + escapeHtml(cur.label) + '</b>' + escapeHtml(lim(cur)) + '<br><small style="color:var(--text-3)">Ton offre</small></div><div class="target"><b>' + escapeHtml(tgt.label) + '</b>' + escapeHtml(lim(tgt)) + '<br><small style="color:var(--primary);font-weight:800">' + blEur(tgt.price) + ' / mois</small></div></div>' +
+      (isAdmin ? '' : '<p style="margin:14px 0 0;font-size:12px;color:var(--text-3)">Seul l’administrateur du cabinet peut changer d’offre : préviens-le.</p>');
+    document.getElementById('upFoot').innerHTML = '<button class="btn" onclick="closeModal()">Plus tard</button><button class="btn" onclick="closeModal();navigate(\'billing\')">Comparer les offres</button>' +
+      (isAdmin && tgt.id ? '<button class="btn btn-primary" onclick="closeModal();blRequest(\'' + tgt.id + '\')">Passer à ' + escapeHtml(tgt.label) + '</button>' : '');
+    openModal('upgradeModal');
+  }
+  const blBaseToast = toast;
+  toast = function (message, type) { if (message) return blBaseToast(message, type); };
+
+  // ── Page Abonnement et facturation ─────────────────────────────────────────
+  function blGauge(icon, label, used, limit) {
+    const pct = limit ? Math.min(100, Math.round(used / limit * 100)) : Math.min(100, used ? 12 : 0);
+    const cls = limit && used > limit ? 'full' : limit && pct >= 80 ? 'warn' : '';
+    return '<div class="bl-gauge"><div class="bl-gauge-ico">' + icon + '</div><div><div class="bl-gauge-top"><span>' + label + '</span><span>' + used + ' / ' + (limit ? limit : 'Illimités') + '</span></div><div class="bl-bar"><i class="' + cls + '" style="width:' + (limit ? pct : 100) + '%;' + (limit ? '' : 'opacity:.35') + '"></i></div></div></div>';
+  }
+
+  function blBanner(s) {
+    const days = s.trialEndsAt ? blDays(s.trialEndsAt) : null;
+    let html = '';
+    if (s.complimentary) html += '<div class="bl-banner ok"><span class="bl-dot" style="color:var(--success)"></span><div><strong>Compte offert.</strong> Tu profites de l’offre ' + escapeHtml(s.planLabel) + ' gratuitement.</div></div>';
+    else if (s.status === 'TRIALING') html += '<div class="bl-banner info"><span class="bl-dot" style="color:#4e87c7"></span><div><strong>Essai ' + escapeHtml(s.planLabel) + ' : ' + (days !== null ? Math.max(0, days) + ' jour' + (days > 1 ? 's' : '') + ' restant' + (days > 1 ? 's' : '') : 'en cours') + '.</strong> À la fin de l’essai, ton cabinet passe automatiquement en Free, sans perte de données.</div></div>';
+    else if (s.status === 'TRIAL_ENDED') html += '<div class="bl-banner warn"><span class="bl-dot"></span><div><strong>Ton essai est terminé.</strong> Ton cabinet est passé en Free. Toutes tes données sont conservées : choisis une offre pour retrouver toutes les fonctions.</div></div>';
+    else if (s.status === 'PAST_DUE') html += '<div class="bl-banner danger"><span class="bl-dot"></span><div><strong>Paiement en attente.</strong> Ton accès reste ouvert. Demédico te contacte pour régulariser.</div></div>';
+    else if (s.status === 'CANCELED') html += '<div class="bl-banner warn"><span class="bl-dot"></span><div><strong>Abonnement résilié.</strong> Ton cabinet fonctionne en Free. Tes données sont conservées.</div></div>';
+    if (s.request) {
+      const p = blPlan(s.request.planId);
+      html += '<div class="bl-banner info"><span class="bl-dot" style="color:#4e87c7"></span><div><strong>Demande envoyée : passage à ' + escapeHtml(p ? p.label : s.request.planId) + ' (' + (s.request.cycle === 'YEARLY' ? 'annuel' : 'mensuel') + ').</strong> Demédico te contacte pour finaliser. Tu gardes ton offre actuelle d’ici là.</div><div class="spacer"></div>' + (s.canManage ? '<button class="btn btn-sm" onclick="blCancelRequest()">Annuler la demande</button>' : '') + '</div>';
+    }
+    return html;
+  }
+
+  function blOfferCta(s, p) {
+    if (p.id === s.planId && s.status !== 'TRIALING') return '<button class="btn btn-primary" disabled>' + BL_ICON.check.replace('<svg', '<svg style="width:16px;height:16px"') + ' Ton offre actuelle</button>';
+    if (!s.canManage) return '<button class="btn" disabled>Réservé à l’administrateur</button>';
+    if (s.complimentary) return '<button class="btn" disabled>Compte offert</button>';
+    if (s.request && s.request.planId === p.id) return '<button class="btn" disabled>Demande envoyée</button>';
+    const cur = blPlan(s.planId), up = !cur || p.price > cur.price || (s.status === 'TRIALING' && p.id === s.planId);
+    if (p.id === 'FREE') return '<button class="btn" onclick="blRequest(\'FREE\')">Passer en Free</button>';
+    if (s.status === 'TRIALING' && p.id === s.planId) return '<button class="btn btn-primary" onclick="blRequest(\'' + p.id + '\')">Garder ' + escapeHtml(p.label) + ' après l’essai</button>';
+    return '<button class="btn ' + (p.id === 'PRO' || up ? 'btn-primary' : '') + '" onclick="blRequest(\'' + p.id + '\')">' + (up ? 'Passer à ' : 'Choisir ') + escapeHtml(p.label) + '</button>';
+  }
+
+  function blRender() {
+    const root = document.getElementById('blRoot'), b = blData();
+    if (!root || !b) return;
+    const s = b.subscription, c = b.catalog, u = s.usage;
+    const founderOpen = c.founder.remaining > 0;
+    const status = BL_STATUS[s.status] || ['Actif', 'success'];
+    const cycle = blState.cycle;
+    const periodTxt = s.complimentary ? 'Offert par Demédico' : s.status === 'TRIALING' && s.trialEndsAt ? 'Fin de l’essai le ' + blDate(s.trialEndsAt) : s.currentPeriodEnd ? 'Renouvellement le ' + blDate(s.currentPeriodEnd) : s.planId === 'FREE' ? 'Gratuit, sans engagement' : 'Échéance communiquée par Demédico';
+    const showList = s.founder && s.planId === 'PRO' && s.listPrice > s.price;
+
+    root.innerHTML = blBanner(s) +
+      '<div class="bl-top">' +
+        '<article class="bl-card"><div class="bl-plan-head"><div class="bl-crown">' + BL_ICON.crown + '</div><div style="flex:1;min-width:0"><div class="bl-eyebrow">Ton abonnement</div><div class="bl-plan-name">Demédico ' + escapeHtml(s.planLabel) + (s.founder ? ' <span class="bl-badge">Tarif fondateur</span>' : '') + '</div></div><span class="chip ' + status[1] + '">' + status[0] + '</span></div>' +
+          '<div class="bl-price"><b>' + blEur(s.price) + '</b><span>/ mois</span>' + (showList ? '<s>' + blEur(s.listPrice) + '</s><span class="bl-pct">−' + Math.round((1 - s.price / s.listPrice) * 100) + ' %</span>' : '') + '</div>' +
+          '<div class="bl-sub">' + periodTxt + (s.founder ? ' · tarif conservé tant que l’abonnement reste actif' : '') + '</div>' +
+          '<div class="bl-actions">' + (s.canManage ? '<button class="btn btn-primary" onclick="document.getElementById(\'blPlans\').scrollIntoView({behavior:\'smooth\'})">Changer d’offre</button>' : '<span class="help">Seul l’administrateur du cabinet peut changer d’offre.</span>') + '</div></article>' +
+        '<article class="bl-card"><h3 class="bl-title">Ton utilisation</h3><div class="bl-sub">Ce mois-ci</div>' +
+          blGauge(BL_ICON.users, 'Patients actifs', u.patients, s.limits.patients) +
+          blGauge(BL_ICON.cal, 'Rendez-vous ce mois', u.appointmentsThisMonth, s.limits.apptsPerMonth) +
+          blGauge(BL_ICON.user, 'Utilisateurs', u.users, s.planId === 'CABINET_PLUS' ? null : s.limits.users) + '</article>' +
+        '<article class="bl-card"><h3 class="bl-title">Paiement</h3><div class="bl-pay" style="margin-top:12px">' +
+          '<div class="bl-lock"><span style="color:var(--primary);display:grid;place-items:center">' + BL_ICON.lock.replace('<svg', '<svg style="width:18px;height:18px"') + '</span><div><strong style="color:var(--text)">Paiement en ligne bientôt disponible.</strong><br>Pour une offre payante, Demédico te contacte pour finaliser ton abonnement.</div></div>' +
+          '<div>Aucune carte bancaire n’est enregistrée dans Demédico.</div></div></article>' +
+      '</div>' +
+      '<section id="blPlans"><div class="bl-section-head"><div><h2 class="bl-h2">Choisis l’offre adaptée à ton activité</h2><p class="panel-sub" style="font-size:12.5px">Tu peux changer de formule à tout moment. Tes données restent toujours intactes.</p></div>' +
+        '<div class="bl-toggle"><button class="' + (cycle === 'MONTHLY' ? 'active' : '') + '" onclick="blCycle(\'MONTHLY\')">Mensuel</button><button class="' + (cycle === 'YEARLY' ? 'active' : '') + '" onclick="blCycle(\'YEARLY\')">Annuel <em>2 mois offerts</em></button></div></div>' +
+        '<div class="bl-plans">' + c.plans.map(p => {
+          const copy = BL_COPY[p.id], reco = p.id === 'PRO';
+          const founderHere = reco && (founderOpen || s.founder) && cycle === 'MONTHLY';
+          const price = cycle === 'YEARLY' ? p.annualPrice : p.price;
+          const note = p.price === 0 ? 'Gratuit, pour toujours' : cycle === 'YEARLY' ? 'soit ' + blEur(Math.round(p.annualPrice / 12 * 100) / 100) + ' / mois' : founderHere ? blEur(c.founder.price) + ' / mois en tarif fondateur' : '';
+          return '<article class="bl-offer' + (reco ? ' reco' : '') + (p.id === s.planId ? ' current' : '') + '">' + (reco ? '<div class="bl-ribbon">Offre recommandée</div>' : '') +
+            '<div class="bl-offer-name">' + escapeHtml(p.label.toUpperCase()) + '</div>' +
+            '<div class="bl-offer-price"><b>' + blEur(price) + '</b><span>/ ' + (cycle === 'YEARLY' && p.price ? 'an' : 'mois') + '</span></div>' +
+            '<div class="bl-offer-note' + (founderHere ? ' gold' : '') + '">' + note + '</div>' +
+            '<div class="bl-offer-tag">' + copy.tag + '</div>' +
+            '<ul class="bl-list">' + copy.items.map(t => '<li>' + BL_ICON.check + '<span>' + t + '</span></li>').join('') + copy.soon.map(t => '<li class="soon">' + BL_ICON.check.replace('currentColor', '#B7C2C5') + '<span>' + t + ' <small>(bientôt)</small></span></li>').join('') + '</ul>' +
+            (p.extraUserPrice ? '<div class="bl-extra">Utilisateur supplémentaire : ' + blEur(p.extraUserPrice) + ' / mois</div>' : '') +
+            blOfferCta(s, p) + '</article>';
+        }).join('') + '</div></section>' +
+      (founderOpen ? '<div class="bl-launch"><div class="bl-crown">' + BL_ICON.gift + '</div><div class="bl-launch-txt"><strong>Offre de lancement</strong><span>Pro à ' + blEur(c.founder.price) + ' / mois pour les ' + c.founder.limit + ' premiers cabinets. Ton tarif fondateur est conservé tant que ton abonnement reste actif.</span></div><div class="bl-launch-meter">' + c.founder.used + ' / ' + c.founder.limit + ' cabinets<div class="bl-bar"><i style="width:' + Math.round(c.founder.used / Math.max(1, c.founder.limit) * 100) + '%"></i></div></div><div class="bl-places">Plus que ' + c.founder.remaining + ' place' + (c.founder.remaining > 1 ? 's' : '') + '</div></div>' : '') +
+      '<div class="bl-reassure"><span>Sans engagement</span><span>Données conservées si tu changes d’offre</span><span>Aucune carte bancaire stockée</span><span>Changement d’offre à tout moment</span></div>';
+    renderIcons(root);
+  }
+
+  function blRenderMini() {
+    const box = document.getElementById('blMini'), b = blData();
+    const line = document.getElementById('blSettingsLine');
+    if (!b) { if (box) box.hidden = true; return; }
+    const s = b.subscription, st = BL_STATUS[s.status] || ['Actif', 'success'];
+    const lim = s.limits.patients, pct = lim ? Math.min(100, Math.round(s.usage.patients / lim * 100)) : 0;
+    if (box) {
+      box.hidden = false;
+      box.innerHTML = '<div class="bl-mini-top"><strong>Demédico ' + escapeHtml(s.planLabel) + '</strong><span class="chip ' + st[1] + '">' + st[0] + '</span></div>' +
+        (lim ? '<div class="bl-bar"><i class="' + (s.usage.patients > lim ? 'full' : pct >= 80 ? 'warn' : '') + '" style="width:' + pct + '%"></i></div><small>' + s.usage.patients + ' / ' + lim + ' patients actifs</small>' : '<small>Patients illimités</small>') +
+        '<button class="btn btn-sm" onclick="navigate(\'billing\')">' + (s.planId === 'FREE' || s.status === 'TRIALING' ? 'Voir les offres' : 'Gérer l’abonnement') + '</button>';
+    }
+    if (line) line.textContent = 'Offre ' + s.planLabel + ' · ' + st[0];
+  }
+
+  // Fonctions verrouillées : indication visuelle sur les agendas et la consultation.
+  function blMarkLocked() {
+    const b = blData(); if (!b) return;
+    const f = b.subscription.features;
+    if (f.indexOf('calendar_sync') < 0) {
+      document.querySelectorAll('#integrationGrid button[onclick*="configureGoogle"], #integrationGrid button[onclick*="configureMicrosoft"]').forEach(btn => {
+        btn.innerHTML = BL_ICON.lock.replace('<svg', '<svg style="width:14px;height:14px"') + ' Offre Pro';
+        btn.classList.remove('btn-primary');
+      });
+    }
+    const roleSel = document.getElementById('inviteRole');
+    if (roleSel && f.indexOf('roles') < 0) {
+      const opt = roleSel.querySelector('option[value="SECRETARY"]');
+      if (opt) { opt.disabled = true; opt.textContent = 'Secrétariat (offre Cabinet)'; }
+    }
+  }
+  const blBaseConsult = openConsultationModal;
+  openConsultationModal = function () {
+    const b = blData();
+    if (b && b.subscription.features.indexOf('consultations') < 0) {
+      return dmShowUpgrade('Les consultations et notes cliniques sont disponibles à partir de l’offre Starter.', {kind:'feature', feature:'consultations', current:b.subscription.planId, target:'STARTER'});
+    }
+    return blBaseConsult.apply(this, arguments);
+  };
+
+  async function blRequest(planId) {
+    const p = blPlan(planId); if (!p) return;
+    const cycle = planId === 'FREE' ? 'MONTHLY' : blState.cycle;
+    const msg = planId === 'FREE'
+      ? 'Passer en Free maintenant ? Tu garderas toutes tes données, avec les limites de l’offre Free.'
+      : 'Demander le passage à ' + p.label + ' (' + (cycle === 'YEARLY' ? 'annuel, ' + blEur(p.annualPrice) + ' / an' : 'mensuel, ' + blEur(p.price) + ' / mois') + ') ? Demédico te contactera pour finaliser. Rien n’est débité aujourd’hui.';
+    if (!confirm(msg)) return;
+    showLoading(true);
+    try {
+      const r = await gs('requestPlanChange', {planId, cycle});
+      state.data.billing = r.billing;
+      toast(r.message);
+      blRender(); blRenderMini();
+      if (r.immediate) await refreshData(true);
+    } catch (err) { toast(err.message, 'error'); }
+    finally { showLoading(false); }
+  }
+  async function blCancelRequest() {
+    showLoading(true);
+    try { state.data.billing = await gs('cancelPlanRequest'); toast('Demande annulée.'); blRender(); }
+    catch (err) { toast(err.message, 'error'); }
+    finally { showLoading(false); }
+  }
+  function blCycle(c) { blState.cycle = c; blRender(); }
+
+  const blBaseRenderAll = renderAll;
+  renderAll = function () {
+    blBaseRenderAll();
+    try {
+      blRender(); blRenderMini(); blMarkLocked();
+      document.querySelectorAll('.sidebar div').forEach(el => { if (el.children.length === 0 && /^DEMÉDICO v[0-9.]+$/i.test(el.textContent.trim()) && state.data.version) el.textContent = 'DEMÉDICO v' + state.data.version; });
+    } catch (e) { console.error(e); }
+  };
+
+  // ── Inscription libre : code de vérification par email ────────────────────
+  const blBaseOpenAuth = dmOpenAuth;
+  dmOpenAuth = async function (view, data) {
+    if (view !== 'signup') return blBaseOpenAuth(view, data);
+    let info = {};
+    try { info = await dmCall('appInfo', []); } catch (e) { info = {}; }
+    if (info.signupMode !== 'OPEN') return blBaseOpenAuth(view, data);
+    const box = document.getElementById('dmAuth'), body = document.getElementById('dmAuthBody');
+    document.getElementById('onboarding').hidden = true;
+    box.hidden = false;
+    const f = (id, label, type, extra) => '<div class="field"><label for="' + id + '">' + label + '</label><input id="' + id + '" type="' + (type || 'text') + '" ' + (extra || '') + '></div>';
+    body.innerHTML = '<h1 class="dm-auth-title">Créer ton cabinet</h1><p class="dm-auth-sub">Essai Pro offert pendant 14 jours, sans carte bancaire. Ensuite, Free reste gratuit pour toujours.</p>' +
+      (info.adoptable ? '<div class="dm-note warn" style="margin-top:14px">Des données Demédico existent déjà sur ce serveur : elles seront reprises dans ce premier cabinet.</div>' : '') +
+      '<form class="dm-auth-form" id="suForm">' +
+        f('suPractice', 'Nom du cabinet', 'text', 'maxlength="120" required placeholder="Cabinet Horizon"') +
+        f('suName', 'Ton nom affiché', 'text', 'maxlength="120" placeholder="Dr Martin"') +
+        f('suEmail', 'Email professionnel', 'email', 'autocomplete="username" required') +
+        '<div id="suStep2" hidden>' +
+          f('suCodeMail', 'Code reçu par email (6 chiffres)', 'text', 'inputmode="numeric" maxlength="6" autocomplete="one-time-code"') +
+          f('suPw', 'Mot de passe (8 caractères minimum)', 'password', 'autocomplete="new-password" minlength="8"') +
+          f('suPw2', 'Confirme le mot de passe', 'password', 'autocomplete="new-password" minlength="8"') +
+          '<label class="dm-check"><input id="suRemember" type="checkbox"> Rester connecté 30 jours (appareil personnel uniquement)</label>' +
+        '</div>' +
+        '<button class="btn btn-primary" type="submit" id="suSubmit">Recevoir mon code</button></form>' +
+      '<div class="dm-auth-links"><button type="button" class="dm-link" onclick="dmOpenAuth(\'login\')">J’ai déjà un compte</button></div>';
+    const form = document.getElementById('suForm');
+    let step = 1;
+    form.onsubmit = async e => {
+      e.preventDefault();
+      if (step === 1) {
+        showLoading(true);
+        try {
+          const r = await dmCall('requestSignupCode', [{email:dmVal('suEmail')}]);
+          toast(r.message);
+          step = 2;
+          document.getElementById('suStep2').hidden = false;
+          ['suCodeMail', 'suPw', 'suPw2'].forEach(id => document.getElementById(id).required = true);
+          document.getElementById('suEmail').readOnly = true;
+          document.getElementById('suSubmit').textContent = 'Créer mon cabinet';
+          setTimeout(() => document.getElementById('suCodeMail').focus(), 60);
+        } catch (err) { toast(err.message, 'error'); }
+        finally { showLoading(false); }
+        return;
+      }
+      if (dmVal('suPw') !== dmVal('suPw2')) return toast('Les deux mots de passe ne sont pas identiques.', 'error');
+      const remember = dmVal('suRemember');
+      dmAuthSubmit('createCabinet', {practiceName:dmVal('suPractice'), displayName:dmVal('suName'), email:dmVal('suEmail'), emailCode:dmVal('suCodeMail'), password:dmVal('suPw'), remember}, remember, 'Bienvenue sur Demédico. Ton essai Pro commence maintenant.');
+    };
+    setTimeout(() => document.getElementById('suPractice').focus(), 60);
+  };
 </script>
 
 </body>
