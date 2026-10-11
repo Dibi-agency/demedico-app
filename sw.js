@@ -1,8 +1,8 @@
-/* Demédico · service worker 38ac3ada0f
+/* Demédico · service worker 2be0ba9396
    Réseau d'abord : l'appli est toujours à jour quand Internet fonctionne.
    Les appels au serveur (script.google.com) ne sont jamais mis en cache. */
-const CACHE = 'demedico-38ac3ada0f';
-const SHELL = ['./', 'index.html', 'manifest.json', 'app-config.js', 'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'icons/favicon-64.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'];
+const CACHE = 'demedico-2be0ba9396';
+const SHELL = ['./', 'index.html', 'manifest.json', 'app-config.js', 'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'icons/favicon-64.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/logo-email.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

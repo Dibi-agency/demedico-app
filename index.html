@@ -3056,5 +3056,375 @@
   };
 </script>
 
+<!-- ═════════════════════════════════════════════════════════════════════════
+     Demédico · Dossier Patient V2 + Contacter (v0.8.0)
+     Page complète : Aperçu (« Prochaine séance » + chronologie), Dossier, Objectifs & mesures,
+     Séances, Messages. Email envoyé par le serveur ; WhatsApp et SMS préparés sur le téléphone.
+     ═════════════════════════════════════════════════════════════════════════ -->
+<style>
+  .pv { display:grid; gap:16px; }
+  .pv-head { background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:20px 22px; display:grid; gap:14px; }
+  .pv-back { border:0; background:none; color:var(--text-3); font-size:12px; font-weight:750; padding:0; cursor:pointer; justify-self:start; }
+  .pv-back:hover { color:var(--primary); }
+  .pv-id { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .pv-avatar { width:58px; height:58px; border-radius:18px; background:var(--primary-soft); color:var(--primary); display:grid; place-items:center; font-weight:850; font-size:18px; flex:0 0 58px; }
+  .pv-name { margin:0; font-size:24px; letter-spacing:-.04em; }
+  .pv-meta { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--text-2); margin-top:4px; }
+  .pv-actions { margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; }
+  .pv-alerts { display:flex; flex-wrap:wrap; gap:8px; }
+  .pv-alert { display:inline-flex; align-items:center; gap:7px; padding:6px 10px; border-radius:10px; font-size:11.5px; font-weight:750; background:var(--surface-3); color:var(--text-2); }
+  .pv-alert.HIGH { background:var(--danger-soft); color:var(--danger); }
+  .pv-alert.MEDIUM { background:var(--warning-soft); color:var(--warning); }
+  .pv-alert button { border:0; background:none; color:inherit; cursor:pointer; padding:0 0 0 2px; font-size:13px; opacity:.7; }
+  .pv-tabs { display:flex; gap:4px; overflow-x:auto; padding:4px; background:var(--surface); border:1px solid var(--line); border-radius:14px; scrollbar-width:none; }
+  .pv-tabs button { border:0; background:none; padding:9px 14px; border-radius:10px; font-size:12px; font-weight:750; color:var(--text-2); white-space:nowrap; cursor:pointer; }
+  .pv-tabs button.active { background:var(--text); color:#fff; }
+  .pv-tabs button[disabled] { color:var(--text-3); cursor:default; }
+  .pv-tabs small { font-size:9.5px; font-weight:800; margin-left:4px; color:var(--text-3); }
+  .pv-grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr); gap:16px; align-items:start; }
+  .pv-card { background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:20px; min-width:0; }
+  .pv-card h3 { margin:0; font-size:15px; letter-spacing:-.02em; }
+  .pv-card .sub { color:var(--text-3); font-size:11.5px; margin-top:3px; }
+  .pv-next { border:2px solid var(--primary); background:linear-gradient(180deg,#F5FBFA,#FFFFFF 55%); }
+  .pv-next-top { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .pv-pill { font-size:11px; font-weight:850; padding:5px 10px; border-radius:999px; background:var(--primary); color:#fff; }
+  .pv-when { font-size:13px; font-weight:750; }
+  .pv-rows { display:grid; gap:14px; margin-top:16px; }
+  .pv-row { display:grid; grid-template-columns:118px 1fr; gap:12px; font-size:12.5px; line-height:1.5; }
+  .pv-row > span:first-child { color:var(--text-3); font-weight:750; font-size:11px; text-transform:uppercase; letter-spacing:.06em; padding-top:2px; }
+  .pv-bar { height:7px; background:var(--surface-3); border-radius:999px; overflow:hidden; margin-top:6px; }
+  .pv-bar i { display:block; height:100%; background:var(--primary); border-radius:999px; }
+  .pv-trend.up { color:var(--success); font-weight:800; } .pv-trend.down { color:var(--danger); font-weight:800; } .pv-trend.flat { color:var(--text-2); font-weight:800; }
+  .pv-checks { margin:0; padding:0; list-style:none; display:grid; gap:6px; }
+  .pv-checks li { display:flex; gap:8px; align-items:flex-start; }
+  .pv-checks li::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--warning); margin-top:6px; flex:0 0 7px; }
+  .pv-checks li.HIGH::before { background:var(--danger); }
+  .pv-tl { list-style:none; margin:14px 0 0; padding:0; display:grid; gap:2px; position:relative; }
+  .pv-tl li { display:grid; grid-template-columns:22px 1fr; gap:10px; padding:8px 0; }
+  .pv-tl i { width:10px; height:10px; border-radius:50%; margin:5px 0 0 5px; background:var(--primary); box-shadow:0 0 0 4px var(--primary-soft); }
+  .pv-tl i.appointment { background:#4e87c7; box-shadow:0 0 0 4px #edf5ff; } .pv-tl i.message { background:#7567d7; box-shadow:0 0 0 4px #f1efff; }
+  .pv-tl i.alert { background:var(--danger); box-shadow:0 0 0 4px var(--danger-soft); } .pv-tl i.task { background:var(--warning); box-shadow:0 0 0 4px var(--warning-soft); }
+  .pv-tl strong { font-size:12px; display:block; } .pv-tl span { font-size:11.5px; color:var(--text-2); display:block; margin-top:2px; } .pv-tl small { font-size:10.5px; color:var(--text-3); }
+  .pv-form { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+  .pv-form .full { grid-column:1 / -1; }
+  .pv-form textarea { min-height:96px; }
+  .pv-actions-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .pv-measures { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:14px; }
+  .pv-measure { border:1px solid var(--line); border-radius:16px; padding:14px; background:var(--surface-2); }
+  .pv-measure-top { display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
+  .pv-measure-top strong { font-size:13px; } .pv-measure-top b { font-size:20px; letter-spacing:-.04em; }
+  .pv-chart { width:100%; height:120px; display:block; margin-top:8px; }
+  .pv-vals { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .pv-vals span { font-size:10.5px; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:3px 6px; color:var(--text-2); }
+  .pv-vals button { border:0; background:none; color:var(--text-3); cursor:pointer; padding:0 0 0 3px; }
+  .pv-goal { padding:14px 0; border-bottom:1px solid var(--line); display:grid; gap:6px; }
+  .pv-goal:last-child { border-bottom:0; }
+  .pv-goal-top { display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap; }
+  .pv-empty { padding:22px; text-align:center; color:var(--text-3); font-size:12.5px; line-height:1.5; }
+  .pv-session { border:1px solid var(--line); border-radius:16px; padding:14px 16px; display:grid; gap:6px; font-size:12.5px; line-height:1.55; }
+  .pv-session + .pv-session { margin-top:10px; }
+  .pv-channels { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:14px; }
+  .pv-channel { border:1px solid var(--line); border-radius:16px; padding:16px; background:var(--surface); text-align:left; cursor:pointer; display:grid; gap:4px; }
+  .pv-channel:hover:not([disabled]) { border-color:var(--primary); background:#F5FBFA; }
+  .pv-channel[disabled] { opacity:.5; cursor:not-allowed; }
+  .pv-channel strong { font-size:13px; } .pv-channel span { font-size:11px; color:var(--text-3); }
+  .pv-note { font-size:11.5px; color:var(--text-3); line-height:1.5; }
+  .ct-seg { display:inline-flex; gap:4px; padding:4px; background:var(--surface-3); border-radius:12px; }
+  .ct-seg button { border:0; background:none; padding:8px 14px; border-radius:9px; font-size:12px; font-weight:800; color:var(--text-2); cursor:pointer; }
+  .ct-seg button.active { background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(20,34,38,.08); }
+  .ct-seg button[disabled] { opacity:.4; cursor:not-allowed; }
+  @media (max-width:1100px) { .pv-grid { grid-template-columns:1fr; } }
+  @media (max-width:640px) {
+    .pv-head { padding:16px; } .pv-name { font-size:20px; } .pv-actions { margin-left:0; width:100%; }
+    .pv-actions .btn { flex:1 1 auto; } .pv-form, .pv-measures, .pv-channels { grid-template-columns:1fr; }
+    .pv-row { grid-template-columns:1fr; gap:2px; }
+  }
+</style>
+
+<script>
+  VIEW_META.patient = ['Dossier patient', 'Tout le suivi du patient, au même endroit.'];
+  const pvState = {record:null, tab:'overview', contact:{channel:'EMAIL', template:'REMINDER'}};
+  const PV_TPL = {
+    REMINDER:{label:'Rappel de rendez-vous', subject:'Rappel de votre rendez-vous', body:'Bonjour {prenom},\n\nPetit rappel : votre rendez-vous au {cabinet} est prévu le {date} à {heure}.\n\nEn cas d’empêchement, merci de nous prévenir.\n\n{praticien}', needsAppt:true},
+    CONFIRM:{label:'Confirmation de rendez-vous', subject:'Confirmation de votre rendez-vous', body:'Bonjour {prenom},\n\nVotre rendez-vous du {date} à {heure} est bien confirmé.\n\nÀ bientôt,\n{praticien}', needsAppt:true},
+    AFTER:{label:'Suite à la séance', subject:'Suite à votre séance', body:'Bonjour {prenom},\n\nMerci pour votre venue. Comme convenu, pensez à vos exercices et n’hésitez pas à revenir vers nous si vous avez une question.\n\n{praticien}'},
+    FREE:{label:'Message libre', subject:'', body:'Bonjour {prenom},\n\n\n\n{praticien}'}
+  };
+
+  (function pvInject() {
+    const content = document.querySelector('.content');
+    if (content && !document.getElementById('view-patient')) {
+      const sec = document.createElement('section');
+      sec.id = 'view-patient'; sec.className = 'section';
+      sec.innerHTML = '<div class="pv" id="pvRoot"></div>';
+      content.appendChild(sec);
+    }
+    if (!document.getElementById('contactModal')) {
+      document.body.insertAdjacentHTML('beforeend', '<section id="contactModal" class="modal" aria-hidden="true"><div class="modal-head"><div><div class="eyebrow">Contacter</div><h2 class="drawer-title" id="ctTitle">Patient</h2></div><button class="icon-btn" onclick="closeModal()" aria-label="Fermer"><span data-icon="x"></span></button></div><div class="modal-body" id="ctBody"></div><div class="modal-foot" id="ctFoot"></div></section>');
+    }
+  })();
+
+  const pvEsc = v => escapeHtml(v == null ? '' : v);
+  const pvNl = v => pvEsc(v).replace(/\n/g, '<br>');
+  const pvDate = v => { if (!v) return ''; const d = new Date(String(v).length === 10 ? v + 'T12:00:00' : v); return isNaN(d) ? '' : d.toLocaleDateString('fr-FR', {weekday:'short', day:'numeric', month:'short'}); };
+  const pvDateLong = v => { if (!v) return ''; const d = new Date(String(v).length === 10 ? v + 'T12:00:00' : v); return isNaN(d) ? '' : d.toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'}); };
+  const pvTime = v => { const d = new Date(v); return isNaN(d) ? '' : d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}); };
+  const pvNum = v => Number(v).toLocaleString('fr-FR', {maximumFractionDigits:2});
+
+  // ── Ouvrir un dossier : page complète au lieu du tiroir ────────────────────
+  openPatient = async function (patientId) {
+    if (!patientId) return;
+    if (state.currentPatientId !== patientId) pvState.tab = 'overview';
+    state.currentPatientId = patientId;
+    closeDrawer();
+    navigate('patient');
+    document.querySelectorAll('[data-view="patients"]').forEach(b => b.classList.add('active'));
+    await pvLoad(false);
+  };
+
+  async function pvLoad(silent) {
+    const root = document.getElementById('pvRoot');
+    if (!silent) root.innerHTML = '<div class="pv-card"><div class="pv-empty"><div class="spinner"></div>Ouverture du dossier…</div></div>';
+    try {
+      const r = await gs('getPatientRecord', state.currentPatientId);
+      pvState.record = r;
+      state.currentPatientDetails = {patient:r.patient, appointments:r.appointments, consultations:r.consultations, tasks:r.tasks};
+      pvRender();
+    } catch (err) {
+      if (err.message) toast(err.message, 'error');
+      navigate('patients');
+    }
+  }
+
+  function pvTabs(r) {
+    const t = [['overview', 'Aperçu']];
+    if (r.clinicalAccess) t.push(['record', 'Dossier'], ['goals', 'Objectifs et mesures'], ['sessions', 'Séances (' + r.consultations.length + ')']);
+    t.push(['appointments', 'Rendez-vous (' + r.appointments.length + ')'], ['messages', 'Messages']);
+    return '<nav class="pv-tabs">' + t.map(([k, l]) => '<button class="' + (pvState.tab === k ? 'active' : '') + '" onclick="pvTab(\'' + k + '\')">' + l + '</button>').join('') +
+      '<button disabled title="Arrive avec l’hébergement sécurisé des pièces médicales">Documents<small>BIENTÔT</small></button><button disabled>Facturation<small>BIENTÔT</small></button></nav>';
+  }
+  function pvTab(k) { pvState.tab = k; pvRender(); }
+
+  function pvRender() {
+    const r = pvState.record, p = r.patient, root = document.getElementById('pvRoot');
+    const care = r.clinicalAccess;
+    const age = p.birthDate ? ageLabel(p.birthDate) : 'Âge non renseigné';
+    root.innerHTML =
+      '<header class="pv-head"><button class="pv-back" onclick="navigate(\'patients\')">← Patients</button>' +
+        '<div class="pv-id"><div class="pv-avatar">' + initials(p.firstName, p.lastName) + '</div><div style="min-width:0"><h1 class="pv-name">' + pvEsc(p.firstName) + ' ' + pvEsc(p.lastName) + '</h1>' +
+          '<div class="pv-meta"><span class="chip ' + (p.status === 'ACTIVE' ? 'success' : '') + '">' + (p.status === 'ACTIVE' ? 'Actif' : 'Inactif') + '</span><span>' + pvEsc(age) + '</span>' + (p.phone ? '<span>' + pvEsc(p.phone) + '</span>' : '') + (p.email ? '<span>' + pvEsc(p.email) + '</span>' : '') + '</div></div>' +
+          '<div class="pv-actions">' + (care ? '<button class="btn btn-primary" onclick="openConsultationModal()"><span data-icon="plus"></span> Nouvelle séance</button>' : '') +
+            '<button class="btn" onclick="openAppointmentModal(\'' + escapeAttr(p.id) + '\')"><span data-icon="calendarPlus"></span> Rendez-vous</button>' +
+            '<button class="btn" onclick="pvOpenContact()"><span data-icon="mail"></span> Contacter</button>' +
+            '<button class="btn btn-ghost" onclick="editCurrentPatient()"><span data-icon="edit"></span> Modifier</button></div></div>' +
+        (r.alerts.length ? '<div class="pv-alerts">' + r.alerts.map(a => '<span class="pv-alert ' + pvEsc(a.severity) + '">' + (a.severity === 'HIGH' ? '⚠ ' : '') + pvEsc(a.label) + (care ? '<button title="Retirer" onclick="pvRemoveAlert(\'' + escapeAttr(a.id) + '\')">×</button>' : '') + '</span>').join('') + '</div>' : '') +
+      '</header>' + pvTabs(r) + '<div id="pvBody"></div>';
+    const body = document.getElementById('pvBody');
+    body.innerHTML = ({overview:pvOverview, record:pvRecordTab, goals:pvGoalsTab, sessions:pvSessionsTab, appointments:pvApptTab, messages:pvMessagesTab}[pvState.tab] || pvOverview)(r);
+    renderIcons(root);
+  }
+
+  // ── Aperçu : « Prochaine séance » + chronologie ────────────────────────────
+  function pvOverview(r) {
+    const n = r.nextSession, care = r.clinicalAccess;
+    const appt = n.appointment;
+    let rows = '';
+    if (care && n.motive) rows += '<div class="pv-row"><span>Motif</span><div>' + pvEsc(n.motive) + '</div></div>';
+    if (care && n.mainGoal) rows += '<div class="pv-row"><span>Objectif</span><div>' + pvEsc(n.mainGoal.title) + ' · <strong>' + n.mainGoal.progress + ' %</strong><div class="pv-bar"><i style="width:' + n.mainGoal.progress + '%"></i></div></div></div>';
+    if (care && n.evolution) {
+      const t = n.evolution.trend, cls = t.better === true ? 'up' : t.better === false ? 'down' : 'flat';
+      const word = t.better === true ? 'en progrès' : t.better === false ? 'à surveiller' : 'stable';
+      rows += '<div class="pv-row"><span>Évolution</span><div>' + pvEsc(n.evolution.name) + ' : ' + pvNum(t.first) + ' → <strong>' + pvNum(t.last) + '</strong> ' + pvEsc(n.evolution.unit || '') + ' <span class="pv-trend ' + cls + '">' + (t.better === true ? '▲ ' : t.better === false ? '▼ ' : '= ') + word + '</span><div class="sub">depuis le ' + pvDateLong(t.since) + '</div></div></div>';
+    }
+    if (care && n.lastSession) {
+      const l = n.lastSession, what = l.treatment || l.recommendations || '';
+      rows += '<div class="pv-row"><span>Dernière séance</span><div>' + pvDateLong(l.date) + (l.motive ? ' · ' + pvEsc(l.motive) : '') + (l.painScore !== '' && l.painScore != null ? ' · douleur ' + pvEsc(l.painScore) + '/10' : '') + (what ? '<div class="sub" style="font-size:12px;color:var(--text-2)">' + pvNl(what.slice(0, 220)) + '</div>' : '') + '</div></div>';
+    }
+    const checks = n.alerts.map(a => '<li class="' + pvEsc(a.severity) + '">' + pvEsc(a.label) + '</li>').join('') + (n.checks || []).map(c => '<li>' + pvEsc(c) + '</li>').join('');
+    if (checks) rows += '<div class="pv-row"><span>À vérifier</span><ul class="pv-checks">' + checks + '</ul></div>';
+    if (n.nextAction) rows += '<div class="pv-row"><span>Prochaine action</span><div>' + pvEsc(n.nextAction.title) + (n.nextAction.dueDate ? ' · ' + pvDate(n.nextAction.dueDate) : '') + '</div></div>';
+    if (!rows) rows = '<div class="pv-empty">' + (care ? 'Complète le dossier (motif, objectif, mesures) : cette carte te résumera tout avant chaque séance.' : 'Aucune information à signaler.') + '</div>';
+    const session = care ? '<span class="pv-pill">Séance ' + n.sessionNumber + (n.prescribedSessions ? ' / ' + n.prescribedSessions : '') + '</span>' : '';
+    const when = appt ? '<span class="pv-when">' + pvDate(appt.startAt) + ' · ' + pvTime(appt.startAt) + (appt.practitionerName ? ' · ' + pvEsc(appt.practitionerName) : '') + '</span>' : '<span class="pv-when" style="color:var(--text-3)">Aucun rendez-vous prévu</span><button class="btn btn-sm" onclick="openAppointmentModal(\'' + escapeAttr(r.patient.id) + '\')">Planifier</button>';
+    const tl = r.timeline.length ? '<ul class="pv-tl">' + r.timeline.slice(0, 25).map(i => '<li><i class="' + i.type + '"></i><div><strong>' + pvEsc(i.title) + '</strong>' + (i.detail ? '<span>' + pvEsc(i.detail) + '</span>' : '') + '<small>' + pvDateLong(i.date) + '</small></div></li>').join('') + '</ul>' : '<div class="pv-empty">L’historique se remplira au fil des rendez-vous, séances et messages.</div>';
+    return '<div class="pv-grid"><article class="pv-card pv-next"><div class="pv-next-top"><h3 style="margin-right:auto">Prochaine séance</h3>' + session + '</div><div class="pv-next-top" style="margin-top:10px">' + when + '</div><div class="pv-rows">' + rows + '</div></article>' +
+      '<article class="pv-card"><h3>Chronologie</h3><div class="sub">Tout ce qui s’est passé, du plus récent au plus ancien.</div>' + tl + '</article></div>';
+  }
+
+  // ── Dossier clinique + alertes ─────────────────────────────────────────────
+  function pvRecordTab(r) {
+    const f = r.profile || {};
+    const area = (id, label, val, ph) => '<div class="field full"><label for="' + id + '">' + label + '</label><textarea id="' + id + '" placeholder="' + ph + '">' + pvEsc(val) + '</textarea></div>';
+    return '<div class="pv-grid"><article class="pv-card"><h3>Dossier clinique</h3><div class="sub">Visible uniquement par les praticiens et administrateurs du cabinet.</div>' +
+      '<form class="pv-form" onsubmit="event.preventDefault();pvSaveProfile()">' +
+        '<div class="field full"><label for="pfMotive">Motif de prise en charge</label><input id="pfMotive" maxlength="300" value="' + pvEsc(f.motive) + '" placeholder="Ex. lombalgie chronique depuis 6 mois"></div>' +
+        area('pfAnamnesis', 'Anamnèse', f.anamnesis, 'Histoire du problème, circonstances, gêne au quotidien…') +
+        area('pfHistory', 'Antécédents', f.history, 'Médicaux, chirurgicaux, traumatiques…') +
+        area('pfTreatments', 'Traitements déclarés', f.treatments, 'Médicaments, autres suivis en cours…') +
+        area('pfAllergies', 'Allergies et précautions', f.allergies, 'Allergies, contre-indications…') +
+        area('pfLifestyle', 'Mode de vie', f.lifestyle, 'Activité, sommeil, travail, sport…') +
+        '<div class="field"><label for="pfSessions">Séances prescrites</label><input id="pfSessions" type="number" min="0" max="200" value="' + pvEsc(f.prescribedSessions) + '" placeholder="Ex. 10"></div>' +
+        '<div class="field full pv-actions-row"><button class="btn btn-primary" type="submit">Enregistrer le dossier</button>' + (f.updatedAt ? '<span class="pv-note">Mis à jour le ' + pvDateLong(f.updatedAt) + '</span>' : '') + '</div></form></article>' +
+      '<article class="pv-card"><h3>Alertes</h3><div class="sub">Affichées en haut du dossier et dans « Prochaine séance ». Le secrétariat les voit aussi.</div>' +
+        (r.alerts.length ? '<div class="pv-alerts" style="margin-top:14px">' + r.alerts.map(a => '<span class="pv-alert ' + pvEsc(a.severity) + '">' + pvEsc(a.label) + '<button onclick="pvRemoveAlert(\'' + escapeAttr(a.id) + '\')">×</button></span>').join('') + '</div>' : '<div class="pv-empty">Aucune alerte.</div>') +
+        '<form class="pv-form" onsubmit="event.preventDefault();pvAddAlert()"><div class="field full"><label for="alLabel">Nouvelle alerte</label><input id="alLabel" maxlength="160" placeholder="Ex. Allergie au latex"></div><div class="field"><label for="alSev">Importance</label><select id="alSev"><option value="HIGH">Haute</option><option value="MEDIUM" selected>Moyenne</option><option value="INFO">Information</option></select></div><div class="field" style="align-self:end"><button class="btn" type="submit">Ajouter l’alerte</button></div></form></article></div>';
+  }
+  async function pvSaveProfile() {
+    const v = id => document.getElementById(id).value;
+    await pvAct(() => gs('saveClinicalProfile', {patientId:state.currentPatientId, motive:v('pfMotive'), anamnesis:v('pfAnamnesis'), history:v('pfHistory'), treatments:v('pfTreatments'), allergies:v('pfAllergies'), lifestyle:v('pfLifestyle'), prescribedSessions:v('pfSessions')}), 'Dossier enregistré.');
+  }
+  async function pvAddAlert() {
+    const label = document.getElementById('alLabel').value.trim();
+    if (!label) return toast('Écris le texte de l’alerte.', 'error');
+    await pvAct(() => gs('savePatientAlert', {patientId:state.currentPatientId, label, severity:document.getElementById('alSev').value}), 'Alerte ajoutée.');
+  }
+  async function pvRemoveAlert(id) { if (confirm('Retirer cette alerte ?')) await pvAct(() => gs('removePatientAlert', id), 'Alerte retirée.'); }
+
+  // ── Objectifs et mesures ───────────────────────────────────────────────────
+  function pvChart(m) {
+    const pts = m.values; if (!pts.length) return '<div class="pv-empty" style="padding:18px 6px">Aucune valeur pour l’instant.</div>';
+    const W = 320, H = 120, P = 14;
+    const vals = pts.map(p => p.value).concat(m.definition.target !== '' && m.definition.target != null ? [Number(m.definition.target)] : []);
+    let min = Math.min(...vals), max = Math.max(...vals); if (min === max) { min -= 1; max += 1; }
+    const x = i => pts.length === 1 ? W / 2 : P + i * (W - 2 * P) / (pts.length - 1);
+    const y = v => H - P - (v - min) / (max - min) * (H - 2 * P);
+    const line = pts.map((p, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.value).toFixed(1)).join(' ');
+    const target = m.definition.target !== '' && m.definition.target != null ? '<line x1="' + P + '" x2="' + (W - P) + '" y1="' + y(Number(m.definition.target)).toFixed(1) + '" y2="' + y(Number(m.definition.target)).toFixed(1) + '" stroke="#A96D2D" stroke-dasharray="4 4" stroke-width="1.2"/>' : '';
+    return '<svg class="pv-chart" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="Évolution ' + pvEsc(m.definition.name) + '">' + target +
+      '<path d="' + line + '" fill="none" stroke="#248780" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
+      pts.map((p, i) => '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.value).toFixed(1) + '" r="' + (i === pts.length - 1 ? 4.5 : 3) + '" fill="' + (i === pts.length - 1 ? '#133239' : '#248780') + '"><title>' + pvDateLong(p.date) + ' : ' + pvNum(p.value) + '</title></circle>').join('') + '</svg>';
+  }
+  function pvGoalsTab(r) {
+    const goals = r.goals.length ? r.goals.map(g => '<div class="pv-goal"><div class="pv-goal-top"><strong style="font-size:13px">' + pvEsc(g.title) + '</strong><span class="chip ' + (g.status === 'COMPLETED' ? 'success' : g.status === 'ACTIVE' ? '' : 'warning') + '">' + ({ACTIVE:'En cours', COMPLETED:'Atteint', PAUSED:'En pause', CANCELED:'Abandonné'}[g.status] || g.status) + '</span></div>' +
+      (g.description ? '<div class="pv-note" style="color:var(--text-2)">' + pvNl(g.description) + '</div>' : '') +
+      '<div class="pv-bar"><i style="width:' + (Number(g.progress) || 0) + '%"></i></div><div class="pv-actions-row"><span class="pv-note">' + (Number(g.progress) || 0) + ' %' + (g.targetDate ? ' · cible le ' + pvDateLong(g.targetDate) : '') + '</span>' +
+      (g.status === 'ACTIVE' ? '<button class="btn btn-sm" onclick="pvGoalProgress(\'' + escapeAttr(g.id) + '\',' + Math.min(100, (Number(g.progress) || 0) + 10) + ')">+10 %</button><button class="btn btn-sm" onclick="pvGoalProgress(\'' + escapeAttr(g.id) + '\',100)">Atteint</button>' : '') + '</div></div>').join('') : '<div class="pv-empty">Aucun objectif. Un objectif clair motive le patient et guide chaque séance.</div>';
+    const defs = r.measures.map(m => m.definition);
+    const measures = r.measures.filter(m => m.values.length || m.definition.builtIn).map(m => {
+      const last = m.values[m.values.length - 1], t = m.trend;
+      return '<div class="pv-measure"><div class="pv-measure-top"><strong>' + pvEsc(m.definition.name) + '</strong><b>' + (last ? pvNum(last.value) : '—') + ' <small style="font-size:11px;color:var(--text-3)">' + pvEsc(m.definition.unit || '') + '</small></b></div>' +
+        (t ? '<div class="pv-trend ' + (t.better === true ? 'up' : t.better === false ? 'down' : 'flat') + '" style="font-size:11px">' + (t.better === true ? '▲ en progrès' : t.better === false ? '▼ à surveiller' : '= stable') + ' depuis le ' + pvDateLong(t.since) + '</div>' : '') +
+        pvChart(m) + '<div class="pv-vals">' + m.values.slice(-6).map(v => '<span>' + pvDate(v.date) + ' · ' + pvNum(v.value) + (v.source === 'measure' ? '<button title="Supprimer" onclick="pvDeleteValue(\'' + escapeAttr(v.id) + '\')">×</button>' : '') + '</span>').join('') + '</div></div>';
+    }).join('');
+    const today = localDateInput(new Date());
+    return '<div class="pv-grid"><article class="pv-card"><h3>Mesures</h3><div class="sub">Le graphique se met à jour à chaque valeur. La douleur des séances est reprise automatiquement.</div>' +
+        '<div class="pv-measures">' + measures + '</div>' +
+        '<form class="pv-form" onsubmit="event.preventDefault();pvAddValue()"><div class="field"><label for="mvDef">Mesure</label><select id="mvDef">' + defs.map(d => '<option value="' + pvEsc(d.id) + '">' + pvEsc(d.name) + (d.unit ? ' (' + pvEsc(d.unit) + ')' : '') + '</option>').join('') + '</select></div>' +
+        '<div class="field"><label for="mvVal">Valeur</label><input id="mvVal" inputmode="decimal" placeholder="Ex. 110"></div><div class="field"><label for="mvDate">Date</label><input id="mvDate" type="date" value="' + today + '"></div><div class="field" style="align-self:end"><button class="btn btn-primary" type="submit">Ajouter la valeur</button></div></form>' +
+        '<details style="margin-top:16px"><summary style="cursor:pointer;font-size:12px;font-weight:800;color:var(--primary)">Créer une nouvelle mesure pour le cabinet</summary><form class="pv-form" onsubmit="event.preventDefault();pvAddDef()"><div class="field"><label for="mdName">Nom</label><input id="mdName" maxlength="60" placeholder="Ex. Flexion genou"></div><div class="field"><label for="mdUnit">Unité</label><input id="mdUnit" maxlength="20" placeholder="Ex. °, kg, cm, s"></div><div class="field"><label for="mdDir">Mieux quand ça</label><select id="mdDir"><option value="UP">Augmente</option><option value="DOWN">Diminue</option><option value="TARGET">Se rapproche de la cible</option></select></div><div class="field"><label for="mdTarget">Cible (facultatif)</label><input id="mdTarget" inputmode="decimal"></div><div class="field full"><button class="btn" type="submit">Créer la mesure</button></div></form></details></article>' +
+      '<article class="pv-card"><h3>Objectifs</h3><div class="sub">Ce que le patient veut atteindre, et où il en est.</div>' + goals +
+        '<form class="pv-form" onsubmit="event.preventDefault();pvAddGoal()"><div class="field full"><label for="glTitle">Nouvel objectif</label><input id="glTitle" maxlength="160" placeholder="Ex. Monter les escaliers sans douleur"></div><div class="field"><label for="glDate">Date cible</label><input id="glDate" type="date"></div><div class="field"><label for="glProg">Avancement (%)</label><input id="glProg" type="number" min="0" max="100" value="0"></div><div class="field full"><button class="btn btn-primary" type="submit">Ajouter l’objectif</button></div></form></article></div>';
+  }
+  async function pvAddValue() { await pvAct(() => gs('saveMeasureValue', {patientId:state.currentPatientId, measureId:document.getElementById('mvDef').value, value:document.getElementById('mvVal').value, date:document.getElementById('mvDate').value}), 'Valeur ajoutée.'); }
+  async function pvDeleteValue(id) { if (confirm('Supprimer cette valeur ?')) await pvAct(() => gs('deleteMeasureValue', id), 'Valeur supprimée.'); }
+  async function pvAddDef() { await pvAct(() => gs('saveMeasureDefinition', {name:document.getElementById('mdName').value, unit:document.getElementById('mdUnit').value, direction:document.getElementById('mdDir').value, target:document.getElementById('mdTarget').value}), 'Mesure créée.'); }
+  async function pvAddGoal() { await pvAct(() => gs('saveGoal', {patientId:state.currentPatientId, title:document.getElementById('glTitle').value, targetDate:document.getElementById('glDate').value, progress:document.getElementById('glProg').value}), 'Objectif ajouté.'); }
+  async function pvGoalProgress(id, progress) {
+    const g = pvState.record.goals.find(x => x.id === id); if (!g) return;
+    await pvAct(() => gs('saveGoal', Object.assign({}, g, {patientId:state.currentPatientId, progress, status:progress >= 100 ? 'COMPLETED' : 'ACTIVE'})), progress >= 100 ? 'Objectif atteint. Bravo !' : 'Avancement mis à jour.');
+  }
+
+  // ── Séances et rendez-vous ─────────────────────────────────────────────────
+  function pvSessionsTab(r) {
+    const list = r.consultations.length ? r.consultations.map((c, i) => '<div class="pv-session"><div class="pv-goal-top"><strong>Séance ' + (r.consultations.length - i) + ' · ' + pvDateLong(c.date) + '</strong>' + (c.painScore !== '' ? '<span class="chip">Douleur ' + pvEsc(c.painScore) + '/10</span>' : '') + '</div>' +
+      (c.motive ? '<div><strong>Motif :</strong> ' + pvEsc(c.motive) + '</div>' : '') + (c.observations ? '<div><strong>Observations :</strong> ' + pvNl(c.observations) + '</div>' : '') +
+      (c.treatment ? '<div><strong>Traitement :</strong> ' + pvNl(c.treatment) + '</div>' : '') + (c.recommendations ? '<div><strong>Conseils :</strong> ' + pvNl(c.recommendations) + '</div>' : '') +
+      (c.followUp ? '<div><strong>Suivi :</strong> ' + pvEsc(c.followUp) + '</div>' : '') + '</div>').join('') : '<div class="pv-empty">Aucune séance enregistrée.</div>';
+    return '<article class="pv-card"><div class="pv-goal-top"><div><h3>Séances</h3><div class="sub">Notes cliniques, de la plus récente à la plus ancienne.</div></div><button class="btn btn-primary" onclick="openConsultationModal()"><span data-icon="plus"></span> Nouvelle séance</button></div><div style="margin-top:14px">' + list + '</div></article>';
+  }
+  function pvApptTab(r) {
+    const list = r.appointments.length ? r.appointments.map(a => '<div class="appointment"><div class="appt-time">' + pvDate(a.startAt) + '</div><div class="appt-bar" style="background:' + statusColor(a.status) + '"></div><div class="appt-main"><div class="appt-name">' + pvTime(a.startAt) + ' · ' + pvEsc(a.type) + '</div><div class="appt-meta">' + pvEsc(a.location || 'Cabinet') + (a.practitionerName ? ' · ' + pvEsc(a.practitionerName) : '') + '</div></div><select class="status-select" onchange="updateAppointmentStatus(\'' + escapeAttr(a.id) + '\',this.value)">' + ['BOOKED', 'DONE', 'NO_SHOW', 'CANCELLED'].map(s => '<option value="' + s + '"' + (a.status === s ? ' selected' : '') + '>' + statusLabel(s) + '</option>').join('') + '</select></div>').join('') : '<div class="pv-empty">Aucun rendez-vous.</div>';
+    return '<article class="pv-card"><div class="pv-goal-top"><h3>Rendez-vous</h3><button class="btn btn-primary" onclick="openAppointmentModal(\'' + escapeAttr(r.patient.id) + '\')"><span data-icon="calendarPlus"></span> Nouveau rendez-vous</button></div><div style="margin-top:10px">' + list + '</div></article>';
+  }
+
+  // ── Messages ───────────────────────────────────────────────────────────────
+  function pvMessagesTab(r) {
+    const p = r.patient;
+    const ch = (k, label, sub, ok) => '<button class="pv-channel" ' + (ok ? '' : 'disabled') + ' onclick="pvOpenContact(\'' + k + '\')"><strong>' + label + '</strong><span>' + sub + '</span></button>';
+    const hist = r.communications.length ? '<ul class="pv-tl">' + r.communications.map(c => '<li><i class="message"></i><div><strong>' + ({EMAIL:'Email envoyé', SMS:'SMS préparé', WHATSAPP:'WhatsApp préparé'}[c.channel]) + '</strong><span>' + pvEsc(c.subject || (PV_TPL[c.template] || {}).label || '') + ' · ' + pvEsc(c.authorName || '') + '</span><small>' + pvDateLong(c.createdAt) + ' · ' + pvTime(c.createdAt) + '</small></div></li>').join('') + '</ul>' : '<div class="pv-empty">Aucun message pour l’instant.</div>';
+    return '<div class="pv-grid"><article class="pv-card"><h3>Contacter ' + pvEsc(p.firstName) + '</h3><div class="sub">Choisis un canal. Le message est prérempli, tu peux le modifier avant l’envoi.</div>' +
+      '<div class="pv-channels">' + ch('EMAIL', 'Email', p.email ? 'Envoyé par Demédico' : 'Ajoute un email dans la fiche', !!p.email) + ch('WHATSAPP', 'WhatsApp', p.phone ? 'Ouvre WhatsApp, message prêt' : 'Ajoute un téléphone', !!p.phone) + ch('SMS', 'SMS', p.phone ? 'Ouvre les SMS du téléphone' : 'Ajoute un téléphone', !!p.phone) + '</div>' +
+      '<p class="pv-note" style="margin-top:14px">Conseil : n’écris aucun détail médical dans un email, un SMS ou un WhatsApp. Demédico garde la trace de l’envoi (date, canal, objet), jamais le contenu.</p></article>' +
+      '<article class="pv-card"><h3>Historique</h3>' + hist + '</article></div>';
+  }
+
+  function pvFill(text) {
+    const r = pvState.record, p = r.patient, appt = r.nextSession.appointment;
+    const me = dmMe(), settings = (state.data && state.data.settings) || {};
+    return String(text || '').replace(/\{prenom\}/g, p.firstName || '').replace(/\{nom\}/g, p.lastName || '')
+      .replace(/\{date\}/g, appt ? new Date(appt.startAt).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'}) : '[date]')
+      .replace(/\{heure\}/g, appt ? pvTime(appt.startAt) : '[heure]')
+      .replace(/\{cabinet\}/g, settings.practiceName || 'cabinet').replace(/\{praticien\}/g, me.displayName || settings.practiceName || '');
+  }
+
+  function pvOpenContact(channel) {
+    const r = pvState.record; if (!r) return;
+    const p = r.patient, c = pvState.contact;
+    if (channel) c.channel = channel;
+    if (c.channel === 'EMAIL' && !p.email) c.channel = p.phone ? 'WHATSAPP' : 'EMAIL';
+    if (c.channel !== 'EMAIL' && !p.phone) c.channel = 'EMAIL';
+    const tpl = PV_TPL[c.template];
+    document.getElementById('ctTitle').textContent = 'Contacter ' + p.firstName + ' ' + p.lastName;
+    const seg = (k, l, ok) => '<button type="button" class="' + (c.channel === k ? 'active' : '') + '" ' + (ok ? '' : 'disabled') + ' onclick="pvOpenContact(\'' + k + '\')">' + l + '</button>';
+    const dest = c.channel === 'EMAIL' ? p.email : p.phone;
+    const warnAppt = tpl.needsAppt && !r.nextSession.appointment ? '<div class="bl-banner warn" style="margin-top:12px"><span class="bl-dot"></span><div>Aucun rendez-vous à venir : remplace [date] et [heure] à la main, ou planifie d’abord un rendez-vous.</div></div>' : '';
+    const desktopSms = c.channel === 'SMS' && !/Android|iPhone|iPad/i.test(navigator.userAgent) ? '<p class="pv-note">Les SMS s’envoient depuis un téléphone. Sur ordinateur, préfère l’email ou WhatsApp.</p>' : '';
+    document.getElementById('ctBody').innerHTML =
+      '<div class="ct-seg">' + seg('EMAIL', 'Email', !!p.email) + seg('WHATSAPP', 'WhatsApp', !!p.phone) + seg('SMS', 'SMS', !!p.phone) + '</div>' +
+      '<p class="pv-note" style="margin:10px 0 0">À : <strong style="color:var(--text)">' + pvEsc(dest || 'aucune coordonnée') + '</strong></p>' +
+      '<div class="form-grid" style="margin-top:14px"><div class="field full"><label for="ctTpl">Modèle</label><select id="ctTpl" onchange="pvState.contact.template=this.value;pvOpenContact()">' + Object.keys(PV_TPL).map(k => '<option value="' + k + '"' + (k === c.template ? ' selected' : '') + '>' + PV_TPL[k].label + '</option>').join('') + '</select></div>' +
+      (c.channel === 'EMAIL' ? '<div class="field full"><label for="ctSubject">Objet</label><input id="ctSubject" maxlength="150" value="' + pvEsc(pvFill(tpl.subject)) + '"></div>' : '') +
+      '<div class="field full"><label for="ctMsg">Message</label><textarea id="ctMsg" style="min-height:180px">' + pvEsc(pvFill(tpl.body)) + '</textarea></div></div>' + warnAppt + desktopSms +
+      '<p class="pv-note">Pas de détail médical dans les messages. Seule la trace de l’envoi est conservée.</p>';
+    document.getElementById('ctFoot').innerHTML = '<button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="pvSendContact()">' + ({EMAIL:'Envoyer l’email', WHATSAPP:'Ouvrir WhatsApp', SMS:'Ouvrir les SMS'}[c.channel]) + '</button>';
+    openModal('contactModal');
+  }
+
+  function pvPhone(raw) {
+    let d = String(raw || '').replace(/[^\d+]/g, '');
+    if (d.startsWith('+')) d = d.slice(1);
+    else if (d.startsWith('00')) d = d.slice(2);
+    else if (d.length === 10 && d.startsWith('0')) d = '33' + d.slice(1);
+    return d;
+  }
+
+  async function pvSendContact() {
+    const r = pvState.record, p = r.patient, c = pvState.contact;
+    const msg = document.getElementById('ctMsg').value.trim();
+    if (!msg) return toast('Écris un message.', 'error');
+    if (c.channel === 'EMAIL') {
+      const subject = document.getElementById('ctSubject').value.trim();
+      if (!subject) return toast('Ajoute un objet.', 'error');
+      setModalBusy(true);
+      try { const res = await gs('sendPatientEmail', {patientId:p.id, subject, body:msg, template:c.template}); closeModal(); toast(res.message); await pvLoad(true); }
+      catch (err) { toast(err.message, 'error'); }
+      finally { setModalBusy(false); }
+      return;
+    }
+    const num = pvPhone(p.phone);
+    if (!num) return toast('Numéro de téléphone invalide.', 'error');
+    const url = c.channel === 'WHATSAPP'
+      ? 'https://wa.me/' + num + '?text=' + encodeURIComponent(msg)
+      : 'sms:+' + num + (/iPhone|iPad/i.test(navigator.userAgent) ? '&' : '?') + 'body=' + encodeURIComponent(msg);
+    if (c.channel === 'WHATSAPP') window.open(url, '_blank'); else window.location.href = url;
+    closeModal();
+    try { await gs('logPatientContact', {patientId:p.id, channel:c.channel, template:c.template}); await pvLoad(true); } catch (err) { if (err.message) toast(err.message, 'error'); }
+  }
+
+  async function pvAct(fn, okMsg) {
+    showLoading(true);
+    try { await fn(); toast(okMsg); await pvLoad(true); }
+    catch (err) { toast(err.message, 'error'); }
+    finally { showLoading(false); }
+  }
+
+  // Après un rendez-vous, une séance ou une modification de fiche : le dossier ouvert se met à jour.
+  const pvBaseRenderAll = renderAll;
+  renderAll = function () {
+    pvBaseRenderAll();
+    if (state.view === 'patient' && state.currentPatientId && pvState.record) pvLoad(true);
+  };
+</script>
+
 </body>
 </html>
