@@ -3341,13 +3341,18 @@
   function pvMessagesTab(r) {
     const p = r.patient;
     const ch = (k, label, sub, ok) => '<button class="pv-channel" ' + (ok ? '' : 'disabled') + ' onclick="pvOpenContact(\'' + k + '\')"><strong>' + label + '</strong><span>' + sub + '</span></button>';
-    const hist = r.communications.length ? '<ul class="pv-tl">' + r.communications.map(c => '<li><i class="message"></i><div><strong>' + ({EMAIL:'Email envoyé', SMS:'SMS préparé', WHATSAPP:'WhatsApp préparé'}[c.channel]) + '</strong><span>' + pvEsc(c.subject || (PV_TPL[c.template] || {}).label || '') + ' · ' + pvEsc(c.authorName || '') + '</span><small>' + pvDateLong(c.createdAt) + ' · ' + pvTime(c.createdAt) + '</small></div></li>').join('') + '</ul>' : '<div class="pv-empty">Aucun message pour l’instant.</div>';
+    const hist = r.communications.length ? '<ul class="pv-tl">' + r.communications.map(c => '<li><i class="message"></i><div><strong>' + pvCommLabel(c) + '</strong><span>' + pvEsc(c.subject || (PV_TPL[c.template] || {}).label || '') + ' · ' + pvEsc(c.authorName || '') + '</span><small>' + pvDateLong(c.createdAt) + ' · ' + pvTime(c.createdAt) + '</small></div></li>').join('') + '</ul>' : '<div class="pv-empty">Aucun message pour l’instant.</div>';
     return '<div class="pv-grid"><article class="pv-card"><h3>Contacter ' + pvEsc(p.firstName) + '</h3><div class="sub">Choisis un canal. Le message est prérempli, tu peux le modifier avant l’envoi.</div>' +
       '<div class="pv-channels">' + ch('EMAIL', 'Email', p.email ? 'Envoyé par Demédico' : 'Ajoute un email dans la fiche', !!p.email) + ch('WHATSAPP', 'WhatsApp', p.phone ? 'Ouvre WhatsApp, message prêt' : 'Ajoute un téléphone', !!p.phone) + ch('SMS', 'SMS', p.phone ? 'Ouvre les SMS du téléphone' : 'Ajoute un téléphone', !!p.phone) + '</div>' +
       '<p class="pv-note" style="margin-top:14px">Conseil : n’écris aucun détail médical dans un email, un SMS ou un WhatsApp. Demédico garde la trace de l’envoi (date, canal, objet), jamais le contenu.</p></article>' +
       '<article class="pv-card"><h3>Historique</h3>' + hist + '</article></div>';
   }
 
+  // Statut réel : un email est « envoyé » ou en « échec » ; WhatsApp et SMS sont seulement « ouverts » (l'envoi final se fait dans l'appli du téléphone).
+  function pvCommLabel(c) {
+    if (c.channel === 'EMAIL') return c.status === 'FAILED' ? 'Échec de l’email' : 'Email envoyé';
+    return (c.channel === 'SMS' ? 'SMS' : 'WhatsApp') + ' ouvert';
+  }
   function pvFill(text) {
     const r = pvState.record, p = r.patient, appt = r.nextSession.appointment;
     const me = dmMe(), settings = (state.data && state.data.settings) || {};
@@ -3424,6 +3429,215 @@
     pvBaseRenderAll();
     if (state.view === 'patient' && state.currentPatientId && pvState.record) pvLoad(true);
   };
+</script>
+
+<!-- ═════════════════════════════════════════════════════════════════════════
+     Demédico · Numéros internationaux + Paramètres > Communications (v0.9.0)
+     Indicatifs : libphonenumber 1.11.4 (245 pays et territoires).
+     ═════════════════════════════════════════════════════════════════════════ -->
+<style>
+  .ph-row { display:grid; grid-template-columns:minmax(118px,40%) 1fr; gap:8px; }
+  .ph-row select { min-width:0; }
+  .cm-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+  .cm-grid .full { grid-column:1 / -1; }
+  .cm-channels { display:grid; gap:10px; }
+  .cm-channel { display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--line); border-radius:14px; background:var(--surface-2); flex-wrap:wrap; }
+  .cm-channel strong { font-size:13px; } .cm-channel small { color:var(--text-3); font-size:11px; display:block; }
+  .cm-channel .grow { flex:1; min-width:160px; }
+  .cm-switch { display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:750; color:var(--text-2); cursor:pointer; }
+  .cm-switch input { width:18px; height:18px; accent-color:var(--primary); }
+  .ct-pref { font-size:9.5px; font-weight:850; color:var(--primary); margin-left:5px; }
+  @media (max-width:640px) { .cm-grid { grid-template-columns:1fr; } .ph-row { grid-template-columns:1fr; } }
+</style>
+<script>
+  const DIAL = {"AC":"247","AD":"376","AE":"971","AF":"93","AG":"1","AI":"1","AL":"355","AM":"374","AO":"244","AR":"54","AS":"1","AT":"43","AU":"61","AW":"297","AX":"358","AZ":"994","BA":"387","BB":"1","BD":"880","BE":"32","BF":"226","BG":"359","BH":"973","BI":"257","BJ":"229","BL":"590","BM":"1","BN":"673","BO":"591","BQ":"599","BR":"55","BS":"1","BT":"975","BW":"267","BY":"375","BZ":"501","CA":"1","CC":"61","CD":"243","CF":"236","CG":"242","CH":"41","CI":"225","CK":"682","CL":"56","CM":"237","CN":"86","CO":"57","CR":"506","CU":"53","CV":"238","CW":"599","CX":"61","CY":"357","CZ":"420","DE":"49","DJ":"253","DK":"45","DM":"1","DO":"1","DZ":"213","EC":"593","EE":"372","EG":"20","EH":"212","ER":"291","ES":"34","ET":"251","FI":"358","FJ":"679","FK":"500","FM":"691","FO":"298","FR":"33","GA":"241","GB":"44","GD":"1","GE":"995","GF":"594","GG":"44","GH":"233","GI":"350","GL":"299","GM":"220","GN":"224","GP":"590","GQ":"240","GR":"30","GT":"502","GU":"1","GW":"245","GY":"592","HK":"852","HN":"504","HR":"385","HT":"509","HU":"36","ID":"62","IE":"353","IL":"972","IM":"44","IN":"91","IO":"246","IQ":"964","IR":"98","IS":"354","IT":"39","JE":"44","JM":"1","JO":"962","JP":"81","KE":"254","KG":"996","KH":"855","KI":"686","KM":"269","KN":"1","KP":"850","KR":"82","KW":"965","KY":"1","KZ":"7","LA":"856","LB":"961","LC":"1","LI":"423","LK":"94","LR":"231","LS":"266","LT":"370","LU":"352","LV":"371","LY":"218","MA":"212","MC":"377","MD":"373","ME":"382","MF":"590","MG":"261","MH":"692","MK":"389","ML":"223","MM":"95","MN":"976","MO":"853","MP":"1","MQ":"596","MR":"222","MS":"1","MT":"356","MU":"230","MV":"960","MW":"265","MX":"52","MY":"60","MZ":"258","NA":"264","NC":"687","NE":"227","NF":"672","NG":"234","NI":"505","NL":"31","NO":"47","NP":"977","NR":"674","NU":"683","NZ":"64","OM":"968","PA":"507","PE":"51","PF":"689","PG":"675","PH":"63","PK":"92","PL":"48","PM":"508","PR":"1","PS":"970","PT":"351","PW":"680","PY":"595","QA":"974","RE":"262","RO":"40","RS":"381","RU":"7","RW":"250","SA":"966","SB":"677","SC":"248","SD":"249","SE":"46","SG":"65","SH":"290","SI":"386","SJ":"47","SK":"421","SL":"232","SM":"378","SN":"221","SO":"252","SR":"597","SS":"211","ST":"239","SV":"503","SX":"1","SY":"963","SZ":"268","TA":"290","TC":"1","TD":"235","TG":"228","TH":"66","TJ":"992","TK":"690","TL":"670","TM":"993","TN":"216","TO":"676","TR":"90","TT":"1","TV":"688","TW":"886","TZ":"255","UA":"380","UG":"256","US":"1","UY":"598","UZ":"998","VA":"39","VC":"1","VE":"58","VG":"1","VI":"1","VN":"84","VU":"678","WF":"681","WS":"685","XK":"383","YE":"967","YT":"262","ZA":"27","ZM":"260","ZW":"263"};
+  const PH_NAMES = (() => { try { return new Intl.DisplayNames(['fr'], {type:'region'}); } catch (e) { return null; } })();
+  const phFlag = iso => iso.toUpperCase().replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0)));
+  const phName = iso => (PH_NAMES && PH_NAMES.of(iso)) || iso;
+  function phDefault() { const s = (state.data && state.data.settings) || {}; return DIAL[s.defaultCountry] ? s.defaultCountry : 'FR'; }
+  function phOptions(selected) {
+    const sel = DIAL[selected] ? selected : phDefault();
+    const list = Object.keys(DIAL).map(iso => ({iso, name:phName(iso)})).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+    const top = [sel].concat(['FR', 'IL', 'BE', 'CH', 'CA', 'MA', 'TN', 'DZ', 'LU', 'MC'].filter(i => i !== sel));
+    const opt = (iso) => '<option value="' + iso + '"' + (iso === sel ? ' selected' : '') + '>' + phFlag(iso) + ' ' + escapeHtml(phName(iso)) + ' (+' + DIAL[iso] + ')</option>';
+    return '<optgroup label="Fréquents">' + top.map(opt).join('') + '</optgroup><optgroup label="Tous les pays">' + list.map(x => opt(x.iso)).join('') + '</optgroup>';
+  }
+  // Même règle que le serveur : « 052-123-4567 » + IL → « +972521234567 ».
+  function phNormalize(raw, iso) {
+    let d = String(raw || '').trim().replace(/[^\d+]/g, '');
+    if (!d) return '';
+    if (d.indexOf('+') > 0) d = d.replace(/\+/g, '');
+    if (d.startsWith('+')) return '+' + d.slice(1);
+    if (d.startsWith('00')) return '+' + d.slice(2);
+    const c = DIAL[iso] ? iso : phDefault();
+    if (d.startsWith('0') && ['IT', 'SM', 'VA'].indexOf(c) < 0) d = d.slice(1);
+    return '+' + DIAL[c] + d;
+  }
+  // Affichage lisible : +33 6 12 34 56 78 · +972 52 123 4567
+  function phFormat(e164) {
+    const v = String(e164 || '');
+    if (!v.startsWith('+')) return v;
+    const digits = v.slice(1);
+    const codes = Object.values(DIAL).filter((c, i, a) => a.indexOf(c) === i).sort((a, b) => b.length - a.length);
+    const code = codes.find(c => digits.startsWith(c));
+    if (!code) return v;
+    const n = digits.slice(code.length);
+    const groups = code === '33' ? n.replace(/^(\d)(\d{2})(\d{2})(\d{2})(\d{2})$/, '$1 $2 $3 $4 $5') : n.replace(/^(\d{2})(\d{3})(\d+)$/, '$1 $2 $3');
+    return '+' + code + ' ' + groups;
+  }
+
+  // ── Fiche patient : pays de l'indicatif + canal préféré ────────────────────
+  (function phInjectPatientForm() {
+    const input = document.getElementById('patientPhone');
+    if (input && !document.getElementById('patientPhoneCountry')) {
+      const row = document.createElement('div');
+      row.className = 'ph-row';
+      input.parentNode.insertBefore(row, input);
+      row.innerHTML = '<select id="patientPhoneCountry" aria-label="Pays de l’indicatif"></select>';
+      row.appendChild(input);
+      input.placeholder = 'Ex. 06 12 34 56 78';
+      input.insertAdjacentHTML('afterend', '');
+      row.insertAdjacentHTML('afterend', '<div class="help" id="patientPhoneHelp">Saisis le numéro comme on le compose dans le pays choisi. Demédico ajoute l’indicatif.</div>');
+    }
+    const email = document.getElementById('patientEmail');
+    if (email && !document.getElementById('patientPreferredChannel')) {
+      email.closest('.field').insertAdjacentHTML('afterend', '<div class="field"><label for="patientPreferredChannel">Canal préféré pour le contacter</label><select id="patientPreferredChannel"><option value="">Pas de préférence</option><option value="WHATSAPP">WhatsApp</option><option value="SMS">SMS</option><option value="EMAIL">Email</option></select></div>');
+    }
+  })();
+
+  const phBaseOpenPatientModal = openPatientModal;
+  openPatientModal = function (patient) {
+    phBaseOpenPatientModal(patient || null);
+    document.getElementById('patientPhoneCountry').innerHTML = phOptions(patient && patient.phoneCountry);
+    document.getElementById('patientPhone').value = patient && patient.phone ? phFormat(patient.phone) : '';
+    document.getElementById('patientPreferredChannel').value = (patient && patient.preferredChannel) || '';
+  };
+
+  submitPatient = async function () {
+    const payload = {
+      id:value('patientId'), firstName:value('patientFirstName'), lastName:value('patientLastName'), birthDate:value('patientBirthDate'),
+      phone:value('patientPhone'), phoneCountry:value('patientPhoneCountry'), preferredChannel:value('patientPreferredChannel'),
+      email:value('patientEmail'), status:value('patientStatus'), importantInfo:value('patientImportantInfo')
+    };
+    if (!payload.firstName || !payload.lastName) return toast('Prénom et nom sont obligatoires.', 'error');
+    try {
+      setModalBusy(true);
+      const saved = await gs('savePatient', payload);
+      closeModal();
+      toast(payload.id ? 'Patient mis à jour.' : 'Patient créé.');
+      await refreshData(true);
+      openPatient(saved.id);
+    } catch (err) { toast(err.message, 'error'); }
+    finally { setModalBusy(false); }
+  };
+
+  // ── Paramètres > Communications ────────────────────────────────────────────
+  function cmSettings() {
+    const s = (state.data && state.data.settings) || {};
+    return {senderName:s.commSenderName || '', replyTo:s.commReplyTo || '', signature:s.commSignature || '', proPhone:s.commProPhone || '', defaultCountry:DIAL[s.defaultCountry] ? s.defaultCountry : 'FR',
+      channels:{EMAIL:s.commEmail !== 'FALSE', WHATSAPP:s.commWhatsapp !== 'FALSE', SMS:s.commSms !== 'FALSE'}, practiceName:s.practiceName || ''};
+  }
+  function cmRender() {
+    const box = document.getElementById('cmPanel');
+    if (!box) return;
+    const c = cmSettings(), admin = dmIsAdmin();
+    const dis = admin ? '' : ' disabled';
+    const ch = (k, label, sub) => '<div class="cm-channel"><div class="grow"><strong>' + label + '</strong><small>' + sub + '</small></div><label class="cm-switch"><input type="checkbox" id="cmCh' + k + '"' + (c.channels[k] ? ' checked' : '') + dis + '> Activé</label>' + (admin ? '<button type="button" class="btn btn-sm" onclick="cmTest(\'' + k + '\')">Tester</button>' : '') + '</div>';
+    box.innerHTML = '<div class="panel-head"><div><h3 class="panel-title">Communications</h3><p class="panel-sub">Comment tes patients voient tes messages. ' + (admin ? '' : 'Seul l’administrateur peut modifier ces réglages.') + '</p></div></div>' +
+      '<div class="cm-grid">' +
+        '<div class="field"><label for="cmSender">Nom affiché dans les emails</label><input id="cmSender" maxlength="80" value="' + escapeHtml(c.senderName) + '" placeholder="' + escapeHtml(c.practiceName || 'Cabinet Dr Cohen') + '"' + dis + '></div>' +
+        '<div class="field"><label for="cmReply">Email de réponse</label><input id="cmReply" type="email" maxlength="160" value="' + escapeHtml(c.replyTo) + '" placeholder="contact@cabinet.fr"' + dis + '><div class="help">Quand le patient clique sur « Répondre », son message arrive ici.</div></div>' +
+        '<div class="field"><label for="cmCountry">Pays du cabinet</label><select id="cmCountry"' + dis + '>' + phOptions(c.defaultCountry) + '</select><div class="help">Utilisé pour compléter les numéros saisis sans indicatif.</div></div>' +
+        '<div class="field"><label for="cmPhone">Téléphone professionnel</label><input id="cmPhone" type="tel" maxlength="40" value="' + escapeHtml(phFormat(c.proPhone)) + '" placeholder="06 12 34 56 78"' + dis + '><div class="help">Affiché sous la signature des emails. Sert aussi aux tests WhatsApp et SMS.</div></div>' +
+        '<div class="field full"><label for="cmSignature">Signature</label><textarea id="cmSignature" maxlength="400" placeholder="Dr David Cohen&#10;Kinésithérapeute"' + dis + '>' + escapeHtml(c.signature) + '</textarea><div class="help">Ajoutée à la fin des modèles de messages, sous la forme {signature}.</div></div>' +
+        '<div class="full"><div class="panel-sub" style="margin-bottom:8px;font-weight:750;color:var(--text-2)">Canaux</div><div class="cm-channels">' +
+          ch('EMAIL', 'Email', 'Envoyé par Demédico, avec le logo et ta signature.') +
+          ch('WHATSAPP', 'WhatsApp', 'Ouvre WhatsApp (téléphone ou WhatsApp Web) avec le message prêt. WhatsApp Business conseillé.') +
+          ch('SMS', 'SMS', 'Ouvre l’app Messages du téléphone. Sur ordinateur, préfère l’email ou WhatsApp.') + '</div></div>' +
+      '</div>' + (admin ? '<div class="pv-actions-row" style="margin-top:16px"><button class="btn btn-primary" onclick="cmSave()">Enregistrer</button><span class="pv-note">Les emails partent pour l’instant depuis l’adresse Gmail du compte Demédico ; le nom affiché et l’adresse de réponse sont les tiens.</span></div>' : '');
+  }
+  async function cmSave() {
+    const payload = {
+      senderName:value('cmSender'), replyTo:value('cmReply'), signature:document.getElementById('cmSignature').value, proPhone:value('cmPhone'), defaultCountry:value('cmCountry'),
+      channels:{EMAIL:document.getElementById('cmChEMAIL').checked, WHATSAPP:document.getElementById('cmChWHATSAPP').checked, SMS:document.getElementById('cmChSMS').checked}
+    };
+    showLoading(true);
+    try { await gs('saveCommSettings', payload); toast('Réglages enregistrés.'); await refreshData(true); }
+    catch (err) { toast(err.message, 'error'); }
+    finally { showLoading(false); }
+  }
+  async function cmTest(channel) {
+    const c = cmSettings();
+    if (channel === 'EMAIL') {
+      showLoading(true);
+      try { const r = await gs('sendTestEmail'); toast(r.message); } catch (err) { toast(err.message, 'error'); } finally { showLoading(false); }
+      return;
+    }
+    const num = c.proPhone ? c.proPhone.replace(/\D/g, '') : '';
+    if (!num) return toast('Enregistre d’abord ton téléphone professionnel.', 'error');
+    const msg = 'Test Demédico : si tu lis ce message, l’envoi par ' + (channel === 'SMS' ? 'SMS' : 'WhatsApp') + ' fonctionne.';
+    if (channel === 'WHATSAPP') window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(msg), '_blank');
+    else window.location.href = 'sms:+' + num + (/iPhone|iPad/i.test(navigator.userAgent) ? '&' : '?') + 'body=' + encodeURIComponent(msg);
+  }
+  (function cmInject() {
+    const anchor = document.getElementById('blSettingsCard');
+    if (anchor && !document.getElementById('cmPanel')) anchor.insertAdjacentHTML('afterend', '<section class="panel" id="cmPanel" style="margin-bottom:18px"></section>');
+  })();
+
+  // ── Fenêtre « Contacter » : canaux activés, canal préféré, signature, numéros internationaux ──
+  Object.assign(PV_TPL, {
+    REMINDER:{label:'Rappel de rendez-vous', subject:'Rappel de votre rendez-vous', body:'Bonjour {prenom},\n\nPetit rappel : votre rendez-vous au {cabinet} est prévu le {date} à {heure}.\n\nEn cas d’empêchement, merci de nous prévenir.\n\n{signature}', needsAppt:true},
+    CONFIRM:{label:'Confirmation de rendez-vous', subject:'Confirmation de votre rendez-vous', body:'Bonjour {prenom},\n\nVotre rendez-vous du {date} à {heure} est bien confirmé.\n\nÀ bientôt,\n{signature}', needsAppt:true},
+    MOVED:{label:'Changement d’horaire', subject:'Changement d’horaire de votre rendez-vous', body:'Bonjour {prenom},\n\nVotre rendez-vous est désormais prévu le {date} à {heure}.\n\nMerci de nous confirmer que cet horaire vous convient.\n\n{signature}', needsAppt:true},
+    CANCEL:{label:'Annulation', subject:'Annulation de votre rendez-vous', body:'Bonjour {prenom},\n\nNous sommes contraints d’annuler votre rendez-vous. Nous vous recontactons pour en fixer un nouveau.\n\nToutes nos excuses,\n{signature}'},
+    AFTER:{label:'Suite à la séance', subject:'Suite à votre séance', body:'Bonjour {prenom},\n\nMerci pour votre venue. Comme convenu, pensez à vos exercices et n’hésitez pas à revenir vers nous si vous avez une question.\n\n{signature}'},
+    FREE:{label:'Message libre', subject:'', body:'Bonjour {prenom},\n\n\n\n{signature}'}
+  });
+  const cmBaseFill = pvFill;
+  pvFill = function (text) {
+    const c = cmSettings(), me = dmMe();
+    return cmBaseFill(String(text || '').replace(/\{signature\}/g, c.signature || me.displayName || c.practiceName || ''));
+  };
+  pvPhone = function (raw) { return phNormalize(raw, phDefault()).replace(/\D/g, ''); };
+
+  const cmBaseOpenContact = pvOpenContact;
+  pvOpenContact = function (channel) {
+    const r = pvState.record; if (!r) return;
+    const p = r.patient, c = cmSettings();
+    const usable = k => c.channels[k] && (k === 'EMAIL' ? !!p.email : !!p.phone);
+    if (!channel && !pvState.contactOpened) {
+      const pref = p.preferredChannel;
+      channel = pref && usable(pref) ? pref : ['EMAIL', 'WHATSAPP', 'SMS'].find(usable) || 'EMAIL';
+    }
+    if (channel) pvState.contact.channel = channel;
+    if (!usable(pvState.contact.channel)) pvState.contact.channel = ['EMAIL', 'WHATSAPP', 'SMS'].find(usable) || pvState.contact.channel;
+    pvState.contactOpened = true;
+    cmBaseOpenContact();
+    document.querySelectorAll('#ctBody .ct-seg button').forEach(b => {
+      const k = (b.getAttribute('onclick') || '').match(/'(\w+)'/);
+      if (!k) return;
+      if (!c.channels[k[1]]) b.remove();
+      else if (p.preferredChannel === k[1]) b.insertAdjacentHTML('beforeend', '<span class="ct-pref">PRÉFÉRÉ</span>');
+    });
+    const to = document.querySelector('#ctBody .pv-note strong');
+    if (to && pvState.contact.channel !== 'EMAIL' && p.phone) to.textContent = phFormat(phNormalize(p.phone, phDefault()));
+    if (!['EMAIL', 'WHATSAPP', 'SMS'].some(usable)) document.getElementById('ctBody').insertAdjacentHTML('afterbegin', '<div class="bl-banner warn"><span class="bl-dot"></span><div>Aucun canal disponible : ajoute un email ou un téléphone au patient, ou active un canal dans Paramètres > Communications.</div></div>');
+  };
+  const cmBaseCloseModal = closeModal;
+  closeModal = function () { pvState.contactOpened = false; return cmBaseCloseModal.apply(this, arguments); };
+
+  // Onglet Messages et en-tête du dossier : statuts honnêtes, numéros lisibles, canaux désactivés masqués.
+  const cmBaseRender = pvRender;
+  pvRender = function () {
+    cmBaseRender();
+    const r = pvState.record, c = cmSettings();
+    const meta = document.querySelector('.pv-meta');
+    if (meta && r.patient.phone) meta.querySelectorAll('span').forEach(s => { if (s.textContent === r.patient.phone) s.textContent = phFormat(phNormalize(r.patient.phone, phDefault())); });
+    document.querySelectorAll('#pvBody .pv-channel').forEach(b => { const k = (b.getAttribute('onclick') || '').match(/'(\w+)'/); if (k && !c.channels[k[1]]) b.remove(); });
+  };
+
+  const cmBaseRenderAll2 = renderAll;
+  renderAll = function () { cmBaseRenderAll2(); try { cmRender(); } catch (e) { console.error(e); } };
 </script>
 
 </body>

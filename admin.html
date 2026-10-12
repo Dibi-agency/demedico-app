@@ -405,6 +405,37 @@
   .adm-auth-brand img{width:170px;height:auto;display:block}
   .adm-auth-brand{flex-direction:column;align-items:flex-start;gap:6px}
   .adm-auth-brand small{margin-left:58px !important}
+
+  /* Téléphone : filtres sur plusieurs lignes, bouton d'ajout pleine largeur en tête */
+  #clientFilters{flex-wrap:wrap}
+  @media (max-width:760px){
+    #clientFilters .spacer{display:none}
+    #clientFilters .primary-btn{order:-1;width:100%;margin-bottom:4px}
+    .drawer .detail-grid{grid-template-columns:1fr 1fr;gap:12px}
+    .drawer .adm-actions .primary-btn,.drawer .adm-actions .ghost-btn{flex:1 1 auto}
+  }
+
+  /* Graphique et grilles : jamais plus larges que l'écran */
+  .grid>*{min-width:0}
+  .bar-col{min-width:0}
+  .bars{gap:4px}
+  @media (max-width:1180px){.two-col{grid-template-columns:minmax(0,1fr)}}
+  @media (max-width:620px){.bar-col:nth-child(even) .month{visibility:hidden}.chart-wrap{padding-right:0}}
+
+  /* Téléphone : chaque ligne de tableau devient une carte lisible */
+  @media (max-width:620px){
+    .table-wrap{overflow:visible}
+    .table-wrap table,.table-wrap tbody,.table-wrap tr,.table-wrap td{display:block;width:100%;min-width:0 !important;box-sizing:border-box}
+    .table-wrap thead{display:none}
+    .table-wrap tr{position:relative;border:1px solid #E4EAEA;border-radius:14px;padding:12px 14px;margin:0 0 10px;background:#fff}
+    .table-wrap td{border:0 !important;padding:3px 0 !important;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:right}
+    .table-wrap td[data-l]::before{content:attr(data-l);font-size:10.5px;font-weight:700;color:#849095;text-transform:uppercase;letter-spacing:.05em;text-align:left}
+    .table-wrap td:first-child{display:block;text-align:left;font-weight:700;font-size:13.5px;padding:0 40px 8px 0 !important}
+    .table-wrap td:first-child::before{display:none}
+    .table-wrap td:last-child:has(.row-menu){position:absolute;top:8px;right:8px;width:auto;padding:0 !important}
+    .table-wrap td:last-child:has(.row-menu)::before{display:none}
+    .table-wrap td[colspan]{display:block}
+  }
 </style>
 </head>
 <body>
@@ -707,7 +738,7 @@
       <td><div class="client">${avatar(o, i)}${esc(o.name)}</div></td>
       <td>${esc(o.planLabel)}</td>
       <td><span class="pill ${PILL[o.subscriptionStatus] || 'warning'}">${esc(o.statusLabel)}</span></td>
-      <td>${o.usersCount}${o.usersInvited ? ` <small style="color:#849095">+${o.usersInvited}</small>` : ''}</td>
+      <td><span>${o.usersCount}${o.usersInvited ? ` <small style="color:#849095">(+${o.usersInvited} invité${o.usersInvited > 1 ? 's' : ''})</small>` : ''}</span></td>
       ${withPatients ? `<td>${o.patientCount}</td>` : ''}
       <td>${esc(due(o))}</td>
       <td><span class="health-text"><i class="status-dot" style="--dot:${HEALTH[o.health.key]}"></i>${esc(o.health.label)}</span></td>
@@ -753,10 +784,18 @@
     $('auditList').innerHTML = auditHtml(d.audit.slice(0, 4));
   }
 
+  // Recopie le nom de chaque colonne dans ses cellules (affichage en cartes sur téléphone).
+  function labelTables() {
+    document.querySelectorAll('.table-wrap table').forEach(t => {
+      const heads = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
+      t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (heads[i] && !td.hasAttribute('colspan')) td.setAttribute('data-l', heads[i]); }));
+    });
+  }
   function renderClients() {
     const list = DATA.orgs.filter(o => (!DATA.filter || (DATA.filter === 'FREE' ? o.complimentary : o.subscriptionStatus === DATA.filter)) && (!DATA.q || (o.name + ' ' + o.ownerEmail + ' ' + o.planLabel).toLowerCase().includes(DATA.q)));
     $('allClients').innerHTML = list.length ? list.map((o, i) => row(o, i, true)).join('') : empty(8, 'Aucun cabinet ne correspond.');
     document.querySelectorAll('#clientFilters .filter-chip').forEach(c => c.classList.toggle('active', c.dataset.status === DATA.filter));
+    labelTables();
   }
 
   function renderSubscriptions() {
@@ -946,6 +985,7 @@
       const [dash, orgs, settings] = await Promise.all([call('adminGetDashboard'), call('adminListOrganizations', {}), call('adminGetSettings')]);
       Object.assign(DATA, {dash, orgs, settings});
       renderOverview(); renderClients(); renderSubscriptions(); renderSupport(dash.audit); renderAnalytics(); renderSettings();
+      labelTables();
     } catch (e) { if (e.code !== 'AUTH') toast(e.message, 'error'); }
     finally { loading(false); }
   }
