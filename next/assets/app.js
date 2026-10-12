@@ -38,9 +38,24 @@
     FREE:{label:'Message libre',subject:'',body:'Bonjour {prenom},\n\n\n\n{signature}'}
   };
 
+  const PLAN_CATALOG = Object.freeze({
+    FREE:{id:'FREE',label:'Free',price:0,annual:0,users:1,patients:20,appointments:30,description:'Pour découvrir Demédico sereinement.',features:['Agenda, fiches patients et tâches','Tableau de bord essentiel']},
+    STARTER:{id:'STARTER',label:'Starter',price:4.90,annual:49,users:1,patients:150,appointments:null,description:'Pour les praticiens indépendants.',features:['Consultations et notes cliniques','Statistiques simples','150 patients actifs']},
+    PRO:{id:'PRO',label:'Pro',price:9.90,annual:99,users:2,patients:null,appointments:null,description:'L’offre la plus complète pour développer ton activité.',features:['Patients illimités','Statistiques complètes','Google Agenda et Outlook','Support prioritaire'],recommended:true,founderPrice:6.90},
+    CABINET_PLUS:{id:'CABINET_PLUS',label:'Cabinet',price:19.90,annual:199,users:5,patients:null,appointments:null,description:'Pour les cabinets et les équipes.',features:['5 utilisateurs inclus','Gestion des rôles et secrétariat','Plusieurs agendas','Statistiques du cabinet'],extraUserPrice:3.90}
+  });
+  const INTEGRATION_CATALOG = Object.freeze([
+    {id:'google_workspace',short:'G',name:'Google Agenda',category:'CALENDAR',state:'SERVER_REQUIRED',sync:'Demédico ↔ Google Agenda',caps:['Calendar','Auto 15 min','Privé'],description:'Tes rendez-vous dans ton agenda Google, avec intitulés neutres et événements privés.',requirement:'OAuth serveur + synchronisation sécurisée. L’ancienne version Apps Script le faisait déjà ; Next doit utiliser une Edge Function ou un backend dédié.'},
+    {id:'microsoft_365',short:'M',name:'Microsoft 365 / Outlook',category:'CALENDAR',state:'SERVER_REQUIRED',sync:'Demédico ↔ Outlook',caps:['Outlook Calendar','Graph','Auto 15 min'],description:'Tes rendez-vous dans ton agenda Outlook, avec gestion des conflits.',requirement:'OAuth Microsoft Graph côté serveur. Aucun secret ne doit être placé dans GitHub Pages.'},
+    {id:'planity',short:'PL',name:'Planity',category:'BOOKING',state:'PARTNER',sync:'Accès à confirmer',caps:['Réservation','Widget','Agenda'],description:'Connecteur prévu selon les capacités réellement ouvertes au compte professionnel.',requirement:'Accès partenaire ou API officiellement disponible requis.'},
+    {id:'phorest',short:'PH',name:'Phorest',category:'BUSINESS',state:'PARTNER',sync:'API',caps:['Clients','Agenda','Réservations'],description:'Connexion métier envisageable pour les structures qui utilisent Phorest.',requirement:'Clés/API partenaire nécessaires.'},
+    {id:'pabau',short:'PB',name:'Pabau',category:'BUSINESS',state:'PARTNER',sync:'API',caps:['Patients','Agenda','CRM'],description:'Connexion possible via API selon le contrat et les droits du cabinet.',requirement:'Accès API requis.'},
+    {id:'ics',short:'ICS',name:'ICS / Calendrier générique',category:'STANDARD',state:'PLANNED',sync:'Import / export',caps:['ICS','1 sens','Interopérable'],description:'Import ou export d’indisponibilités via le standard iCalendar.',requirement:'Le moteur d’import serveur n’est pas encore activé dans Next.'}
+  ]);
+
   const S = {
     sb:null,user:null,member:null,org:null,route:'dashboard',patientId:null,patientTab:'overview',
-    patients:[],appointments:[],tasks:[],members:[],profiles:{},subscription:null,usage:null,commSettings:null,
+    patients:[],appointments:[],tasks:[],members:[],profiles:{},subscription:null,usage:null,commSettings:null,planRequests:[],
     weekStart:startOfWeek(), perf:[]
   };
 
@@ -83,10 +98,12 @@
     patients:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
     tasks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
     stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+    integrations:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 12h6M12 9v6"/><path d="M7 3v4M17 3v4M5 7h14v4a7 7 0 0 1-14 0z"/></svg>',
+    subscription:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m3 7 4 4 5-7 5 7 4-4-2 13H5z"/></svg>',
     settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.28.35.48.76.6 1 .12.35.1.73.1 1.1v1.8c0 .37.02.75-.1 1.1-.12.24-.32.65-.6 1z"/></svg>',
     diagnostic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg>'
   };
-  const ROUTE_META={dashboard:['Accueil','Votre journée, en un coup d’œil.'],agenda:['Agenda','Planifier sans perdre le contexte patient.'],patients:['Patients','Une vue 360° claire, sans jargon CRM.'],patient:['Patients','Dossier patient et suivi clinique.'],tasks:['Tâches','Les prochaines actions, pas une liste oubliée.'],stats:['Statistiques','Des indicateurs utiles au cabinet.'],settings:['Paramètres','Cabinet, communications et équipe.'],diagnostic:['Diagnostic','Performance réelle de Supabase.']};
+  const ROUTE_META={dashboard:['Accueil','Votre journée, en un coup d’œil.'],agenda:['Agenda','Planifier sans perdre le contexte patient.'],patients:['Patients','Une vue 360° claire, sans jargon CRM.'],patient:['Patients','Dossier patient et suivi clinique.'],tasks:['Tâches','Les prochaines actions, pas une liste oubliée.'],stats:['Statistiques','Des indicateurs utiles au cabinet.'],integrations:['Intégrations','Connecter Demédico sans perdre la maîtrise des données.'],subscription:['Abonnement','Ton offre, ton utilisation et les formules disponibles.'],settings:['Paramètres','Cabinet, communications et équipe.'],diagnostic:['Diagnostic','Performance réelle de Supabase.']};
   function appShell() {
     root.innerHTML = `
       <div id="toasts" class="toasts"></div>
@@ -99,11 +116,17 @@
             ${navButton('patients','Patients')}
             ${navButton('tasks','Tâches')}
             ${navButton('stats','Statistiques')}
+            ${navButton('integrations','Intégrations')}
+            ${navButton('subscription','Abonnement')}
             ${navButton('settings','Paramètres')}
             ${navButton('diagnostic','Diagnostic')}
           </nav>
           <div class="sidebar-spacer"></div>
           <div class="version-label">DEMÉDICO · SUPABASE</div>
+          <button class="plan-side-card" data-route="subscription">
+            <span><strong>Demédico ${esc(planLabel(S.subscription?.plan_id))}</strong><small>${esc(subscriptionStatusLabel(S.subscription?.status))}</small></span>
+            <span class="plan-arrow">›</span>
+          </button>
           <div class="user-card"><strong>${esc(S.user.email)}</strong><span class="meta">${esc(roleLabel(S.member.role))} · ${esc(S.org.name)}</span><button class="link" id="logoutBtn">Se déconnecter</button></div>
           <div class="side-card"><div class="eyebrow">Action rapide</div><p>Crée un rendez-vous sans quitter l’écran en cours.</p><button class="btn primary" id="sideQuickAppt">+ Rendez-vous</button></div>
         </aside>
@@ -149,7 +172,7 @@
       const {data,error}=await timed('Cabinet et rôle',()=>S.sb.from('organization_members').select('organization_id,role,active,organizations(name,profession_template_key,timezone)').eq('user_id',S.user.id).eq('active',true).limit(1));
       if(error) throw error; if(!data?.length) return authView('Ce compte n’est rattaché à aucun cabinet.');
       S.member=data[0]; S.org={id:data[0].organization_id,...(data[0].organizations||{})};
-      await Promise.all([loadPatients(),loadAppointments(),loadTasks(),loadMembers(),loadSubscription(),loadCommSettings()]);
+      await Promise.all([loadPatients(),loadAppointments(),loadTasks(),loadMembers(),loadSubscription(),loadCommSettings(),loadPlanRequests()]);
       appShell(); render();
     }catch(e){console.error(e);authView(frErr(e));}
   }
@@ -159,6 +182,12 @@
   async function loadTasks(){const {data,error}=await timed('Tâches',()=>S.sb.from('tasks').select('*').eq('organization_id',S.org.id).order('created_at',{ascending:false}).limit(200));if(error)throw error;S.tasks=data||[];}
   async function loadMembers(){const {data,error}=await timed('Équipe',()=>S.sb.from('organization_members').select('user_id,role,active').eq('organization_id',S.org.id).order('created_at'));if(error)throw error;S.members=data||[];const ids=S.members.map(m=>m.user_id);if(ids.length){const {data:p}=await S.sb.from('profiles').select('id,display_name').in('id',ids);S.profiles=Object.fromEntries((p||[]).map(x=>[x.id,x]));}}
   async function loadSubscription(){const [{data:s},{data:u}]=await Promise.all([S.sb.from('subscriptions').select('*').eq('organization_id',S.org.id).maybeSingle(),S.sb.from('usage_counters').select('*').eq('organization_id',S.org.id).maybeSingle()]);S.subscription=s||null;S.usage=u||null;}
+  async function loadPlanRequests(){
+    if(!isAdmin()){S.planRequests=[];return;}
+    const {data,error}=await S.sb.from('subscription_change_requests').select('*').eq('organization_id',S.org.id).order('created_at',{ascending:false}).limit(10);
+    if(error){ if(/subscription_change_requests/i.test(error.message||'')){console.warn('Migration 008 missing',error);S.planRequests=[];return;} throw error; }
+    S.planRequests=data||[];
+  }
   async function loadCommSettings(){
     const defaults={sender_name:S.org?.name||'Votre cabinet',reply_to:'',default_country:'FR',pro_phone:'',signature:'',email_enabled:true,whatsapp_enabled:true,sms_enabled:true};
     const {data,error}=await S.sb.from('organization_communication_settings').select('*').eq('organization_id',S.org.id).maybeSingle();
@@ -166,10 +195,15 @@
     S.commSettings={...defaults,...(data||{})};
   }
 
-  function render(){markNav(); const p=$('#page'); if(!p)return; ({dashboard:renderDashboard,patients:renderPatients,patient:renderPatient,agenda:renderAgenda,tasks:renderTasks,stats:renderStats,settings:renderSettings,diagnostic:renderDiagnostic}[S.route]||renderDashboard)();}
+  function render(){markNav(); const p=$('#page'); if(!p)return; ({dashboard:renderDashboard,patients:renderPatients,patient:renderPatient,agenda:renderAgenda,tasks:renderTasks,stats:renderStats,integrations:renderIntegrations,subscription:renderSubscription,settings:renderSettings,diagnostic:renderDiagnostic}[S.route]||renderDashboard)();}
   function pageHead(title,sub,actions=''){return `<div class="page-head"><div><h1>${esc(title)}</h1><p class="muted">${esc(sub)}</p></div>${actions?`<div class="actions">${actions}</div>`:''}</div>`;}
   function patientName(id){const p=S.patients.find(x=>x.id===id);return p?`${p.first_name} ${p.last_name}`:'Patient';}
   function patientById(id){return S.patients.find(x=>x.id===id);}
+  function planLabel(id){return PLAN_CATALOG[id]?.label||PLAN_CATALOG.FREE.label;}
+  function subscriptionStatusLabel(s){return ({FREE:'Actif',TRIALING:'Essai',ACTIVE:'Actif',PAST_DUE:'Paiement à régulariser',CANCELED:'Résilié',SUSPENDED:'Suspendu'}[s]||'Actif');}
+  function euro(v){return Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:Number(v)%1?2:0,maximumFractionDigits:2})+' €';}
+  function usagePct(used,limit){if(limit===null||!Number.isFinite(Number(limit)))return 100; return Math.max(0,Math.min(100,Math.round(Number(used||0)/Math.max(1,Number(limit))*100)));}
+  function integrationStatus(i){return i.state==='PARTNER'?['Accès partenaire','partner']:i.state==='SERVER_REQUIRED'?['Backend sécurisé requis','warn']:['Prévu',''];}
 
   function renderDashboard(){
     const today=new Date(); const day=today.toISOString().slice(0,10); const todayA=S.appointments.filter(a=>a.starts_at.slice(0,10)===day && a.status!=='CANCELLED'); const open=S.tasks.filter(t=>t.status!=='DONE'); const next=[...S.appointments].filter(a=>new Date(a.starts_at)>=today&&a.status!=='CANCELLED').sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at)); const first=next[0];
@@ -262,6 +296,63 @@
   function renderStats(){
     const completed=S.appointments.filter(a=>a.status==='DONE').length;const noShow=S.appointments.filter(a=>a.status==='NO_SHOW').length;const open=S.tasks.filter(t=>t.status!=='DONE').length;const byMonth={};S.appointments.forEach(a=>{const k=a.starts_at.slice(0,7);byMonth[k]=(byMonth[k]||0)+1;});const max=Math.max(1,...Object.values(byMonth));
     $('#page').innerHTML=pageHead('Statistiques','Des indicateurs simples, sans exposer de contenu clinique.')+`<div class="grid grid4"><div class="card stat"><div class="label">Patients</div><div class="value">${S.patients.length}</div></div><div class="card stat"><div class="label">RDV suivis</div><div class="value">${S.appointments.length}</div></div><div class="card stat"><div class="label">RDV terminés</div><div class="value">${completed}</div></div><div class="card stat"><div class="label">Absences</div><div class="value">${noShow}</div></div></div><section class="card" style="margin-top:16px"><div class="card-head"><h2>Activité par mois</h2><span class="badge">${open} tâche(s) ouverte(s)</span></div><div class="grid">${Object.entries(byMonth).sort().slice(-8).map(([m,n])=>`<div><div class="metric-line"><span>${esc(m)}</span><strong>${n} RDV</strong></div><div class="bar"><span style="width:${Math.round(n/max*100)}%"></span></div></div>`).join('')||'<div class="empty">Pas assez de données.</div>'}</div></section>`;
+  }
+
+  function renderIntegrations(){
+    const groups={CALENDAR:'Calendriers',BOOKING:'Réservation & booking',BUSINESS:'Systèmes métier',STANDARD:'Standards & autres'};
+    $('#page').innerHTML=pageHead('Intégrations','Vos outils connectés, vos disponibilités unifiées.',`<button class="btn" id="refreshIntegrations">Actualiser</button>`)
+      +`<div class="integration-hero"><section class="integration-connect-hero"><span class="eyebrow light">DEMÉDICO CONNECT</span><h2>Tout connecter.<br>Tout garder sous contrôle.</h2><p>Centralisez vos agendas et services externes sans perdre la maîtrise des données. Les événements externes restent des indisponibilités, jamais des dossiers patients.</p></section><section class="card integration-principles"><div class="integration-principle"><span class="integration-symbol">◇</span><div><strong>Privacy by default</strong><p>Intitulés externes neutres et aucune donnée clinique envoyée aux calendriers.</p></div></div><div class="integration-principle"><span class="integration-symbol">↻</span><div><strong>Conflits maîtrisés</strong><p>Une source de vérité explicite et des identifiants externes pour éviter les doublons.</p></div></div><div class="integration-principle"><span class="integration-symbol">⌁</span><div><strong>Connecteurs interchangeables</strong><p>Google, Microsoft, ICS ou API partenaire sans coupler le cœur clinique.</p></div></div></section></div>`
+      +`<div class="integration-section-head"><div><span class="eyebrow">CATALOGUE</span><h2>Disponibles</h2><p class="muted">Seuls les boutons réellement exploitables seront activés.</p></div></div>`
+      +`<div class="integration-grid">${Object.entries(groups).map(([key,label])=>{const items=INTEGRATION_CATALOG.filter(i=>i.category===key);if(!items.length)return'';return `<div class="provider-label">${esc(label)}</div>${items.map(i=>{const [st,cls]=integrationStatus(i);return `<article class="integration-card"><div class="integration-card-head"><span class="integration-logo">${esc(i.short)}</span><span class="badge">${esc(i.sync)}</span></div><h3>${esc(i.name)}</h3><p>${esc(i.description)}</p><div class="integration-caps">${i.caps.map(c=>`<span>${esc(c)}</span>`).join('')}</div><div class="integration-card-foot"><span class="integration-state ${cls}">${esc(st)}</span><button class="btn sm" data-integration="${esc(i.id)}">Détails</button></div></article>`}).join('')}`}).join('')}</div>`;
+    $('#refreshIntegrations').onclick=()=>{toast('Catalogue actualisé.');renderIntegrations();};
+    $$('[data-integration]').forEach(b=>b.onclick=()=>openIntegrationDetails(b.dataset.integration));
+  }
+
+  function openIntegrationDetails(id){
+    const i=INTEGRATION_CATALOG.find(x=>x.id===id); if(!i)return;
+    const [st]=integrationStatus(i);
+    modal(i.name,`<div class="integration-detail"><span class="badge brand">${esc(st)}</span><p>${esc(i.description)}</p><div class="divider"></div><div class="metric-line"><span>Synchronisation</span><strong>${esc(i.sync)}</strong></div><div class="metric-line"><span>État Next</span><strong>${esc(st)}</strong></div><div class="notice warn" style="margin-top:14px">${esc(i.requirement)}</div><p class="small muted">Demédico n’active pas de faux bouton OAuth : tant que le backend sécurisé n’est pas branché, aucune clé ni secret n’est placé dans le navigateur.</p></div>`);
+  }
+
+  function renderSubscription(){
+    const currentId=S.subscription?.plan_id||'FREE', current=PLAN_CATALOG[currentId]||PLAN_CATALOG.FREE, usage=S.usage||{};
+    const users=usage.active_users ?? S.members.filter(m=>m.active).length;
+    const patients=usage.active_patients ?? S.patients.length;
+    const appts=usage.appointments_current_month ?? S.appointments.filter(a=>String(a.starts_at).slice(0,7)===new Date().toISOString().slice(0,7)&&a.status!=='CANCELLED').length;
+    const pending=S.planRequests.find(r=>r.status==='PENDING');
+    $('#page').innerHTML=pageHead('Abonnement','Ton offre, ton utilisation et les offres disponibles.')
+      +`${pending?`<div class="subscription-banner warn"><span class="status-dot amber"></span><strong>Demande en attente.</strong> Passage vers ${esc(planLabel(pending.requested_plan_id))} demandé le ${fmtDate(pending.created_at)}.</div>`:`<div class="subscription-banner"><span class="status-dot"></span><strong>Compte ${S.subscription?.status==='TRIALING'?'en essai':'actif'}.</strong> ${currentId==='FREE'?'Tu profites de l’offre gratuite.':`Ton offre ${esc(current.label)} est active.`}</div>`}`
+      +`<div class="subscription-overview"><section class="card current-plan-card"><div class="current-plan-title"><div class="plan-icon">♛</div><div><span class="eyebrow">Ton abonnement</span><h2>Demédico ${esc(current.label)}</h2></div><span class="badge ok">${esc(subscriptionStatusLabel(S.subscription?.status))}</span></div><div class="current-price">${euro(S.subscription?.founder_price&&currentId==='PRO'?current.founderPrice:current.price)} <small>/ mois</small></div><p class="muted">${currentId==='FREE'?'Offert par Demédico':S.subscription?.billing_cycle==='ANNUAL'?'Facturation annuelle':'Facturation mensuelle'}</p><button class="btn primary" id="scrollPlans">Changer d’offre</button></section>`
+      +`<section class="card usage-card"><div class="card-head"><div><h2>Ton utilisation</h2><p class="sub muted">Ce mois-ci</p></div></div>${usageLine('Patients actifs',patients,current.patients)}${usageLine('Rendez-vous ce mois',appts,current.appointments)}${usageLine('Utilisateurs',users,current.users)}</section>`
+      +`<section class="card payment-card"><div class="card-head"><h2>Paiement</h2></div><div class="notice"><strong>Paiement en ligne bientôt disponible.</strong><p>Stripe n’est pas encore branché dans Next. Aucune carte bancaire n’est enregistrée ici.</p></div><p class="muted">Les changements vers une offre payante créent une demande administrateur sécurisée. Aucune facturation fictive n’est simulée.</p></section></div>`
+      +`<div class="plans-head" id="plansSection"><div><h2>Choisis l’offre adaptée à ton activité</h2><p class="muted">Tu peux demander une autre formule sans perdre tes données.</p></div><div class="segmented billing-toggle"><button class="active" data-cycle="MONTHLY">Mensuel</button><button data-cycle="ANNUAL">Annuel <span class="annual-gift">2 mois offerts</span></button></div></div>`
+      +`<div class="plan-grid">${Object.values(PLAN_CATALOG).map(p=>planCard(p,currentId)).join('')}</div>`
+      +`${isAdmin()?`<section class="card request-history"><div class="card-head"><div><h2>Demandes récentes</h2><p class="sub muted">Historique visible uniquement par l’administration du cabinet.</p></div></div><div class="list">${S.planRequests.map(r=>`<div class="row-item"><div class="grow"><strong>${esc(planLabel(r.requested_plan_id))}</strong><div class="meta">${fmtDateTime(r.created_at)} · ${esc(r.billing_cycle||'MONTHLY')}</div></div><span class="badge ${r.status==='PENDING'?'warn':r.status==='APPROVED'?'ok':''}">${esc(r.status)}</span></div>`).join('')||'<div class="empty">Aucune demande.</div>'}</div></section>`:''}`;
+    $('#scrollPlans').onclick=()=>$('#plansSection').scrollIntoView({behavior:'smooth'});
+    $$('.billing-toggle button').forEach(b=>b.onclick=()=>{$$('.billing-toggle button').forEach(x=>x.classList.toggle('active',x===b));root.dataset.billingCycle=b.dataset.cycle;$$('.plan-price').forEach(x=>{const p=PLAN_CATALOG[x.dataset.plan];const annual=b.dataset.cycle==='ANNUAL';x.innerHTML=`${euro(annual?p.annual:p.price)} <small>${annual?'/ an':'/ mois'}</small>`;});});
+    $$('[data-request-plan]').forEach(b=>b.onclick=()=>requestPlanChange(b.dataset.requestPlan));
+  }
+
+  function usageLine(label,used,limit){
+    const text=limit===null?`${used} / Illimités`:`${used} / ${limit}`; const pct=usagePct(used,limit);
+    return `<div class="usage-line"><div class="usage-copy"><strong>${esc(label)}</strong><span>${esc(text)}</span></div><div class="usage-bar"><span style="width:${pct}%"></span></div></div>`;
+  }
+  function planCard(p,currentId){
+    const active=p.id===currentId; return `<article class="plan-card ${p.recommended?'recommended':''} ${active?'active-plan':''}">${p.recommended?'<span class="recommend-pill">Offre recommandée</span>':''}<span class="eyebrow">${esc(p.label.toUpperCase())}</span><div class="plan-price" data-plan="${p.id}">${euro(p.price)} <small>/ mois</small></div>${p.founderPrice?`<div class="founder-price">${euro(p.founderPrice)} / mois en tarif fondateur</div>`:''}<p>${esc(p.description)}</p><ul>${p.features.map(f=>`<li>✓ ${esc(f)}</li>`).join('')}<li>✓ ${p.users} utilisateur${p.users>1?'s':''}${p.id==='CABINET_PLUS'?' inclus':''}</li>${p.extraUserPrice?`<li>+ ${euro(p.extraUserPrice)} / utilisateur supplémentaire</li>`:''}</ul><button class="btn ${active?'':'primary'}" ${active?'disabled':''} data-request-plan="${p.id}">${active?'Offre actuelle':p.price===0?'Passer en Free':`Demander ${esc(p.label)}`}</button></article>`;
+  }
+
+  async function requestPlanChange(planId){
+    if(!isAdmin())return toast('Seuls le propriétaire ou un administrateur peuvent changer d’offre.','error');
+    const current=S.subscription?.plan_id||'FREE'; if(planId===current)return;
+    const cycle=root.dataset.billingCycle||'MONTHLY';
+    if(planId==='FREE'){
+      const p=PLAN_CATALOG.FREE, patients=S.usage?.active_patients??S.patients.length, users=S.usage?.active_users??S.members.filter(m=>m.active).length, appts=S.usage?.appointments_current_month??0;
+      if(patients>p.patients||users>p.users||appts>p.appointments)return toast('Ton usage dépasse actuellement les limites Free. Réduis l’usage ou choisis une autre offre.','error');
+    }
+    const row={organization_id:S.org.id,requested_plan_id:planId,billing_cycle:cycle,status:'PENDING',requested_by:S.user.id};
+    const {error}=await S.sb.from('subscription_change_requests').insert(row);
+    if(error){ if(/subscription_change_requests/i.test(error.message||''))return toast('Migration Supabase 008 requise avant de pouvoir envoyer la demande.','error'); return fail(error); }
+    await loadPlanRequests(); toast(`Demande ${planLabel(planId)} enregistrée.`); renderSubscription();
   }
 
   function renderSettings(){
