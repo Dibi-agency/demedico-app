@@ -143,7 +143,7 @@
       </div>
       <div id="modalRoot"></div>`;
     $('#logoutBtn').onclick = async()=>{await S.sb.auth.signOut(); location.reload();};
-    $('#menuBtn').onclick=()=>$('#sidebar').classList.toggle('open');
+    $('#menuBtn').onclick=()=>toggleMenu();
     $('#nav').onclick=(e)=>{const b=e.target.closest('[data-route]');if(!b)return;go(b.dataset.route);$('#sidebar').classList.remove('open');};
     $('#sideQuickAppt').onclick=()=>openAppointmentModal();
     $('#topNewPatient').onclick=()=>openPatientModal();
@@ -152,10 +152,21 @@
     document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();gs.focus();}});
     updateTopbar();
   }
+  // Menu mobile : se ferme en touchant à côté (voile), avec Échap, ou en choisissant une page.
+  function toggleMenu(force){
+    const sb=$('#sidebar');if(!sb)return;const open=force===undefined?!sb.classList.contains('open'):force;
+    sb.classList.toggle('open',open);document.body.classList.toggle('menu-open',open);
+    let scrim=$('#navScrim');
+    if(open&&!scrim){scrim=document.createElement('div');scrim.id='navScrim';scrim.className='nav-scrim';scrim.onclick=()=>toggleMenu(false);document.body.appendChild(scrim);requestAnimationFrame(()=>scrim.classList.add('show'));}
+    if(!open)$$('.nav-scrim').forEach(x=>{x.removeAttribute('id');x.classList.remove('show');x.style.pointerEvents='none';setTimeout(()=>x.remove(),200);});
+    const btn=$('#menuBtn');if(btn)btn.setAttribute('aria-expanded',String(open));
+  }
+  document.addEventListener('keydown',(e)=>{if(e.key==='Escape'&&$('#sidebar')?.classList.contains('open'))toggleMenu(false);});
+  document.addEventListener('click',(e)=>{if(e.target.closest('#sidebar [data-route]')&&document.body.classList.contains('menu-open'))toggleMenu(false);},true);
   function navButton(route,label){ return `<button data-route="${route}"><span class="nav-ico">${NAV_ICONS[route]||''}</span><span>${label}</span></button>`; }
   function updateTopbar(){const m=ROUTE_META[S.route]||ROUTE_META.dashboard; const t=$('#topbarTitle'),s=$('#topbarSubtitle');if(t)t.textContent=m[0];if(s)s.textContent=m[1];}
   function markNav(){ $$('#nav [data-route]').forEach(b=>b.classList.toggle('active',b.dataset.route===S.route || (S.route==='patient'&&b.dataset.route==='patients'))); updateTopbar(); }
-  function go(route, opts={}){ S.route=route; if(opts.patientId!==undefined) S.patientId=opts.patientId; if(opts.patientTab) S.patientTab=opts.patientTab; markNav(); render(); window.scrollTo({top:0,behavior:'instant'}); }
+  function go(route, opts={}){ if(document.body.classList.contains('menu-open'))toggleMenu(false); S.route=route; if(opts.patientId!==undefined) S.patientId=opts.patientId; if(opts.patientTab) S.patientTab=opts.patientTab; markNav(); render(); window.scrollTo({top:0,behavior:'instant'}); }
 
   function authView(message='') {
     root.innerHTML=`<section class="auth"><div class="auth-card"><img class="logo" src="${LOGO}" alt="Demédico"><div><span class="eyebrow">Cabinet OS · Supabase</span><h1>Connexion</h1><p class="muted">Retrouve ton cabinet, sans Apps Script.</p></div>${message?`<p class="danger-text">${esc(message)}</p>`:''}<form id="loginForm" class="grid"><div class="field"><label>Email</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label>Mot de passe</label><input id="password" type="password" autocomplete="current-password" required></div><button class="btn primary" type="submit">Se connecter</button></form><button class="link" id="forgotBtn">Mot de passe oublié ?</button><p class="tiny muted">Cette version utilise uniquement des données fictives tant qu’un hébergement HDS n’est pas en place.</p></div></section><div id="toasts" class="toasts"></div>`;
