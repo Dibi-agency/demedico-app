@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Demédico · Next (test Supabase)</title>
+<style>
+  :root{--bg:#F4F7F7;--surface:#FFFFFF;--surface-2:#F8FAFA;--text:#142226;--text-2:#526268;--text-3:#849095;--line:#E4EAEA;--brand:#248780;--ink:#133239;--success:#2F7A58;--warning:#A96D2D;--danger:#B24F56;--soft:#E7F4F2}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;overflow-x:hidden}
+  button,input,select,textarea{font:inherit}
+  .btn{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:12px;min-height:40px;padding:0 16px;font-weight:700;cursor:pointer}
+  .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+  .btn.ghost{background:transparent}
+  .btn:disabled{opacity:.55;cursor:default}
+  .field{display:grid;gap:6px}
+  .field label{font-size:11px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em}
+  .field input,.field select{border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:#fff;min-width:0;width:100%}
+  .field input:focus,.field select:focus{outline:none;border-color:#8ABAB7;box-shadow:0 0 0 3px rgba(36,135,128,.12)}
+  /* Connexion */
+  .auth{min-height:100vh;display:flex;padding:24px 16px}
+  .auth-card{margin:auto;width:min(420px,100%);background:#fff;border:1px solid var(--line);border-radius:24px;padding:32px 26px;box-shadow:0 24px 80px rgba(18,34,38,.10);display:grid;gap:14px}
+  .auth-card img{width:170px;display:block;margin:0 auto 6px}
+  .auth-card h1{margin:4px 0 0;font-size:26px;letter-spacing:-.04em}
+  .auth-card p{margin:0;color:var(--text-2);font-size:13px}
+  .tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--brand);background:var(--soft);padding:4px 8px;border-radius:8px}
+  .link{border:0;background:none;color:var(--brand);font-weight:700;cursor:pointer;padding:0;font-size:12.5px}
+  /* Appli */
+  .top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;padding:12px 20px;padding-top:max(12px,env(safe-area-inset-top));background:rgba(244,247,247,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .top img{height:30px}
+  .top .who{margin-left:auto;text-align:right;font-size:12px;color:var(--text-2)}
+  .top .who strong{display:block;color:var(--text);font-size:13px}
+  .tabs{display:flex;gap:4px;padding:4px;background:#fff;border:1px solid var(--line);border-radius:14px;margin:16px 20px 0;overflow-x:auto}
+  .tabs button{border:0;background:none;padding:9px 14px;border-radius:10px;font-weight:750;color:var(--text-2);cursor:pointer;white-space:nowrap}
+  .tabs button.active{background:var(--text);color:#fff}
+  main{padding:16px 20px 40px;max-width:1180px;margin:0 auto}
+  .card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;min-width:0}
+  .card h2{margin:0;font-size:17px;letter-spacing:-.02em}
+  .sub{color:var(--text-3);font-size:12px;margin-top:3px}
+  .grid2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,1fr);gap:16px;align-items:start}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .list{margin-top:14px;display:grid;gap:8px}
+  .item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2)}
+  .avatar{width:38px;height:38px;border-radius:12px;background:var(--soft);color:var(--brand);display:grid;place-items:center;font-weight:850;flex:0 0 38px}
+  .item .grow{flex:1;min-width:0}
+  .item strong{display:block;font-size:13.5px}
+  .item small{color:var(--text-2);font-size:12px;overflow-wrap:anywhere}
+  .form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .form .full{grid-column:1/-1}
+  .ph{display:grid;grid-template-columns:minmax(110px,42%) 1fr;gap:8px}
+  .empty{padding:22px;text-align:center;color:var(--text-3);font-size:12.5px}
+  .day{margin-top:14px}
+  .day h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3)}
+  .chip{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;background:var(--soft);color:var(--brand);white-space:nowrap}
+  .chip.ok{background:#E7F4EC;color:var(--success)} .chip.ko{background:#F8E9EA;color:var(--danger)}
+  .metric{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .metric:last-child{border-bottom:0}
+  .metric b{font-variant-numeric:tabular-nums}
+  .banner{padding:12px 14px;border-radius:14px;background:#FFF7E8;border:1px solid #F1DFC0;color:#6D4B22;font-size:12.5px;margin:16px 20px 0}
+  .toasts{position:fixed;right:16px;bottom:16px;bottom:max(16px,env(safe-area-inset-bottom));z-index:50;display:grid;gap:8px;width:min(380px,calc(100vw - 32px))}
+  .toast{padding:12px 14px;border-radius:12px;background:var(--text);color:#fff;font-size:12.5px;box-shadow:0 16px 40px rgba(18,34,38,.22)}
+  .toast.error{background:#8F3D45}
+  [hidden]{display:none !important}
+  @media (max-width:900px){.grid2{grid-template-columns:1fr}}
+  @media (max-width:560px){.form{grid-template-columns:1fr}.ph{grid-template-columns:1fr}.top{padding:10px 14px}.tabs,.banner{margin-left:14px;margin-right:14px}main{padding:14px}.top .who{margin-left:0;text-align:left;width:100%}}
+</style>
+</head>
+<body>
+<div class="banner">Version de test « Next » branchée sur Supabase. Données fictives uniquement. Ton Demédico habituel n'est pas modifié.</div>
+
+<section class="auth" id="authView">
+  <div class="auth-card">
+    <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iQ2FscXVlXzIiIGRhdGEtbmFtZT0iQ2FscXVlIDIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZpZXdCb3g9IjAgMCAxMjU3LjA3IDI4My40NiI+PG1ldGFkYXRhPjw/eHBhY2tldCBiZWdpbj0iIiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+PHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNi4wLjAiPjxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIiB4bWxuczpkY3Rlcm1zPSJodHRwOi8vcHVybC5vcmcvZGMvdGVybXMvIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOmNiOWY1NDk4LWJiNTgtNDU3Mi04MDQzLThjMzY5ZTZiZmI5YiIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpjYjlmNTQ5OC1iYjU4LTQ1NzItODA0My04YzM2OWU2YmZiOWIiIGRjdGVybXM6cHJvdmVuYW5jZT0iaHR0cHM6Ly9jYWktbWFuaWZlc3RzLmFkb2JlLmNvbS9tYW5pZmVzdHMvdXJuLWMycGEtYzM4NmNhOGQtZmI2ZS00MjJiLWJjM2MtNzU0Yzk1ZDQ1ODA5LWFkb2JlIj4gPC9yZGY6RGVzY3JpcHRpb24+PC9yZGY6UkRGPjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJ3Ij8+PC9tZXRhZGF0YT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLmNscy0xIHsKICAgICAgICBmaWxsOiAjMTMzMjM5OwogICAgICB9CgogICAgICAuY2xzLTIgewogICAgICAgIGZpbGw6IHVybCgjRMOpZ3JhZMOpX3NhbnNfbm9tXzcpOwogICAgICB9CgogICAgICAuY2xzLTMgewogICAgICAgIGZpbGw6ICMyNjg4ODE7CiAgICAgIH0KCiAgICAgIC5jbHMtNCB7CiAgICAgICAgZmlsbDogIzI0ODc4MDsKICAgICAgfQogICAgPC9zdHlsZT4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iRMOpZ3JhZMOpX3NhbnNfbm9tXzciIGRhdGEtbmFtZT0iRMOpZ3JhZMOpIHNhbnMgbm9tIDciIHgxPSItMy43NSIgeTE9IjEzMi4xIiB4Mj0iMzI2LjkzIiB5Mj0iMTMyLjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMTMzMjM5Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzI3ODg4MSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgaWQ9IkNhbHF1ZV8xLTIiIGRhdGEtbmFtZT0iQ2FscXVlIDEiPgogICAgPGc+CiAgICAgIDxnPgogICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtNCIgZD0iTTQ0LjI0LDI4My4yMmMyMC41OS0zMy4wOSw1My44LTU1LjUsOTEuNzktNjIuMzksMjIuNDItMy4wNSw0Mi41OC0xMi40Niw1OC4wNy0yOC40NSwxNC40NC0xNC42NSwyMS41Mi0zMi43NSwyMS4yNy01NC4zMSwyMC4wMiw0Ni4xLDcuMjQsOTkuNjUtMzAuMywxMzMuMjItMTYuNDcsNy4zOC0zMy4xMSwxMS40OC01MS4zNywxMi4xN2wtODkuNDctLjI0WiIvPgogICAgICAgIDxnPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJNMjYzLjU3LDExMS43NkMyNTAuODYsNTMuMDUsMjAzLjQzLDkuMzUsMTQzLjQxLDMuMDdMMi44MSwwbC0xLjMsNjcuNDUsMTMzLjYsMi45N2MyMC44NiwxLjU1LDM5Ljc2LDkuMzIsNTUuMywyMy43MiwzOS4zOCwzNi40Nyw0OC45NSw5NS4xNiwyNS40OSwxNDMuMTctNC45OSwxMC4yMS0xMS40LDE3LjU0LTE3LjkxLDI2Ljg4LDUzLjAxLTMxLjE0LDc4LjM1LTkzLjQxLDY1LjU4LTE1Mi40M1oiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTkzLjY4LDE2MC43NmwtNjAuNjItMzguMDljLTYuODYtNC4zMS0xNS4zNC01LjE0LTIyLjYyLS45M0M1LjUxLDEyNC41OSwwLDEzMS4xNywwLDEzOC44NmwuMDksMTM0LjU4LDEwOC41NC04NS4yNWM5LjQ5LTcuNDUsMTcuNTctMTUuNTIsMTkuODgtMjcuNTctMTIuNTgsNi43Ny0yNC4wNyw2LjktMzQuODQuMTRaIi8+CiAgICAgICAgICA8Y2lyY2xlIGNsYXNzPSJjbHMtMSIgY3g9IjE3NS45NiIgY3k9IjEzOC41MiIgcj0iMTkuMTYiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC00MS41MSAxOTEuOTYpIHJvdGF0ZSgtNTIuMDIpIi8+CiAgICAgICAgPC9nPgogICAgICA8L2c+CiAgICAgIDxnPgogICAgICAgIDxnPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNDM1Ljg3LDEzMS43MmMtMy40Ny02LjM5LTguMy0xMS4yMi0xNC40OS0xNC40OS02LjE4LTMuMjYtMTMuMjMtNC45LTIxLjE2LTQuOS0xMCwwLTE4LjYyLDIuMzctMjUuODQsNy4wOS03LjIzLDQuNzMtMTIuNzksMTEuMTUtMTYuNjgsMTkuMjgtMy44OSw4LjEzLTUuODMsMTcuNC01LjgzLDI3LjgzczEuOTEsMTkuNDYsNS43MywyNy41MWMzLjgyLDguMDYsOS4yOCwxNC4zNSwxNi4zNiwxOC44Niw3LjA5LDQuNTIsMTUuNTYsNi43OCwyNS40Myw2Ljc4LDguMiwwLDE1LjUzLTEuODEsMjEuOTktNS40Miw2LjQ2LTMuNjEsMTEuMzYtOC44MiwxNC43LTE1LjYzbDEuNjcsMTguNTVoMTcuNTFWNjMuNzhoLTE5LjM5djY3Ljk1Wk00MzEuNywxODQuNjdjLTIuNjQsNS40Mi02LjM2LDkuNjYtMTEuMTUsMTIuNzEtNC43OSwzLjA2LTEwLjUyLDQuNTktMTcuMiw0LjU5cy0xMi4zNy0xLjUzLTE3LjA5LTQuNTljLTQuNzMtMy4wNS04LjM0LTcuMjktMTAuODQtMTIuNzEtMi41LTUuNDItMy43NS0xMS42Ny0zLjc1LTE4Ljc2czEuMjUtMTMuMDksMy43NS0xOC40NWMyLjUtNS4zNSw2LjExLTkuNTksMTAuODQtMTIuNzEsNC43Mi0zLjEzLDEwLjQyLTQuNjksMTcuMDktNC42OXMxMi40LDEuNTMsMTcuMiw0LjU5YzQuNzksMy4wNiw4LjUxLDcuMjYsMTEuMTUsMTIuNjEsMi42NCw1LjM1LDMuOTYsMTEuNTcsMy45NiwxOC42NXMtMS4zMiwxMy4zNC0zLjk2LDE4Ljc2WiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNTQ2Ljc1LDE5OC44NGMtNC44NywzLjA2LTExLjEyLDQuNTktMTguNzYsNC41OS0xMC40MiwwLTE4LjQxLTMuMy0yMy45Ny05LjktNC44MS01LjcxLTcuNTMtMTMuNTQtOC4xOC0yMy40N2w3OC44NC0uMTl2LTcuMjljMC0xMC4xNC0xLjk4LTE4Ljk3LTUuOTQtMjYuNDctMy45Ni03LjUxLTkuNTItMTMuMzQtMTYuNjctMTcuNTEtNy4xNi00LjE3LTE1LjYtNi4yNS0yNS4zMi02LjI1cy0xOC41MiwyLjI5LTI1Ljk1LDYuODhjLTcuNDQsNC41OS0xMy4yNywxMC45MS0xNy41MSwxOC45Ny00LjI0LDguMDYtNi4zNiwxNy40NC02LjM2LDI4LjE0czIuMTUsMTkuODQsNi40NiwyNy44MmM0LjMxLDcuOTksMTAuMjgsMTQuMjUsMTcuOTMsMTguNzYsNy42NCw0LjUyLDE2LjM5LDYuNzgsMjYuMjYsNi43OCwxMi42NCwwLDIzLjA2LTIuOTksMzEuMjYtOC45Niw4LjItNS45NywxMy41NS0xNC4zOCwxNi4wNS0yNS4yMmgtMTguMzRjLTEuNjcsNS44My00LjkzLDEwLjI4LTkuOCwxMy4zNFpNNTA5Ljk2LDEzMy4wOGM0LjY1LTIuODUsMTAuMjUtNC4yNywxNi43OC00LjI3LDguNjEsMCwxNS40OSwyLjU3LDIwLjYzLDcuNzEsNS4xNCw1LjE0LDcuNzEsMTEuOTUsNy43MSwyMC40M2gtNTguOGMuNTgtNC4xNywxLjU1LTcuOTksMy4wNS0xMS4zNiwyLjQzLTUuNDksNS45Ny05LjY2LDEwLjYzLTEyLjUxWiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNzExLjYyLDExMi4zNGMtOS4xNywwLTE2Ljg4LDIuNDMtMjMuMTMsNy4zLTQuNTksMy41Ny03Ljg1LDguMDMtOS44MiwxMy4zMy0yLjE0LTUuMy01LjM4LTkuNzUtOS43Ny0xMy4zMy01Ljk3LTQuODYtMTMuNDgtNy4zLTIyLjUxLTcuMy04LjA2LDAtMTQuOSwxLjkxLTIwLjUzLDUuNzMtNC4zNSwyLjk2LTcuNjEsNi40OC05Ljg0LDEwLjU2bC0xLjkzLTEzLjM3aC0xNy41MXYxMDEuOTJoMTkuNTl2LTYwLjQ0YzAtNS40MiwxLjA0LTEwLjExLDMuMTMtMTQuMDdzNC45Ny03LjAxLDguNjUtOS4xN2MzLjY4LTIuMTUsNy45NS0zLjIzLDEyLjgyLTMuMjMsNi45NSwwLDEyLjQ0LDIuMTIsMTYuNDcsNi4zNiw0LjAzLDQuMjQsNi4wNCwxMC4zOCw2LjA0LDE4LjQ0djYyLjExaDE5LjM4di02MC40NGMwLTUuNDIsMS4wNC0xMC4xNCwzLjEzLTE0LjE4LDIuMDgtNC4wMyw0Ljk3LTcuMTIsOC42NS05LjI3LDMuNjgtMi4xNSw3Ljk1LTMuMjMsMTIuODItMy4yMyw2Ljk1LDAsMTIuNDcsMi4xOSwxNi41Nyw2LjU3LDQuMSw0LjM4LDYuMTUsMTAuNiw2LjE1LDE4LjY1djYxLjloMTkuMTh2LTY2LjdjMC0xMS44MS0zLjM0LTIxLjEyLTEwLTI3LjkzLTYuNjctNi44MS0xNS44NC0xMC4yMi0yNy41MS0xMC4yMloiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTg0Mi40LDExOS42NGMtNi44OC00LjAzLTE0LjktNi4wNS0yNC4wNy02LjA1cy0xOCwyLjI2LTI1LjIyLDYuNzhjLTcuMjMsNC41Mi0xMi44OSwxMC43Ny0xNi45OSwxOC43Ni00LjEsNy45OS02LjE1LDE3LjItNi4xNSwyNy42MnMyLjA4LDE5LjgsNi4yNSwyNy43MmM0LjE3LDcuOTIsOS45NywxNC4xLDE3LjQsMTguNTUsNy40Myw0LjQ0LDE2LjAxLDYuNjcsMjUuNzQsNi42NywxMS45NSwwLDIxLjc0LTIuODIsMjkuMzktOC40NCw3LjY0LTUuNjMsMTIuNzgtMTMuNzIsMTUuNDItMjQuMjhoLTEzLjc2Yy0xLjgxLDYuNjctNS4zNSwxMS43NC0xMC42MywxNS4yMS01LjI4LDMuNDctMTIuMDIsNS4yMS0yMC4yMiw1LjIxLTExLjQsMC0yMC4xOC0zLjY4LTI2LjM3LTExLjA1LTUuNjUtNi43My04LjY5LTE2LTkuMTctMjcuNzJoODAuMTV2LTcuMDljMC05LjU5LTEuOTEtMTcuOTYtNS43My0yNS4xMi0zLjgyLTcuMTUtOS4xNy0xMi43NS0xNi4wNS0xNi43OFpNNzg0LjM4LDE1OC4yYy41OS01LjEyLDEuOC05Ljc3LDMuNzMtMTMuODYsMi43OC01LjksNi43Ny0xMC40NSwxMS45OC0xMy42NSw1LjIxLTMuMiwxMS4yOS00LjgsMTguMjQtNC44LDkuNDUsMCwxNy4wNiwyLjk2LDIyLjgyLDguODYsNS43Niw1LjkxLDguNjUsMTMuNzIsOC42NSwyMy40NWgtNjUuNDJaIi8+CiAgICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik05NjQuNDQsMTM1LjQ4Yy0zLjQ4LTcuMzYtOC40NC0xMi44NS0xNC45LTE2LjQ3LTYuNDYtMy42MS0xMy44Ni01LjQyLTIyLjItNS40Mi0xMC4wMSwwLTE4LjUyLDIuMzMtMjUuNTMsNi45OC03LjAyLDQuNjYtMTIuNCwxMS4wMS0xNi4xNSwxOS4wNy0zLjc1LDguMDYtNS42MywxNy4xNy01LjYzLDI3LjNzMS44NywxOSw1LjYzLDI2Ljk5YzMuNzUsNy45OSw5LjEsMTQuMjgsMTYuMDUsMTguODcsNi45NSw0LjU4LDE1LjI4LDYuODgsMjUuMDEsNi44OCw4LjQ3LDAsMTYuMDUtMS45MSwyMi43Mi01LjczLDYuNjctMy44MiwxMS44MS05LjYyLDE1LjQyLTE3LjRsMS40NiwyMC42M2gxMi41MVY2NS4yNGgtMTQuMzh2NzAuMjRaTTk2MC4wNiwxODcuMjdjLTIuNzgsNi4wNS02Ljc0LDEwLjc3LTExLjg4LDE0LjE4LTUuMTQsMy40MS0xMS40Niw1LjExLTE4Ljk3LDUuMTFzLTEzLjQ0LTEuNy0xOC42NS01LjExYy01LjIxLTMuNDEtOS4xNy04LjEzLTExLjg4LTE0LjE4LTIuNzEtNi4wNC00LjA2LTEyLjk1LTQuMDYtMjAuNzRzMS4zNS0xNC42Niw0LjA2LTIwLjYzYzIuNzEtNS45Nyw2LjY3LTEwLjcsMTEuODgtMTQuMTgsNS4yMS0zLjQ3LDExLjQzLTUuMjEsMTguNjUtNS4yMXMxMy44MywxLjc0LDE4Ljk3LDUuMjFjNS4xNCwzLjQ4LDkuMSw4LjIsMTEuODgsMTQuMTgsMi43OCw1Ljk3LDQuMTcsMTIuODUsNC4xNywyMC42M3MtMS4zOSwxNC42OS00LjE3LDIwLjc0WiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTAxNS45Miw2Ny4xMWMtMi45MiwwLTUuNDIsMS4wOC03LjUsMy4yMy0yLjA4LDIuMTYtMy4xMyw0LjY5LTMuMTMsNy42MXMxLjA0LDUuNDIsMy4xMyw3LjUxYzIuMDgsMi4wOCw0LjU5LDMuMTMsNy41LDMuMTNzNS40NS0xLjA0LDcuNjEtMy4xM2MyLjE1LTIuMDksMy4yMy00LjU5LDMuMjMtNy41MXMtMS4wOC01LjQ1LTMuMjMtNy42MWMtMi4xNi0yLjE1LTQuNjktMy4yMy03LjYxLTMuMjNaIi8+CiAgICAgICAgICA8cmVjdCBjbGFzcz0iY2xzLTEiIHg9IjEwMDguODMiIHk9IjExNi4zIiB3aWR0aD0iMTQuMzgiIGhlaWdodD0iMTAwLjg4Ii8+CiAgICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMTEzLjg4LDIwMS4wM2MtNS41NiwzLjgyLTEyLjE2LDUuNzMtMTkuOCw1LjczLTYuODEsMC0xMi43NS0xLjY3LTE3LjgyLTUtNS4wNy0zLjM0LTktNy45OS0xMS43OC0xMy45Ny0yLjc4LTUuOTctNC4xNy0xMi45OS00LjE3LTIxLjA1czEuNDktMTUuMzIsNC40OC0yMS4zNmMyLjk5LTYuMDUsNy4xMi0xMC43MywxMi40LTE0LjA3LDUuMjgtMy4zMywxMS4yNS01LDE3LjkyLTUsNy4wOSwwLDEzLjM0LDEuODgsMTguNzYsNS42Myw1LjQyLDMuNzUsOS4xLDkuMSwxMS4wNSwxNi4wNWgxNC4zOGMtMS45NS0xMC40Mi02LjkxLTE4Ljc2LTE0LjktMjUuMDEtNy45OS02LjI1LTE3LjgyLTkuMzgtMjkuNDktOS4zOC05LjczLDAtMTguMjQsMi4yNi0yNS41Myw2Ljc4LTcuMjksNC41Mi0xMi45OSwxMC43Ny0xNy4wOSwxOC43Ni00LjEsNy45OS02LjE1LDE3LjI3LTYuMTUsMjcuODNzMi4wMSwxOS44LDYuMDQsMjcuNzJjNC4wMyw3LjkyLDkuNjIsMTQuMDcsMTYuNzgsMTguNDUsNy4xNSw0LjM4LDE1LjUzLDYuNTcsMjUuMTEsNi41Nyw3LjY0LDAsMTQuNjItMS40MywyMC45NS00LjI3LDYuMzItMi44NSwxMS42NC02Ljg0LDE1Ljk0LTExLjk4LDQuMzEtNS4xNCw3LjIyLTExLjExLDguNzUtMTcuOTJoLTE0LjU5Yy0xLjk1LDYuNTMtNS43LDExLjcxLTExLjI2LDE1LjUyWiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTI1MC40LDEzOS4yM2MtNC40NS03LjkyLTEwLjUyLTE0LjE3LTE4LjI0LTE4Ljc2LTcuNzEtNC41OC0xNi41LTYuODgtMjYuMzctNi44OHMtMTguNDgsMi4yOS0yNi4yNiw2Ljg4Yy03Ljc4LDQuNTktMTMuOSwxMC44NC0xOC4zNCwxOC43Ni00LjQ1LDcuOTItNi42NywxNy4wOS02LjY3LDI3LjUxczIuMjIsMTkuMjEsNi42NywyNy4yYzQuNDUsNy45OSwxMC41NiwxNC4yOCwxOC4zNCwxOC44Nyw3Ljc4LDQuNTgsMTYuNTMsNi44OCwyNi4yNiw2Ljg4czE4LjY2LTIuMjksMjYuMzctNi44OGM3LjcxLTQuNTksMTMuNzktMTAuODcsMTguMjQtMTguODcsNC40NS03Ljk5LDYuNjctMTcuMDYsNi42Ny0yNy4ycy0yLjIyLTE5LjU5LTYuNjctMjcuNTFaTTEyMzcuNzksMTg3LjQ4Yy0zLjEzLDYuMDQtNy40NCwxMC43Ny0xMi45MiwxNC4xNy01LjQ5LDMuNDEtMTEuODUsNS4xMS0xOS4wNyw1LjExcy0xMy41OC0xLjctMTkuMDctNS4xMWMtNS40OS0zLjQxLTkuOC04LjEzLTEyLjkyLTE0LjE3LTMuMTMtNi4wNS00LjY5LTEzLjAzLTQuNjktMjAuOTVzMS41Ni0xNC42Niw0LjY5LTIwLjYzYzMuMTMtNS45Nyw3LjQzLTEwLjcsMTIuOTItMTQuMTgsNS40OS0zLjQ3LDExLjg0LTUuMjEsMTkuMDctNS4yMXMxMy41OCwxLjc0LDE5LjA3LDUuMjFjNS40OSwzLjQ4LDkuOCw4LjIsMTIuOTIsMTQuMTgsMy4xMyw1Ljk3LDQuNjksMTIuODUsNC42OSwyMC42M3MtMS41NiwxNC45LTQuNjksMjAuOTVaIi8+CiAgICAgICAgPC9nPgogICAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSI4NDAuNjQgNzkuODMgODI0Ljc5IDEwNC42NCA4MTIuOTEgMTA0LjY0IDgyNS42MyA3OS44MyA4NDAuNjQgNzkuODMiLz4KICAgICAgPC9nPgogICAgPC9nPgogIDwvZz4KPC9zdmc+" alt="Demédico">
+    <div><span class="tag">NEXT · SUPABASE</span></div>
+    <div id="authBody"></div>
+  </div>
+</section>
+
+<section id="appView" hidden>
+  <header class="top">
+    <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iQ2FscXVlXzIiIGRhdGEtbmFtZT0iQ2FscXVlIDIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZpZXdCb3g9IjAgMCAxMjU3LjA3IDI4My40NiI+PG1ldGFkYXRhPjw/eHBhY2tldCBiZWdpbj0iIiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+PHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iWE1QIENvcmUgNi4wLjAiPjxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIiB4bWxuczpkY3Rlcm1zPSJodHRwOi8vcHVybC5vcmcvZGMvdGVybXMvIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOmNiOWY1NDk4LWJiNTgtNDU3Mi04MDQzLThjMzY5ZTZiZmI5YiIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpjYjlmNTQ5OC1iYjU4LTQ1NzItODA0My04YzM2OWU2YmZiOWIiIGRjdGVybXM6cHJvdmVuYW5jZT0iaHR0cHM6Ly9jYWktbWFuaWZlc3RzLmFkb2JlLmNvbS9tYW5pZmVzdHMvdXJuLWMycGEtYzM4NmNhOGQtZmI2ZS00MjJiLWJjM2MtNzU0Yzk1ZDQ1ODA5LWFkb2JlIj4gPC9yZGY6RGVzY3JpcHRpb24+PC9yZGY6UkRGPjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJ3Ij8+PC9tZXRhZGF0YT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLmNscy0xIHsKICAgICAgICBmaWxsOiAjMTMzMjM5OwogICAgICB9CgogICAgICAuY2xzLTIgewogICAgICAgIGZpbGw6IHVybCgjRMOpZ3JhZMOpX3NhbnNfbm9tXzcpOwogICAgICB9CgogICAgICAuY2xzLTMgewogICAgICAgIGZpbGw6ICMyNjg4ODE7CiAgICAgIH0KCiAgICAgIC5jbHMtNCB7CiAgICAgICAgZmlsbDogIzI0ODc4MDsKICAgICAgfQogICAgPC9zdHlsZT4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iRMOpZ3JhZMOpX3NhbnNfbm9tXzciIGRhdGEtbmFtZT0iRMOpZ3JhZMOpIHNhbnMgbm9tIDciIHgxPSItMy43NSIgeTE9IjEzMi4xIiB4Mj0iMzI2LjkzIiB5Mj0iMTMyLjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMTMzMjM5Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzI3ODg4MSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgaWQ9IkNhbHF1ZV8xLTIiIGRhdGEtbmFtZT0iQ2FscXVlIDEiPgogICAgPGc+CiAgICAgIDxnPgogICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtNCIgZD0iTTQ0LjI0LDI4My4yMmMyMC41OS0zMy4wOSw1My44LTU1LjUsOTEuNzktNjIuMzksMjIuNDItMy4wNSw0Mi41OC0xMi40Niw1OC4wNy0yOC40NSwxNC40NC0xNC42NSwyMS41Mi0zMi43NSwyMS4yNy01NC4zMSwyMC4wMiw0Ni4xLDcuMjQsOTkuNjUtMzAuMywxMzMuMjItMTYuNDcsNy4zOC0zMy4xMSwxMS40OC01MS4zNywxMi4xN2wtODkuNDctLjI0WiIvPgogICAgICAgIDxnPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0yIiBkPSJNMjYzLjU3LDExMS43NkMyNTAuODYsNTMuMDUsMjAzLjQzLDkuMzUsMTQzLjQxLDMuMDdMMi44MSwwbC0xLjMsNjcuNDUsMTMzLjYsMi45N2MyMC44NiwxLjU1LDM5Ljc2LDkuMzIsNTUuMywyMy43MiwzOS4zOCwzNi40Nyw0OC45NSw5NS4xNiwyNS40OSwxNDMuMTctNC45OSwxMC4yMS0xMS40LDE3LjU0LTE3LjkxLDI2Ljg4LDUzLjAxLTMxLjE0LDc4LjM1LTkzLjQxLDY1LjU4LTE1Mi40M1oiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTkzLjY4LDE2MC43NmwtNjAuNjItMzguMDljLTYuODYtNC4zMS0xNS4zNC01LjE0LTIyLjYyLS45M0M1LjUxLDEyNC41OSwwLDEzMS4xNywwLDEzOC44NmwuMDksMTM0LjU4LDEwOC41NC04NS4yNWM5LjQ5LTcuNDUsMTcuNTctMTUuNTIsMTkuODgtMjcuNTctMTIuNTgsNi43Ny0yNC4wNyw2LjktMzQuODQuMTRaIi8+CiAgICAgICAgICA8Y2lyY2xlIGNsYXNzPSJjbHMtMSIgY3g9IjE3NS45NiIgY3k9IjEzOC41MiIgcj0iMTkuMTYiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC00MS41MSAxOTEuOTYpIHJvdGF0ZSgtNTIuMDIpIi8+CiAgICAgICAgPC9nPgogICAgICA8L2c+CiAgICAgIDxnPgogICAgICAgIDxnPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNDM1Ljg3LDEzMS43MmMtMy40Ny02LjM5LTguMy0xMS4yMi0xNC40OS0xNC40OS02LjE4LTMuMjYtMTMuMjMtNC45LTIxLjE2LTQuOS0xMCwwLTE4LjYyLDIuMzctMjUuODQsNy4wOS03LjIzLDQuNzMtMTIuNzksMTEuMTUtMTYuNjgsMTkuMjgtMy44OSw4LjEzLTUuODMsMTcuNC01LjgzLDI3LjgzczEuOTEsMTkuNDYsNS43MywyNy41MWMzLjgyLDguMDYsOS4yOCwxNC4zNSwxNi4zNiwxOC44Niw3LjA5LDQuNTIsMTUuNTYsNi43OCwyNS40Myw2Ljc4LDguMiwwLDE1LjUzLTEuODEsMjEuOTktNS40Miw2LjQ2LTMuNjEsMTEuMzYtOC44MiwxNC43LTE1LjYzbDEuNjcsMTguNTVoMTcuNTFWNjMuNzhoLTE5LjM5djY3Ljk1Wk00MzEuNywxODQuNjdjLTIuNjQsNS40Mi02LjM2LDkuNjYtMTEuMTUsMTIuNzEtNC43OSwzLjA2LTEwLjUyLDQuNTktMTcuMiw0LjU5cy0xMi4zNy0xLjUzLTE3LjA5LTQuNTljLTQuNzMtMy4wNS04LjM0LTcuMjktMTAuODQtMTIuNzEtMi41LTUuNDItMy43NS0xMS42Ny0zLjc1LTE4Ljc2czEuMjUtMTMuMDksMy43NS0xOC40NWMyLjUtNS4zNSw2LjExLTkuNTksMTAuODQtMTIuNzEsNC43Mi0zLjEzLDEwLjQyLTQuNjksMTcuMDktNC42OXMxMi40LDEuNTMsMTcuMiw0LjU5YzQuNzksMy4wNiw4LjUxLDcuMjYsMTEuMTUsMTIuNjEsMi42NCw1LjM1LDMuOTYsMTEuNTcsMy45NiwxOC42NXMtMS4zMiwxMy4zNC0zLjk2LDE4Ljc2WiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNTQ2Ljc1LDE5OC44NGMtNC44NywzLjA2LTExLjEyLDQuNTktMTguNzYsNC41OS0xMC40MiwwLTE4LjQxLTMuMy0yMy45Ny05LjktNC44MS01LjcxLTcuNTMtMTMuNTQtOC4xOC0yMy40N2w3OC44NC0uMTl2LTcuMjljMC0xMC4xNC0xLjk4LTE4Ljk3LTUuOTQtMjYuNDctMy45Ni03LjUxLTkuNTItMTMuMzQtMTYuNjctMTcuNTEtNy4xNi00LjE3LTE1LjYtNi4yNS0yNS4zMi02LjI1cy0xOC41MiwyLjI5LTI1Ljk1LDYuODhjLTcuNDQsNC41OS0xMy4yNywxMC45MS0xNy41MSwxOC45Ny00LjI0LDguMDYtNi4zNiwxNy40NC02LjM2LDI4LjE0czIuMTUsMTkuODQsNi40NiwyNy44MmM0LjMxLDcuOTksMTAuMjgsMTQuMjUsMTcuOTMsMTguNzYsNy42NCw0LjUyLDE2LjM5LDYuNzgsMjYuMjYsNi43OCwxMi42NCwwLDIzLjA2LTIuOTksMzEuMjYtOC45Niw4LjItNS45NywxMy41NS0xNC4zOCwxNi4wNS0yNS4yMmgtMTguMzRjLTEuNjcsNS44My00LjkzLDEwLjI4LTkuOCwxMy4zNFpNNTA5Ljk2LDEzMy4wOGM0LjY1LTIuODUsMTAuMjUtNC4yNywxNi43OC00LjI3LDguNjEsMCwxNS40OSwyLjU3LDIwLjYzLDcuNzEsNS4xNCw1LjE0LDcuNzEsMTEuOTUsNy43MSwyMC40M2gtNTguOGMuNTgtNC4xNywxLjU1LTcuOTksMy4wNS0xMS4zNiwyLjQzLTUuNDksNS45Ny05LjY2LDEwLjYzLTEyLjUxWiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNzExLjYyLDExMi4zNGMtOS4xNywwLTE2Ljg4LDIuNDMtMjMuMTMsNy4zLTQuNTksMy41Ny03Ljg1LDguMDMtOS44MiwxMy4zMy0yLjE0LTUuMy01LjM4LTkuNzUtOS43Ny0xMy4zMy01Ljk3LTQuODYtMTMuNDgtNy4zLTIyLjUxLTcuMy04LjA2LDAtMTQuOSwxLjkxLTIwLjUzLDUuNzMtNC4zNSwyLjk2LTcuNjEsNi40OC05Ljg0LDEwLjU2bC0xLjkzLTEzLjM3aC0xNy41MXYxMDEuOTJoMTkuNTl2LTYwLjQ0YzAtNS40MiwxLjA0LTEwLjExLDMuMTMtMTQuMDdzNC45Ny03LjAxLDguNjUtOS4xN2MzLjY4LTIuMTUsNy45NS0zLjIzLDEyLjgyLTMuMjMsNi45NSwwLDEyLjQ0LDIuMTIsMTYuNDcsNi4zNiw0LjAzLDQuMjQsNi4wNCwxMC4zOCw2LjA0LDE4LjQ0djYyLjExaDE5LjM4di02MC40NGMwLTUuNDIsMS4wNC0xMC4xNCwzLjEzLTE0LjE4LDIuMDgtNC4wMyw0Ljk3LTcuMTIsOC42NS05LjI3LDMuNjgtMi4xNSw3Ljk1LTMuMjMsMTIuODItMy4yMyw2Ljk1LDAsMTIuNDcsMi4xOSwxNi41Nyw2LjU3LDQuMSw0LjM4LDYuMTUsMTAuNiw2LjE1LDE4LjY1djYxLjloMTkuMTh2LTY2LjdjMC0xMS44MS0zLjM0LTIxLjEyLTEwLTI3LjkzLTYuNjctNi44MS0xNS44NC0xMC4yMi0yNy41MS0xMC4yMloiLz4KICAgICAgICAgIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTg0Mi40LDExOS42NGMtNi44OC00LjAzLTE0LjktNi4wNS0yNC4wNy02LjA1cy0xOCwyLjI2LTI1LjIyLDYuNzhjLTcuMjMsNC41Mi0xMi44OSwxMC43Ny0xNi45OSwxOC43Ni00LjEsNy45OS02LjE1LDE3LjItNi4xNSwyNy42MnMyLjA4LDE5LjgsNi4yNSwyNy43MmM0LjE3LDcuOTIsOS45NywxNC4xLDE3LjQsMTguNTUsNy40Myw0LjQ0LDE2LjAxLDYuNjcsMjUuNzQsNi42NywxMS45NSwwLDIxLjc0LTIuODIsMjkuMzktOC40NCw3LjY0LTUuNjMsMTIuNzgtMTMuNzIsMTUuNDItMjQuMjhoLTEzLjc2Yy0xLjgxLDYuNjctNS4zNSwxMS43NC0xMC42MywxNS4yMS01LjI4LDMuNDctMTIuMDIsNS4yMS0yMC4yMiw1LjIxLTExLjQsMC0yMC4xOC0zLjY4LTI2LjM3LTExLjA1LTUuNjUtNi43My04LjY5LTE2LTkuMTctMjcuNzJoODAuMTV2LTcuMDljMC05LjU5LTEuOTEtMTcuOTYtNS43My0yNS4xMi0zLjgyLTcuMTUtOS4xNy0xMi43NS0xNi4wNS0xNi43OFpNNzg0LjM4LDE1OC4yYy41OS01LjEyLDEuOC05Ljc3LDMuNzMtMTMuODYsMi43OC01LjksNi43Ny0xMC40NSwxMS45OC0xMy42NSw1LjIxLTMuMiwxMS4yOS00LjgsMTguMjQtNC44LDkuNDUsMCwxNy4wNiwyLjk2LDIyLjgyLDguODYsNS43Niw1LjkxLDguNjUsMTMuNzIsOC42NSwyMy40NWgtNjUuNDJaIi8+CiAgICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik05NjQuNDQsMTM1LjQ4Yy0zLjQ4LTcuMzYtOC40NC0xMi44NS0xNC45LTE2LjQ3LTYuNDYtMy42MS0xMy44Ni01LjQyLTIyLjItNS40Mi0xMC4wMSwwLTE4LjUyLDIuMzMtMjUuNTMsNi45OC03LjAyLDQuNjYtMTIuNCwxMS4wMS0xNi4xNSwxOS4wNy0zLjc1LDguMDYtNS42MywxNy4xNy01LjYzLDI3LjNzMS44NywxOSw1LjYzLDI2Ljk5YzMuNzUsNy45OSw5LjEsMTQuMjgsMTYuMDUsMTguODcsNi45NSw0LjU4LDE1LjI4LDYuODgsMjUuMDEsNi44OCw4LjQ3LDAsMTYuMDUtMS45MSwyMi43Mi01LjczLDYuNjctMy44MiwxMS44MS05LjYyLDE1LjQyLTE3LjRsMS40NiwyMC42M2gxMi41MVY2NS4yNGgtMTQuMzh2NzAuMjRaTTk2MC4wNiwxODcuMjdjLTIuNzgsNi4wNS02Ljc0LDEwLjc3LTExLjg4LDE0LjE4LTUuMTQsMy40MS0xMS40Niw1LjExLTE4Ljk3LDUuMTFzLTEzLjQ0LTEuNy0xOC42NS01LjExYy01LjIxLTMuNDEtOS4xNy04LjEzLTExLjg4LTE0LjE4LTIuNzEtNi4wNC00LjA2LTEyLjk1LTQuMDYtMjAuNzRzMS4zNS0xNC42Niw0LjA2LTIwLjYzYzIuNzEtNS45Nyw2LjY3LTEwLjcsMTEuODgtMTQuMTgsNS4yMS0zLjQ3LDExLjQzLTUuMjEsMTguNjUtNS4yMXMxMy44MywxLjc0LDE4Ljk3LDUuMjFjNS4xNCwzLjQ4LDkuMSw4LjIsMTEuODgsMTQuMTgsMi43OCw1Ljk3LDQuMTcsMTIuODUsNC4xNywyMC42M3MtMS4zOSwxNC42OS00LjE3LDIwLjc0WiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTAxNS45Miw2Ny4xMWMtMi45MiwwLTUuNDIsMS4wOC03LjUsMy4yMy0yLjA4LDIuMTYtMy4xMyw0LjY5LTMuMTMsNy42MXMxLjA0LDUuNDIsMy4xMyw3LjUxYzIuMDgsMi4wOCw0LjU5LDMuMTMsNy41LDMuMTNzNS40NS0xLjA0LDcuNjEtMy4xM2MyLjE1LTIuMDksMy4yMy00LjU5LDMuMjMtNy41MXMtMS4wOC01LjQ1LTMuMjMtNy42MWMtMi4xNi0yLjE1LTQuNjktMy4yMy03LjYxLTMuMjNaIi8+CiAgICAgICAgICA8cmVjdCBjbGFzcz0iY2xzLTEiIHg9IjEwMDguODMiIHk9IjExNi4zIiB3aWR0aD0iMTQuMzgiIGhlaWdodD0iMTAwLjg4Ii8+CiAgICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMTEzLjg4LDIwMS4wM2MtNS41NiwzLjgyLTEyLjE2LDUuNzMtMTkuOCw1LjczLTYuODEsMC0xMi43NS0xLjY3LTE3LjgyLTUtNS4wNy0zLjM0LTktNy45OS0xMS43OC0xMy45Ny0yLjc4LTUuOTctNC4xNy0xMi45OS00LjE3LTIxLjA1czEuNDktMTUuMzIsNC40OC0yMS4zNmMyLjk5LTYuMDUsNy4xMi0xMC43MywxMi40LTE0LjA3LDUuMjgtMy4zMywxMS4yNS01LDE3LjkyLTUsNy4wOSwwLDEzLjM0LDEuODgsMTguNzYsNS42Myw1LjQyLDMuNzUsOS4xLDkuMSwxMS4wNSwxNi4wNWgxNC4zOGMtMS45NS0xMC40Mi02LjkxLTE4Ljc2LTE0LjktMjUuMDEtNy45OS02LjI1LTE3LjgyLTkuMzgtMjkuNDktOS4zOC05LjczLDAtMTguMjQsMi4yNi0yNS41Myw2Ljc4LTcuMjksNC41Mi0xMi45OSwxMC43Ny0xNy4wOSwxOC43Ni00LjEsNy45OS02LjE1LDE3LjI3LTYuMTUsMjcuODNzMi4wMSwxOS44LDYuMDQsMjcuNzJjNC4wMyw3LjkyLDkuNjIsMTQuMDcsMTYuNzgsMTguNDUsNy4xNSw0LjM4LDE1LjUzLDYuNTcsMjUuMTEsNi41Nyw3LjY0LDAsMTQuNjItMS40MywyMC45NS00LjI3LDYuMzItMi44NSwxMS42NC02Ljg0LDE1Ljk0LTExLjk4LDQuMzEtNS4xNCw3LjIyLTExLjExLDguNzUtMTcuOTJoLTE0LjU5Yy0xLjk1LDYuNTMtNS43LDExLjcxLTExLjI2LDE1LjUyWiIvPgogICAgICAgICAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNMTI1MC40LDEzOS4yM2MtNC40NS03LjkyLTEwLjUyLTE0LjE3LTE4LjI0LTE4Ljc2LTcuNzEtNC41OC0xNi41LTYuODgtMjYuMzctNi44OHMtMTguNDgsMi4yOS0yNi4yNiw2Ljg4Yy03Ljc4LDQuNTktMTMuOSwxMC44NC0xOC4zNCwxOC43Ni00LjQ1LDcuOTItNi42NywxNy4wOS02LjY3LDI3LjUxczIuMjIsMTkuMjEsNi42NywyNy4yYzQuNDUsNy45OSwxMC41NiwxNC4yOCwxOC4zNCwxOC44Nyw3Ljc4LDQuNTgsMTYuNTMsNi44OCwyNi4yNiw2Ljg4czE4LjY2LTIuMjksMjYuMzctNi44OGM3LjcxLTQuNTksMTMuNzktMTAuODcsMTguMjQtMTguODcsNC40NS03Ljk5LDYuNjctMTcuMDYsNi42Ny0yNy4ycy0yLjIyLTE5LjU5LTYuNjctMjcuNTFaTTEyMzcuNzksMTg3LjQ4Yy0zLjEzLDYuMDQtNy40NCwxMC43Ny0xMi45MiwxNC4xNy01LjQ5LDMuNDEtMTEuODUsNS4xMS0xOS4wNyw1LjExcy0xMy41OC0xLjctMTkuMDctNS4xMWMtNS40OS0zLjQxLTkuOC04LjEzLTEyLjkyLTE0LjE3LTMuMTMtNi4wNS00LjY5LTEzLjAzLTQuNjktMjAuOTVzMS41Ni0xNC42Niw0LjY5LTIwLjYzYzMuMTMtNS45Nyw3LjQzLTEwLjcsMTIuOTItMTQuMTgsNS40OS0zLjQ3LDExLjg0LTUuMjEsMTkuMDctNS4yMXMxMy41OCwxLjc0LDE5LjA3LDUuMjFjNS40OSwzLjQ4LDkuOCw4LjIsMTIuOTIsMTQuMTgsMy4xMyw1Ljk3LDQuNjksMTIuODUsNC42OSwyMC42M3MtMS41NiwxNC45LTQuNjksMjAuOTVaIi8+CiAgICAgICAgPC9nPgogICAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSI4NDAuNjQgNzkuODMgODI0Ljc5IDEwNC42NCA4MTIuOTEgMTA0LjY0IDgyNS42MyA3OS44MyA4NDAuNjQgNzkuODMiLz4KICAgICAgPC9nPgogICAgPC9nPgogIDwvZz4KPC9zdmc+" alt="Demédico">
+    <div class="who"><strong id="whoName"></strong><span id="whoOrg"></span> · <button class="link" id="logoutBtn">Déconnexion</button></div>
+  </header>
+  <nav class="tabs" id="tabs">
+    <button data-tab="patients" class="active">Patients</button>
+    <button data-tab="agenda">Agenda</button>
+    <button data-tab="diag">Diagnostic</button>
+  </nav>
+  <main>
+    <div id="tab-patients"></div>
+    <div id="tab-agenda" hidden></div>
+    <div id="tab-diag" hidden></div>
+  </main>
+</section>
+<div class="toasts" id="toasts"></div>
+
+<!-- Bibliothèque officielle @supabase/supabase-js 2.45.4 (licence MIT), servie avec l'appli : aucun service tiers. -->
+<script src="vendor/supabase-js-2.45.4.js"></script>
+<script>
+(() => {
+  "use strict";
+  const CFG = {"url":"https://asddgbbqevnpdozhjuho.supabase.co","publishableKey":"sb_publishable_VYEtJ52_48NWMdSwbBxl7w_WYoaHsxk"};
+  const DIAL = {AC:'247',AD:'376',AE:'971',AF:'93',AG:'1',AI:'1',AL:'355',AM:'374',AO:'244',AR:'54',AS:'1',AT:'43',AU:'61',AW:'297',AX:'358',AZ:'994',BA:'387',BB:'1',BD:'880',BE:'32',BF:'226',BG:'359',BH:'973',BI:'257',BJ:'229',BL:'590',BM:'1',BN:'673',BO:'591',BQ:'599',BR:'55',BS:'1',BT:'975',BW:'267',BY:'375',BZ:'501',CA:'1',CC:'61',CD:'243',CF:'236',CG:'242',CH:'41',CI:'225',CK:'682',CL:'56',CM:'237',CN:'86',CO:'57',CR:'506',CU:'53',CV:'238',CW:'599',CX:'61',CY:'357',CZ:'420',DE:'49',DJ:'253',DK:'45',DM:'1',DO:'1',DZ:'213',EC:'593',EE:'372',EG:'20',EH:'212',ER:'291',ES:'34',ET:'251',FI:'358',FJ:'679',FK:'500',FM:'691',FO:'298',FR:'33',GA:'241',GB:'44',GD:'1',GE:'995',GF:'594',GG:'44',GH:'233',GI:'350',GL:'299',GM:'220',GN:'224',GP:'590',GQ:'240',GR:'30',GT:'502',GU:'1',GW:'245',GY:'592',HK:'852',HN:'504',HR:'385',HT:'509',HU:'36',ID:'62',IE:'353',IL:'972',IM:'44',IN:'91',IO:'246',IQ:'964',IR:'98',IS:'354',IT:'39',JE:'44',JM:'1',JO:'962',JP:'81',KE:'254',KG:'996',KH:'855',KI:'686',KM:'269',KN:'1',KP:'850',KR:'82',KW:'965',KY:'1',KZ:'7',LA:'856',LB:'961',LC:'1',LI:'423',LK:'94',LR:'231',LS:'266',LT:'370',LU:'352',LV:'371',LY:'218',MA:'212',MC:'377',MD:'373',ME:'382',MF:'590',MG:'261',MH:'692',MK:'389',ML:'223',MM:'95',MN:'976',MO:'853',MP:'1',MQ:'596',MR:'222',MS:'1',MT:'356',MU:'230',MV:'960',MW:'265',MX:'52',MY:'60',MZ:'258',NA:'264',NC:'687',NE:'227',NF:'672',NG:'234',NI:'505',NL:'31',NO:'47',NP:'977',NR:'674',NU:'683',NZ:'64',OM:'968',PA:'507',PE:'51',PF:'689',PG:'675',PH:'63',PK:'92',PL:'48',PM:'508',PR:'1',PS:'970',PT:'351',PW:'680',PY:'595',QA:'974',RE:'262',RO:'40',RS:'381',RU:'7',RW:'250',SA:'966',SB:'677',SC:'248',SD:'249',SE:'46',SG:'65',SH:'290',SI:'386',SJ:'47',SK:'421',SL:'232',SM:'378',SN:'221',SO:'252',SR:'597',SS:'211',ST:'239',SV:'503',SX:'1',SY:'963',SZ:'268',TA:'290',TC:'1',TD:'235',TG:'228',TH:'66',TJ:'992',TK:'690',TL:'670',TM:'993',TN:'216',TO:'676',TR:'90',TT:'1',TV:'688',TW:'886',TZ:'255',UA:'380',UG:'256',US:'1',UY:'598',UZ:'998',VA:'39',VC:'1',VE:'58',VG:'1',VI:'1',VN:'84',VU:'678',WF:'681',WS:'685',XK:'383',YE:'967',YT:'262',ZA:'27',ZM:'260',ZW:'263'};
+  const sb = window.supabase.createClient(CFG.url, CFG.publishableKey, {auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:true}});
+  const S = {user:null, member:null, org:null, patients:[], appts:[], weekStart:startOfWeek(new Date()), editId:null, perf:[]};
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function toast(m, t) { const d = document.createElement('div'); d.className = 'toast ' + (t || ''); d.textContent = m; $('toasts').appendChild(d); setTimeout(() => d.remove(), 4200); }
+  function startOfWeek(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+  const fr = (d, o) => new Date(d).toLocaleString('fr-FR', o);
+
+  // Chronomètre : chaque appel à la base est mesuré et affiché dans Diagnostic.
+  async function timed(label, fn) {
+    const t0 = performance.now();
+    try { return await fn(); }
+    finally { S.perf.unshift({label, ms:Math.round(performance.now() - t0), at:new Date()}); S.perf = S.perf.slice(0, 30); if (!$('tab-diag').hidden) renderDiag(); }
+  }
+  function frErr(e) {
+    const m = (e && (e.message || e.error_description)) || String(e);
+    if (/Invalid login credentials/i.test(m)) return 'Email ou mot de passe incorrect.';
+    if (/row-level security/i.test(m)) return 'Action refusée par les règles de sécurité.';
+    if (/patients_phone_e164_check/i.test(m)) return 'Numéro de téléphone invalide.';
+    return m;
+  }
+
+  // Téléphones : même règle que Demédico (indicatifs libphonenumber).
+  const PH_NAMES = (() => { try { return new Intl.DisplayNames(['fr'], {type:'region'}); } catch (e) { return null; } })();
+  const flag = iso => iso.replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0)));
+  function countryOptions(sel) {
+    const list = Object.keys(DIAL).map(i => ({i, n:(PH_NAMES && PH_NAMES.of(i)) || i})).sort((a, b) => a.n.localeCompare(b.n, 'fr'));
+    const top = ['FR', 'IL', 'BE', 'CH', 'CA', 'MA'];
+    const o = i => '<option value="' + i + '"' + (i === sel ? ' selected' : '') + '>' + flag(i) + ' ' + esc((PH_NAMES && PH_NAMES.of(i)) || i) + ' (+' + DIAL[i] + ')</option>';
+    return '<optgroup label="Fréquents">' + top.map(o).join('') + '</optgroup><optgroup label="Tous les pays">' + list.map(x => o(x.i)).join('') + '</optgroup>';
+  }
+  function phFormat(v) {
+    v = String(v || ''); if (!v.startsWith('+')) return v;
+    const d = v.slice(1), codes = [...new Set(Object.values(DIAL))].sort((a, b) => b.length - a.length), c = codes.find(x => d.startsWith(x));
+    if (!c) return v; const n = d.slice(c.length);
+    return '+' + c + ' ' + (c === '33' ? n.replace(/^(\d)(\d{2})(\d{2})(\d{2})(\d{2})$/, '$1 $2 $3 $4 $5') : n.replace(/^(\d{2})(\d{3})(\d+)$/, '$1 $2 $3'));
+  }
+  function e164(raw, iso) {
+    let d = String(raw || '').trim().replace(/[^\d+]/g, '');
+    if (!d) return null;
+    if (d.indexOf('+') > 0) d = d.replace(/\+/g, '');
+    if (d.startsWith('+')) d = '+' + d.slice(1);
+    else if (d.startsWith('00')) d = '+' + d.slice(2);
+    else { if (d.startsWith('0') && ['IT', 'SM', 'VA'].indexOf(iso) < 0) d = d.slice(1); d = '+' + DIAL[iso] + d; }
+    if (d.length - 1 < 7 || d.length - 1 > 15) throw new Error('Numéro de téléphone invalide.');
+    return d;
+  }
+
+  // ── Connexion ───────────────────────────────────────────────────────────────
+  function showLogin(msg) {
+    $('appView').hidden = true; $('authView').hidden = false;
+    $('authBody').innerHTML = '<h1>Connexion</h1><p>Compte de test créé dans Supabase.</p>' + (msg ? '<p style="color:var(--danger)">' + esc(msg) + '</p>' : '') +
+      '<form id="loginForm" style="display:grid;gap:12px;margin-top:10px"><div class="field"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" required></div>' +
+      '<div class="field"><label for="lPw">Mot de passe</label><input id="lPw" type="password" autocomplete="current-password" required></div>' +
+      '<button class="btn primary" type="submit">Se connecter</button></form><button class="link" id="forgot">Mot de passe oublié ?</button>';
+    $('loginForm').onsubmit = async e => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button'); btn.disabled = true;
+      try {
+        const {error} = await timed('Connexion', () => sb.auth.signInWithPassword({email:$('lEmail').value.trim(), password:$('lPw').value}));
+        if (error) throw error;
+        await boot();
+      } catch (err) { toast(frErr(err), 'error'); }
+      finally { btn.disabled = false; }
+    };
+    $('forgot').onclick = async () => {
+      const email = $('lEmail').value.trim();
+      if (!email) return toast('Écris d’abord ton email, puis clique sur « Mot de passe oublié ».', 'error');
+      const {error} = await sb.auth.resetPasswordForEmail(email, {redirectTo:location.origin + location.pathname});
+      toast(error ? frErr(error) : 'Si ce compte existe, un email de réinitialisation vient de partir.', error ? 'error' : '');
+    };
+  }
+  function showNewPassword() {
+    $('appView').hidden = true; $('authView').hidden = false;
+    $('authBody').innerHTML = '<h1>Nouveau mot de passe</h1><form id="npForm" style="display:grid;gap:12px;margin-top:10px"><div class="field"><label for="np1">Nouveau mot de passe (8 caractères minimum)</label><input id="np1" type="password" minlength="8" required autocomplete="new-password"></div><button class="btn primary" type="submit">Enregistrer</button></form>';
+    $('npForm').onsubmit = async e => {
+      e.preventDefault();
+      const {error} = await sb.auth.updateUser({password:$('np1').value});
+      if (error) return toast(frErr(error), 'error');
+      toast('Mot de passe modifié.'); boot();
+    };
+  }
+  sb.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') showNewPassword(); });
+
+  async function boot() {
+    const {data:{session}} = await sb.auth.getSession();
+    if (!session) return showLogin();
+    S.user = session.user;
+    const {data, error} = await timed('Cabinet et rôle', () => sb.from('organization_members').select('organization_id, role, active, organizations(name)').eq('user_id', S.user.id).eq('active', true).limit(1));
+    if (error) return showLogin(frErr(error));
+    if (!data || !data.length) return showLogin('Ce compte n’est rattaché à aucun cabinet.');
+    S.member = data[0]; S.org = {id:data[0].organization_id, name:(data[0].organizations || {}).name || 'Cabinet'};
+    $('authView').hidden = true; $('appView').hidden = false;
+    $('whoName').textContent = S.user.email; $('whoOrg').textContent = S.org.name + ' · ' + S.member.role;
+    await Promise.all([loadPatients(), loadAgenda()]);
+    renderDiag();
+  }
+  $('logoutBtn').onclick = async () => { await sb.auth.signOut(); S.user = null; showLogin(); };
+  $('tabs').onclick = e => {
+    const b = e.target.closest('button[data-tab]'); if (!b) return;
+    document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('active', x === b));
+    ['patients', 'agenda', 'diag'].forEach(t => $('tab-' + t).hidden = t !== b.dataset.tab);
+    if (b.dataset.tab === 'diag') renderDiag();
+  };
+
+  // ── Patients ────────────────────────────────────────────────────────────────
+  async function loadPatients() {
+    const {data, error} = await timed('Liste des patients', () => sb.from('patients').select('id, first_name, last_name, phone, phone_country, email, birth_date, status').is('archived_at', null).order('last_name'));
+    if (error) return toast(frErr(error), 'error');
+    S.patients = data; renderPatients();
+  }
+  function renderPatients(q) {
+    q = (q ?? ($('pSearch') ? $('pSearch').value : '')).toLowerCase();
+    const list = S.patients.filter(p => (p.first_name + ' ' + p.last_name + ' ' + (p.phone || '') + ' ' + (p.email || '')).toLowerCase().includes(q));
+    const edit = S.patients.find(p => p.id === S.editId);
+    $('tab-patients').innerHTML = '<div class="grid2"><section class="card"><div class="row"><div style="flex:1"><h2>Patients</h2><div class="sub">' + S.patients.length + ' patient(s) dans ' + esc(S.org.name) + '</div></div></div>' +
+      '<div class="field" style="margin-top:12px"><input id="pSearch" placeholder="Rechercher un nom, un téléphone…" value="' + esc(q) + '"></div>' +
+      '<div class="list">' + (list.length ? list.map(p => '<div class="item"><div class="avatar">' + esc((p.first_name[0] || '') + (p.last_name[0] || '')).toUpperCase() + '</div><div class="grow"><strong>' + esc(p.first_name + ' ' + p.last_name) + '</strong><small>' + esc([phFormat(p.phone), p.email].filter(Boolean).join(' · ') || 'Pas de coordonnées') + '</small></div><button class="btn ghost" data-edit="' + p.id + '">Modifier</button></div>').join('') : '<div class="empty">Aucun patient.</div>') + '</div></section>' +
+      '<section class="card"><h2>' + (edit ? 'Modifier le patient' : 'Nouveau patient') + '</h2><div class="sub">Enregistré directement dans Supabase.</div><form id="pForm" class="form">' +
+        '<div class="field"><label for="fFirst">Prénom</label><input id="fFirst" required value="' + esc(edit ? edit.first_name : '') + '"></div>' +
+        '<div class="field"><label for="fLast">Nom</label><input id="fLast" required value="' + esc(edit ? edit.last_name : '') + '"></div>' +
+        '<div class="field full"><label for="fPhone">Téléphone</label><div class="ph"><select id="fCountry">' + countryOptions((edit && edit.phone_country) || 'FR') + '</select><input id="fPhone" type="tel" placeholder="06 12 34 56 78" value="' + esc(edit ? phFormat(edit.phone) : '') + '"></div></div>' +
+        '<div class="field"><label for="fEmail">Email</label><input id="fEmail" type="email" value="' + esc(edit ? edit.email || '' : '') + '"></div>' +
+        '<div class="field"><label for="fBirth">Date de naissance</label><input id="fBirth" type="date" value="' + esc(edit ? edit.birth_date || '' : '') + '"></div>' +
+        '<div class="full row"><button class="btn primary" type="submit">' + (edit ? 'Enregistrer' : 'Créer le patient') + '</button>' + (edit ? '<button class="btn ghost" type="button" id="cancelEdit">Annuler</button>' : '') + '</div></form></section></div>';
+    $('pSearch').oninput = e => { const pos = e.target.selectionStart; renderPatients(e.target.value); $('pSearch').focus(); $('pSearch').setSelectionRange(pos, pos); };
+    document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { S.editId = b.dataset.edit; renderPatients(); });
+    if ($('cancelEdit')) $('cancelEdit').onclick = () => { S.editId = null; renderPatients(); };
+    $('pForm').onsubmit = savePatient;
+  }
+  async function savePatient(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]'); btn.disabled = true;
+    try {
+      const country = $('fCountry').value;
+      const row = {first_name:$('fFirst').value.trim(), last_name:$('fLast').value.trim(), phone:e164($('fPhone').value, country), phone_country:country, email:$('fEmail').value.trim() || null, birth_date:$('fBirth').value || null, updated_at:new Date().toISOString()};
+      const q = S.editId
+        ? () => sb.from('patients').update(row).eq('id', S.editId).select('id').single()
+        : () => sb.from('patients').insert(Object.assign({organization_id:S.org.id}, row)).select('id').single();
+      const {error} = await timed(S.editId ? 'Modifier un patient' : 'Créer un patient', q);
+      if (error) throw error;
+      toast(S.editId ? 'Patient mis à jour.' : 'Patient créé.');
+      S.editId = null; await loadPatients();
+    } catch (err) { toast(frErr(err), 'error'); }
+    finally { btn.disabled = false; }
+  }
+
+  // ── Agenda (semaine) ────────────────────────────────────────────────────────
+  async function loadAgenda() {
+    const from = new Date(S.weekStart), to = new Date(S.weekStart); to.setDate(to.getDate() + 7);
+    const {data, error} = await timed('Agenda de la semaine', () => sb.from('appointments').select('id, starts_at, ends_at, status, appointment_type, location, patients!appointments_same_org_patient(first_name, last_name)').gte('starts_at', from.toISOString()).lt('starts_at', to.toISOString()).order('starts_at'));
+    if (error) return toast(frErr(error), 'error');
+    S.appts = data; renderAgenda();
+  }
+  const STATUS = {BOOKED:'Prévu', DONE:'Terminé', CANCELLED:'Annulé', NO_SHOW:'Absent'};
+  function renderAgenda() {
+    const days = [];
+    for (let i = 0; i < 7; i++) { const d = new Date(S.weekStart); d.setDate(d.getDate() + i); days.push(d); }
+    const byDay = days.map(d => ({d, items:S.appts.filter(a => new Date(a.starts_at).toDateString() === d.toDateString())})).filter(x => x.items.length);
+    const end = new Date(S.weekStart); end.setDate(end.getDate() + 6);
+    const today = new Date(); const dflt = new Date(Math.max(today, S.weekStart));
+    $('tab-agenda').innerHTML = '<div class="grid2"><section class="card"><div class="row"><div style="flex:1"><h2>Semaine du ' + fr(S.weekStart, {day:'numeric', month:'long'}) + '</h2><div class="sub">au ' + fr(end, {day:'numeric', month:'long', year:'numeric'}) + ' · ' + S.appts.length + ' rendez-vous</div></div><button class="btn" id="wPrev">←</button><button class="btn" id="wToday">Aujourd’hui</button><button class="btn" id="wNext">→</button></div>' +
+      (byDay.length ? byDay.map(x => '<div class="day"><h3>' + fr(x.d, {weekday:'long', day:'numeric', month:'long'}) + '</h3><div class="list" style="margin-top:0">' + x.items.map(a => '<div class="item"><div class="avatar" style="font-size:12px">' + fr(a.starts_at, {hour:'2-digit', minute:'2-digit'}) + '</div><div class="grow"><strong>' + esc(a.patients ? a.patients.first_name + ' ' + a.patients.last_name : 'Sans patient') + '</strong><small>' + esc([a.appointment_type, a.location].filter(Boolean).join(' · ') || 'Consultation') + '</small></div><select data-st="' + a.id + '" class="btn" style="padding:0 8px">' + Object.keys(STATUS).map(k => '<option value="' + k + '"' + (a.status === k ? ' selected' : '') + '>' + STATUS[k] + '</option>').join('') + '</select></div>').join('') + '</div></div>').join('') : '<div class="empty">Aucun rendez-vous cette semaine.</div>') + '</section>' +
+      '<section class="card"><h2>Nouveau rendez-vous</h2><div class="sub">Enregistré directement dans Supabase.</div><form id="aForm" class="form">' +
+        '<div class="field full"><label for="aPatient">Patient</label><select id="aPatient" required>' + (S.patients.length ? S.patients.map(p => '<option value="' + p.id + '">' + esc(p.last_name + ' ' + p.first_name) + '</option>').join('') : '<option value="">Crée d’abord un patient</option>') + '</select></div>' +
+        '<div class="field"><label for="aDate">Date</label><input id="aDate" type="date" required value="' + dflt.toLocaleDateString('sv-SE') + '"></div>' +
+        '<div class="field"><label for="aTime">Heure</label><input id="aTime" type="time" required value="09:00" step="300"></div>' +
+        '<div class="field"><label for="aDur">Durée</label><select id="aDur"><option value="30">30 min</option><option value="45" selected>45 min</option><option value="60">1 h</option></select></div>' +
+        '<div class="field"><label for="aType">Type</label><input id="aType" value="Consultation"></div>' +
+        '<div class="full"><button class="btn primary" type="submit">Créer le rendez-vous</button></div></form></section></div>';
+    $('wPrev').onclick = () => { S.weekStart.setDate(S.weekStart.getDate() - 7); loadAgenda(); };
+    $('wNext').onclick = () => { S.weekStart.setDate(S.weekStart.getDate() + 7); loadAgenda(); };
+    $('wToday').onclick = () => { S.weekStart = startOfWeek(new Date()); loadAgenda(); };
+    document.querySelectorAll('[data-st]').forEach(s => s.onchange = async () => {
+      const {error} = await timed('Changer un statut', () => sb.from('appointments').update({status:s.value, updated_at:new Date().toISOString()}).eq('id', s.dataset.st));
+      if (error) toast(frErr(error), 'error'); else toast('Statut mis à jour.');
+    });
+    $('aForm').onsubmit = async e => {
+      e.preventDefault();
+      if (!$('aPatient').value) return toast('Crée d’abord un patient.', 'error');
+      const start = new Date($('aDate').value + 'T' + $('aTime').value);
+      const endAt = new Date(start.getTime() + Number($('aDur').value) * 60000);
+      const {error} = await timed('Créer un rendez-vous', () => sb.from('appointments').insert({organization_id:S.org.id, patient_id:$('aPatient').value, practitioner_user_id:S.user.id, starts_at:start.toISOString(), ends_at:endAt.toISOString(), status:'BOOKED', appointment_type:$('aType').value.trim() || 'Consultation'}));
+      if (error) return toast(frErr(error), 'error');
+      toast('Rendez-vous créé.'); S.weekStart = startOfWeek(start); loadAgenda();
+    };
+  }
+
+  // ── Diagnostic : vitesse et sécurité ───────────────────────────────────────
+  function renderDiag(results) {
+    const avg = l => { const v = S.perf.filter(p => p.label === l).map(p => p.ms); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
+    const labels = [...new Set(S.perf.map(p => p.label))];
+    $('tab-diag').innerHTML = '<div class="grid2"><section class="card"><h2>Vitesse</h2><div class="sub">Temps réels mesurés dans ton navigateur (moyenne des derniers appels).</div><div style="margin-top:10px">' +
+      (labels.length ? labels.map(l => '<div class="metric"><span>' + esc(l) + '</span><b>' + avg(l) + ' ms</b></div>').join('') : '<div class="empty">Utilise l’appli : les temps s’affichent ici.</div>') +
+      '</div><div class="row" style="margin-top:12px"><button class="btn" id="bench">Mesurer 5 fois patients + agenda</button></div></section>' +
+      '<section class="card"><h2>Sécurité</h2><div class="sub">Le « test du méchant » : chaque tentative doit être refusée.</div><div style="margin-top:10px" id="secList">' +
+      (results ? results.map(r => '<div class="metric"><span>' + esc(r.label) + '</span><span class="chip ' + (r.ok ? 'ok' : 'ko') + '">' + (r.ok ? 'Protégé' : 'PROBLÈME') + '</span></div>').join('') : '<div class="empty">Clique sur « Lancer les tests ».</div>') +
+      '</div><div class="row" style="margin-top:12px"><button class="btn primary" id="secRun">Lancer les tests</button></div></section></div>';
+    $('bench').onclick = async () => { for (let i = 0; i < 5; i++) { await loadPatients(); await loadAgenda(); } renderDiag(results); toast('Mesures terminées.'); };
+    $('secRun').onclick = runSecurity;
+  }
+  async function runSecurity() {
+    const res = [];
+    // 1. Un visiteur sans compte ne lit aucun patient.
+    const anon = window.supabase.createClient(CFG.url, CFG.publishableKey, {auth:{persistSession:false, autoRefreshToken:false, storageKey:'dm-anon-test'}});
+    const a = await anon.from('patients').select('id');
+    res.push({label:'Sans compte : aucun patient visible', ok:!a.error ? a.data.length === 0 : true});
+    // 2. Je ne vois que les patients de mon cabinet.
+    const mine = await sb.from('patients').select('organization_id');
+    res.push({label:'Je ne vois que mon cabinet', ok:!mine.error && mine.data.every(p => p.organization_id === S.org.id)});
+    // 3. Écrire dans un autre cabinet est refusé.
+    const other = '00000000-0000-0000-0000-00000000000b';
+    const w = await sb.from('patients').insert({organization_id:other, first_name:'Intrus', last_name:'Test'}).select('id');
+    res.push({label:'Créer un patient dans un autre cabinet : refusé', ok:!!w.error});
+    // 4. Je ne peux pas me donner un autre rôle.
+    const r = await sb.from('organization_members').update({role:'OWNER'}).eq('user_id', S.user.id).select('role');
+    res.push({label:'Me promouvoir propriétaire : refusé', ok:!!r.error || !r.data || r.data.length === 0});
+    // 5. Je ne lis aucun abonnement ni compte Super Admin.
+    const pa = await sb.from('platform_admins').select('user_id');
+    res.push({label:'Liste des Super Admins : invisible', ok:!!pa.error || pa.data.length === 0});
+    renderDiag(res);
+    toast(res.every(x => x.ok) ? 'Tous les tests de sécurité sont au vert.' : 'Au moins un test a échoué : envoie une capture.', res.every(x => x.ok) ? '' : 'error');
+  }
+
+  boot().catch(err => showLogin(frErr(err)));
+})();
+</script>
+</body>
+</html>
