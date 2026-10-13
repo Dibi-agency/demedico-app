@@ -170,3 +170,19 @@ h3{font-size:13px;margin-bottom:4px}
 .nav-scrim{position:fixed;inset:0;z-index:39;background:rgba(20,34,38,.32);opacity:0;transition:opacity .2s ease;-webkit-tap-highlight-color:transparent}
 .nav-scrim.show{opacity:1}
 body.menu-open{overflow:hidden}
+
+/* DEMÉDICO · HOTFIX UX/UI · Statistiques mobile · 13/10/2026
+   Présentation uniquement. Aucun changement métier / backend. */
+@media (max-width: 820px) {
+  /* Les grilles de 4 indicateurs passent en 2 × 2 sur tablette/mobile. */
+  .grid4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Aucun libellé KPI ne doit être coupé au milieu d'un mot. */
+  .stat .label {
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
+}
