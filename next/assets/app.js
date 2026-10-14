@@ -179,7 +179,13 @@
   document.addEventListener('keydown',(e)=>{if(e.key!=='Escape')return;if($('#modalRoot')?.children.length){closeModal();return;}if($('#mobileMoreRoot')?.children.length){closeMobileMore();return;}if($('#sidebar')?.classList.contains('open'))toggleMenu(false);});
   document.addEventListener('click',(e)=>{if(e.target.closest('#sidebar [data-route]')&&document.body.classList.contains('menu-open'))toggleMenu(false);},true);
   function navButton(route,label){ return `<button data-route="${route}"><span class="nav-ico">${NAV_ICONS[route]||''}</span><span>${label}</span></button>`; }
-  function updateTopbar(){const m=ROUTE_META[S.route]||ROUTE_META.dashboard; const t=$('#topbarTitle'),s=$('#topbarSubtitle');if(t)t.textContent=m[0];if(s)s.textContent=m[1];}
+  function updateTopbar(){
+    const m=ROUTE_META[S.route]||ROUTE_META.dashboard;
+    const t=$('#topbarTitle'),s=$('#topbarSubtitle');
+    if(t)t.textContent=m[0];
+    if(s)s.textContent=m[1];
+    root.dataset.route=S.route;
+  }
   function markNav(){
     $$('#nav [data-route]').forEach(b=>b.classList.toggle('active',b.dataset.route===S.route || (S.route==='patient'&&b.dataset.route==='patients')));
     $$('#mobileBottomNav [data-route]').forEach(b=>b.classList.toggle('active',b.dataset.route===S.route || (S.route==='patient'&&b.dataset.route==='patients')));
@@ -312,9 +318,131 @@
 
 
   function renderPatients(){
-    $('#page').innerHTML=pageHead('Patients','Recherche, dossier clinique, objectifs, mesures et historique.',canManagePatients()?`<button class="btn primary" id="addPatient">+ Nouveau patient</button>`:'')+`<section class="card"><div class="patients-search"><div class="search"><input id="patientSearch" placeholder="Rechercher un nom, téléphone, email…" aria-describedby="patientsCount"></div><div class="patients-count" id="patientsCount" aria-live="polite"></div></div><div class="list" id="patientList"></div></section>`;
-    const draw=()=>{const q=$('#patientSearch').value.toLowerCase().trim();const list=S.patients.filter(p=>`${p.first_name} ${p.last_name} ${p.phone||''} ${p.email||''}`.toLowerCase().includes(q));const total=S.patients.length;const shown=list.length;const nf=(n)=>Number(n).toLocaleString('fr-FR');const count=q?`${nf(shown)} ${shown===1?'résultat':'résultats'} sur ${nf(total)} ${total===1?'patient':'patients'}`:`${nf(total)} ${total===1?'patient':'patients'}`;$('#patientsCount').textContent=count;$('#patientList').innerHTML=list.map(p=>`<div class="row-item clickable" data-pid="${p.id}" role="button" tabindex="0"><div class="avatar">${esc(initials(p))}</div><div class="grow"><strong>${esc(p.first_name)} ${esc(p.last_name)}</strong><div class="meta">${esc([p.phone,p.email].filter(Boolean).join(' · ')||'Aucune coordonnée')}</div></div><span class="patient-chevron" aria-hidden="true">›</span></div>`).join('')||(q?'<div class="empty"><div><strong>Aucun résultat</strong><p>Essaie un autre nom, téléphone ou email.</p></div></div>':`<div class="empty"><div><strong>Aucun patient</strong><p>${canManagePatients()?'Ajoute ton premier patient fictif pour commencer.':'Aucun patient actif à afficher.'}</p>${canManagePatients()?'<button type="button" class="btn primary" id="emptyAddPatient">+ Patient</button>':''}</div></div>`);$$('[data-pid]').forEach(x=>{x.onclick=()=>go('patient',{patientId:x.dataset.pid,patientTab:'overview'});x.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();x.click();}};});if($('#emptyAddPatient'))$('#emptyAddPatient').onclick=()=>openPatientModal();};
-    draw();$('#patientSearch').oninput=draw;if($('#addPatient'))$('#addPatient').onclick=()=>openPatientModal();
+    $('#page').innerHTML=
+      pageHead(
+        'Patients',
+        'Recherche, dossier clinique, objectifs, mesures et historique.',
+        canManagePatients()?`<button class="btn primary" id="addPatient">+ Nouveau patient</button>`:''
+      )
+      +`<section class="card patient-list-card">
+          <div class="patients-search">
+            <div class="search">
+              <input
+                id="patientSearch"
+                type="search"
+                inputmode="search"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="Nom, prénom, téléphone, email…"
+                aria-describedby="patientsCount">
+            </div>
+            <div class="patients-count" id="patientsCount" aria-live="polite"></div>
+          </div>
+          <div class="list patient-list" id="patientList"></div>
+        </section>`;
+
+    const normalizeSearch=(value)=>String(value??'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLocaleLowerCase('fr')
+      .trim();
+
+    const sortPatients=(a,b)=>{
+      const byLast=String(a.last_name||'').localeCompare(String(b.last_name||''),'fr',{sensitivity:'base'});
+      if(byLast!==0)return byLast;
+      return String(a.first_name||'').localeCompare(String(b.first_name||''),'fr',{sensitivity:'base'});
+    };
+
+    const RENDER_LIMIT=120;
+
+    const draw=()=>{
+      const qRaw=$('#patientSearch').value;
+      const q=normalizeSearch(qRaw);
+      const all=[...S.patients].sort(sortPatients);
+      const matches=q
+        ? all.filter(p=>normalizeSearch(`${p.last_name||''} ${p.first_name||''} ${p.phone||''} ${p.email||''}`).includes(q))
+        : all;
+
+      const total=all.length;
+      const shown=matches.length;
+      const visible=matches.slice(0,RENDER_LIMIT);
+      const nf=(n)=>Number(n).toLocaleString('fr-FR');
+
+      const countText=q
+        ? `${nf(shown)} ${shown===1?'résultat':'résultats'} sur ${nf(total)} ${total===1?'patient':'patients'}`
+        : `${nf(total)} ${total===1?'patient':'patients'}`;
+
+      $('#patientsCount').innerHTML=
+        `<span>${esc(countText)}</span><span class="patients-sort">Nom A–Z</span>`;
+
+      const useLetterGroups=!q && total>=30;
+      let previousLetter='';
+
+      let html=visible.map(p=>{
+        const rawLetter=String(p.last_name||p.first_name||'#').trim().charAt(0).toLocaleUpperCase('fr')||'#';
+        const letter=/[A-ZÀ-ÖØ-Ý]/i.test(rawLetter)?rawLetter:'#';
+        let section='';
+        if(useLetterGroups && letter!==previousLetter){
+          previousLetter=letter;
+          section=`<div class="patient-letter" aria-hidden="true">${esc(letter)}</div>`;
+        }
+
+        const phone=p.phone?`<span class="patient-phone">${esc(p.phone)}</span>`:'';
+        const email=p.email?`<span class="patient-email">${esc(p.email)}</span>`:'';
+        const contact=phone||email
+          ? `<div class="patient-meta">${phone}${email}</div>`
+          : `<div class="patient-meta"><span>Aucune coordonnée</span></div>`;
+
+        return `${section}
+          <div class="row-item clickable patient-row"
+               data-pid="${p.id}"
+               role="button"
+               tabindex="0"
+               aria-label="Ouvrir le dossier de ${esc(`${p.first_name||''} ${p.last_name||''}`.trim())}">
+            <div class="avatar">${esc(initials(p))}</div>
+            <div class="grow">
+              <div class="patient-name">
+                <strong class="patient-last-name">${esc(p.last_name||'')}</strong>
+                <span class="patient-first-name">${esc(p.first_name||'')}</span>
+              </div>
+              ${contact}
+            </div>
+            <span class="patient-chevron" aria-hidden="true">›</span>
+          </div>`;
+      }).join('');
+
+      if(matches.length>RENDER_LIMIT){
+        html+=`<div class="patients-more-hint">
+          ${q
+            ? `${nf(RENDER_LIMIT)} premiers résultats affichés. Affine la recherche pour aller plus vite.`
+            : `${nf(RENDER_LIMIT)} premiers patients affichés. Utilise la recherche pour accéder immédiatement aux autres.`}
+        </div>`;
+      }
+
+      if(!matches.length){
+        html=q
+          ? '<div class="empty"><div><strong>Aucun résultat</strong><p>Essaie un nom, un prénom, un téléphone ou un email.</p></div></div>'
+          : `<div class="empty"><div><strong>Aucun patient</strong><p>${canManagePatients()?'Ajoute ton premier patient fictif pour commencer.':'Aucun patient actif à afficher.'}</p>${canManagePatients()?'<button type="button" class="btn primary" id="emptyAddPatient">+ Patient</button>':''}</div></div>`;
+      }
+
+      $('#patientList').innerHTML=html;
+
+      $$('[data-pid]').forEach(x=>{
+        x.onclick=()=>go('patient',{patientId:x.dataset.pid,patientTab:'overview'});
+        x.onkeydown=e=>{
+          if(e.key==='Enter'||e.key===' '){
+            e.preventDefault();
+            x.click();
+          }
+        };
+      });
+
+      if($('#emptyAddPatient'))$('#emptyAddPatient').onclick=()=>openPatientModal();
+    };
+
+    draw();
+    $('#patientSearch').oninput=draw;
+    if($('#addPatient'))$('#addPatient').onclick=()=>openPatientModal();
   }
 
   async function renderPatient(){
