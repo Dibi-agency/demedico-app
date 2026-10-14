@@ -20,19 +20,44 @@
 <script src="vendor/supabase-js-2.45.4.js"></script>
 <script src="assets/onboarding.js?v=4d51b98207"></script>
 <script>
-/* iOS fallback: si le tap sur « Plus » ne produit pas le click délégué normal,
-   réutilise exactement le gestionnaire déjà installé sur la navigation. */
+/* Compatibilité tactile iOS/WebKit pour le bouton « Plus ».
+   Les quatre routes classiques fonctionnent via click. « Plus » n'a pas de route :
+   on transmet explicitement touchend/click au gestionnaire déjà installé sur la nav. */
 (() => {
-  document.addEventListener('pointerup', (event) => {
-    const target = event.target instanceof Element
-      ? event.target.closest('#mobileBottomNav [data-more]')
+  let lastTouchAt = 0;
+
+  const moreButtonFromEvent = (event) => {
+    const node = event.target;
+    return node instanceof Element
+      ? node.closest('#mobileBottomNav [data-more]')
       : null;
-    if (!target) return;
-    setTimeout(() => {
-      if (document.querySelector('#mobileMoreRoot .mobile-more-backdrop')) return;
-      const nav = document.getElementById('mobileBottomNav');
-      if (nav && typeof nav.onclick === 'function') nav.onclick({ target });
-    }, 80);
+  };
+
+  const triggerExistingMoreHandler = (button, event) => {
+    const nav = document.getElementById('mobileBottomNav');
+    if (!nav || typeof nav.onclick !== 'function') return false;
+    if (event && event.cancelable) event.preventDefault();
+    if (event) event.stopPropagation();
+    nav.onclick({ target: button });
+    return true;
+  };
+
+  document.addEventListener('touchend', (event) => {
+    const button = moreButtonFromEvent(event);
+    if (!button) return;
+    lastTouchAt = Date.now();
+    triggerExistingMoreHandler(button, event);
+  }, { capture: true, passive: false });
+
+  document.addEventListener('click', (event) => {
+    const button = moreButtonFromEvent(event);
+    if (!button) return;
+    if (Date.now() - lastTouchAt < 700) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    triggerExistingMoreHandler(button, event);
   }, true);
 })();
 </script>
