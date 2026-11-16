@@ -141,9 +141,9 @@
             <button class="icon-btn mobile-menu" id="menuBtn" aria-label="Menu">☰</button>
             <div class="mobile-brand"><img src="${LOGO}" alt="Demédico"></div>
             <div class="topbar-left"><h1 id="topbarTitle">Accueil</h1><p id="topbarSubtitle">Votre journée, en un coup d’œil.</p></div>
-            <div class="top-actions"><div class="global-search"><span class="search-icon">⌕</span><input id="globalSearch" placeholder="Rechercher un patient…"><span class="kbd">⌘K</span></div>${canManagePatients()?'<button class="btn primary" id="topNewPatient">+ Nouveau patient</button>':''}</div>
+            <div class="top-actions"><div class="global-search"><span class="search-icon">⌕</span><input id="globalSearch" type="search" aria-label="Rechercher un patient" placeholder="Rechercher un patient…"><span class="kbd">⌘K</span></div>${canManagePatients()?'<button class="btn primary" id="topNewPatient">+ Nouveau patient</button>':''}</div>
           </header>
-          <main class="page" id="page"></main>
+          <main class="page" id="page" tabindex="-1"></main>
         </div>
       </div>
       <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navigation principale">
@@ -161,7 +161,7 @@
     if($('#sideQuickAppt'))$('#sideQuickAppt').onclick=()=>openAppointmentModal();
     if($('#topNewPatient'))$('#topNewPatient').onclick=()=>openPatientModal();
     const mobileNav=$('#mobileBottomNav');
-    if(mobileNav)mobileNav.onclick=(e)=>{const routeBtn=e.target.closest('[data-route]');if(routeBtn)return go(routeBtn.dataset.route);if(e.target.closest('[data-more]'))openMobileMore();};
+    if(mobileNav)mobileNav.onclick=(e)=>{const routeBtn=e.target.closest('#mobileBottomNav button[data-route]');if(routeBtn)return go(routeBtn.dataset.route);if(e.target.closest('#mobileBottomNav button[data-more]'))openMobileMore();};
     const gs=$('#globalSearch');
     gs.oninput=()=>{const q=gs.value.trim().toLowerCase();if(!q)return;go('patients');setTimeout(()=>{const ps=$('#patientSearch');if(ps){ps.value=q;ps.dispatchEvent(new Event('input'));}},0);};
     document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();gs.focus();}});
@@ -206,12 +206,14 @@
 
   function authView(message='') {
     root.innerHTML=`<section class="auth"><div class="auth-card"><img class="logo" src="${LOGO}" alt="Demédico"><div><span class="eyebrow">Espace professionnel</span><h1>Connexion</h1><p class="muted">Accède à ton espace Demédico.</p></div>${message?`<p class="danger-text">${esc(message)}</p>`:''}<form id="loginForm" class="grid"><div class="field"><label>Email</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label>Mot de passe</label><input id="password" type="password" autocomplete="current-password" required></div><button class="btn primary" type="submit">Se connecter</button></form><button class="link" id="forgotBtn">Mot de passe oublié ?</button><p class="tiny muted">Version de test. Utilise uniquement des données fictives.</p></div></section><div id="toasts" class="toasts"></div>`;
+    enhanceFieldLabels(root);
     $('#loginForm').onsubmit=async(e)=>{e.preventDefault();const btn=$('button[type=submit]',e.target);btn.disabled=true;try{const {error}=await timed('Connexion',()=>S.sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#password').value}));if(error)throw error;const active=document.activeElement;if(active&&typeof active.blur==='function')active.blur();window.scrollTo(0,0);await new Promise(r=>setTimeout(r,120));await boot();}catch(err){fail(err)}finally{btn.disabled=false;}};
     $('#forgotBtn').onclick=async()=>{const email=$('#email').value.trim();if(!email)return toast('Entre ton email d’abord.','error');const {error}=await S.sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});toast(error?frErr(error):'Email de réinitialisation envoyé.',error?'error':'');};
   }
 
   function passwordRecoveryView(message='') {
     root.innerHTML=`<section class="auth"><div class="auth-card recovery-card"><img class="logo" src="${LOGO}" alt="Demédico"><div><span class="eyebrow">Sécurité du compte</span><h1>Nouveau mot de passe</h1><p class="muted">Choisis un nouveau mot de passe pour terminer la récupération de ton compte.</p></div>${message?`<p class="danger-text" role="alert">${esc(message)}</p>`:''}<form id="recoveryForm" class="grid" novalidate><div class="field"><label for="newPassword">Nouveau mot de passe</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" required aria-describedby="passwordRule"></div><div class="field"><label for="confirmPassword">Confirmer le mot de passe</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" required></div><p id="passwordRule" class="password-rule">12 caractères minimum.</p><button class="btn primary" type="submit">Modifier mon mot de passe</button></form><button class="link recovery-cancel" id="recoveryCancel" type="button">Annuler et revenir à la connexion</button><p class="tiny muted">Le lien de récupération est temporaire. Demédico ne t’affichera jamais son jeton de sécurité.</p></div></section><div id="toasts" class="toasts"></div>`;
+    enhanceFieldLabels(root);
     $('#recoveryForm').onsubmit=async(e)=>{
       e.preventDefault();
       const btn=$('button[type=submit]',e.target),password=$('#newPassword').value,confirm=$('#confirmPassword').value;
@@ -298,9 +300,20 @@
     S.commSettings={...defaults,...(data||{})};
   }
 
-  function render(){markNav(); const p=$('#page'); if(!p)return; ({dashboard:renderDashboard,patients:renderPatients,patient:renderPatient,agenda:renderAgenda,tasks:renderTasks,stats:renderStats,integrations:renderIntegrations,subscription:renderSubscription,settings:renderSettings,diagnostic:renderDiagnostic}[S.route]||renderDashboard)();}
+  function render(){markNav(); const p=$('#page'); if(!p)return; ({dashboard:renderDashboard,patients:renderPatients,patient:renderPatient,agenda:renderAgenda,tasks:renderTasks,stats:renderStats,integrations:renderIntegrations,subscription:renderSubscription,settings:renderSettings,diagnostic:renderDiagnostic}[S.route]||renderDashboard)(); enhanceFieldLabels(p);}
+  function enhanceFieldLabels(scope=document){
+    $$('.field',scope).forEach((field)=>{
+      const label=field.querySelector(':scope > label');
+      const control=field.querySelector(':scope > input:not([type="hidden"]), :scope > select, :scope > textarea');
+      if(!label||!control||label.htmlFor)return;
+      if(!control.id)control.id=`demedico-field-${++enhanceFieldLabels.nextId}`;
+      label.htmlFor=control.id;
+    });
+  }
+  enhanceFieldLabels.nextId=0;
+
   function pageHead(title,sub,actions=''){return `<div class="page-head"><div><h1>${esc(title)}</h1><p class="muted">${esc(sub)}</p></div>${actions?`<div class="actions">${actions}</div>`:''}</div>`;}
-  function patientName(id){const p=S.patients.find(x=>x.id===id);return p?`${p.first_name} ${p.last_name}`:'Patient';}
+  function patientName(id){const p=S.patients.find(x=>x.id===id);return p?`${String(p.last_name||'').toLocaleUpperCase('fr')} ${p.first_name||''}`.trim():'Patient';}
   function patientById(id){return S.patients.find(x=>x.id===id);}
   function planLabel(id){return PLAN_CATALOG[id]?.label||PLAN_CATALOG.FREE.label;}
   function subscriptionStatusLabel(s){return ({FREE:'Actif',TRIALING:'Essai',ACTIVE:'Actif',PAST_DUE:'Paiement à régulariser',CANCELED:'Résilié',SUSPENDED:'Suspendu'}[s]||'Actif');}
@@ -334,6 +347,7 @@
                 autocomplete="off"
                 spellcheck="false"
                 placeholder="Nom, prénom, téléphone, email…"
+                aria-label="Rechercher un patient"
                 aria-describedby="patientsCount">
             </div>
             <div class="patients-count" id="patientsCount" aria-live="polite"></div>
@@ -353,19 +367,23 @@
       return String(a.first_name||'').localeCompare(String(b.first_name||''),'fr',{sensitivity:'base'});
     };
 
-    const RENDER_LIMIT=120;
+    const PAGE_SIZE=60;
+    let visibleCount=PAGE_SIZE;
+
+    const all=[...S.patients].sort(sortPatients);
+    const indexed=all.map(patient=>({patient,search:normalizeSearch(`${patient.last_name||''} ${patient.first_name||''} ${patient.phone||''} ${patient.email||''}`)}));
 
     const draw=()=>{
       const qRaw=$('#patientSearch').value;
       const q=normalizeSearch(qRaw);
-      const all=[...S.patients].sort(sortPatients);
+      const tokens=q.split(/\s+/).filter(Boolean);
       const matches=q
-        ? all.filter(p=>normalizeSearch(`${p.last_name||''} ${p.first_name||''} ${p.phone||''} ${p.email||''}`).includes(q))
+        ? indexed.filter(({search})=>tokens.every(token=>search.includes(token))).map(x=>x.patient)
         : all;
 
       const total=all.length;
       const shown=matches.length;
-      const visible=matches.slice(0,RENDER_LIMIT);
+      const visible=matches.slice(0,visibleCount);
       const nf=(n)=>Number(n).toLocaleString('fr-FR');
 
       const countText=q
@@ -411,11 +429,10 @@
           </div>`;
       }).join('');
 
-      if(matches.length>RENDER_LIMIT){
+      if(matches.length>visibleCount){
         html+=`<div class="patients-more-hint">
-          ${q
-            ? `${nf(RENDER_LIMIT)} premiers résultats affichés. Affine la recherche pour aller plus vite.`
-            : `${nf(RENDER_LIMIT)} premiers patients affichés. Utilise la recherche pour accéder immédiatement aux autres.`}
+          <span>${nf(visible.length)} sur ${nf(matches.length)} patients affichés</span>
+          <button type="button" class="btn sm" id="patientLoadMore">Afficher ${nf(Math.min(PAGE_SIZE,matches.length-visibleCount))} suivants</button>
         </div>`;
       }
 
@@ -438,19 +455,25 @@
       });
 
       if($('#emptyAddPatient'))$('#emptyAddPatient').onclick=()=>openPatientModal();
+      if($('#patientLoadMore'))$('#patientLoadMore').onclick=()=>{
+        visibleCount+=PAGE_SIZE;
+        draw();
+        const more=$('#patientLoadMore');
+        if(more)more.focus({preventScroll:true});
+      };
     };
 
     draw();
-    $('#patientSearch').oninput=draw;
+    $('#patientSearch').oninput=()=>{visibleCount=PAGE_SIZE;draw();};
     if($('#addPatient'))$('#addPatient').onclick=()=>openPatientModal();
   }
 
   async function renderPatient(){
     const p=patientById(S.patientId); if(!p)return go('patients');
-    $('#page').innerHTML=`<div class="page-head"><div class="patient-head"><button class="btn sm" id="backPatients">←</button><div class="avatar">${esc(initials(p))}</div><div><h1>${esc(p.first_name)} ${esc(p.last_name)}</h1><p class="muted">${esc([p.phone,p.email,fmtDate(p.birth_date)].filter(Boolean).join(' · '))}</p></div></div><div class="actions patient-actions">${canManageAgenda()?'<button class="btn primary" id="patientAppt">+ Rendez-vous</button>':''}${canCommunicate()?'<button class="btn" id="contactPatient">Contacter</button>':''}${canManagePatients()?'<button class="btn ghost" id="editPatient">Modifier</button>':''}</div></div>
+    $('#page').innerHTML=`<div class="page-head"><div class="patient-head"><button class="btn sm" id="backPatients">←</button><div class="avatar">${esc(initials(p))}</div><div><h1 class="patient-detail-name"><strong>${esc(String(p.last_name||'').toLocaleUpperCase('fr'))}</strong> <span>${esc(p.first_name||'')}</span></h1><p class="muted">${esc([p.phone,p.email,fmtDate(p.birth_date)].filter(Boolean).join(' · '))}</p></div></div><div class="actions patient-actions">${canManageAgenda()?'<button class="btn primary" id="patientAppt">+ Rendez-vous</button>':''}${canCommunicate()?'<button class="btn" id="contactPatient">Contacter</button>':''}${canManagePatients()?'<button class="btn ghost" id="editPatient">Modifier</button>':''}</div></div>
       <div class="tabs" id="patientTabs">${['overview','clinical','goals','consultations','appointments','messages'].map(t=>`<button data-tab="${t}" class="${S.patientTab===t?'active':''}">${({overview:'Aperçu',clinical:'Dossier',goals:'Objectifs & mesures',consultations:'Séances',appointments:'Rendez-vous',messages:'Messages'})[t]}</button>`).join('')}</div><div id="patientBody"><div class="empty">Chargement…</div></div>`;
     $('#backPatients').onclick=()=>go('patients'); if($('#editPatient'))$('#editPatient').onclick=()=>openPatientModal(p); if($('#contactPatient'))$('#contactPatient').onclick=()=>{S.patientTab='messages';renderPatient();}; if($('#patientAppt'))$('#patientAppt').onclick=()=>openAppointmentModal(p.id); $$('#patientTabs button').forEach(b=>b.onclick=()=>{S.patientTab=b.dataset.tab;renderPatient();});
-    try { await renderPatientTab(p); } catch(e){ $('#patientBody').innerHTML=`<div class="card"><p class="danger-text">${esc(frErr(e))}</p></div>`; }
+    try { await renderPatientTab(p); enhanceFieldLabels($('#patientBody')); } catch(e){ $('#patientBody').innerHTML=`<div class="card"><p class="danger-text">${esc(frErr(e))}</p></div>`; }
   }
 
   async function patientBundle(p){
@@ -539,7 +562,7 @@
 
   function renderStats(){
     const completed=S.appointments.filter(a=>a.status==='DONE').length;const noShow=S.appointments.filter(a=>a.status==='NO_SHOW').length;const open=S.tasks.filter(t=>t.status!=='DONE').length;const byMonth={};S.appointments.forEach(a=>{const k=a.starts_at.slice(0,7);byMonth[k]=(byMonth[k]||0)+1;});const max=Math.max(1,...Object.values(byMonth));
-    $('#page').innerHTML=pageHead('Statistiques','Des indicateurs simples, sans exposer de contenu clinique.')+`<div class="grid grid4"><div class="card stat"><div class="label">Patients</div><div class="value">${S.patients.length}</div></div><div class="card stat"><div class="label">RDV suivis</div><div class="value">${S.appointments.length}</div></div><div class="card stat"><div class="label">RDV terminés</div><div class="value">${completed}</div></div><div class="card stat"><div class="label">Absences</div><div class="value">${noShow}</div></div></div><section class="card" style="margin-top:16px"><div class="card-head"><h2>Activité par mois</h2><span class="badge">${open} tâche(s) ouverte(s)</span></div><div class="grid">${Object.entries(byMonth).sort().slice(-8).map(([m,n])=>`<div><div class="metric-line"><span>${esc(m)}</span><strong>${n} RDV</strong></div><div class="bar"><span style="width:${Math.round(n/max*100)}%"></span></div></div>`).join('')||'<div class="empty">Pas assez de données.</div>'}</div></section>`;
+    $('#page').innerHTML=pageHead('Statistiques','Des indicateurs simples, sans exposer de contenu clinique.')+`<div class="grid grid4"><div class="card stat"><div class="label">Patients</div><div class="value">${S.patients.length}</div></div><div class="card stat"><div class="label">RDV suivis</div><div class="value">${S.appointments.length}</div></div><div class="card stat"><div class="label">RDV terminés</div><div class="value">${completed}</div></div><div class="card stat"><div class="label">Absences</div><div class="value">${noShow}</div></div></div><section class="card" style="margin-top:16px"><div class="card-head"><h2>Activité par mois</h2><span class="badge">${open} ${open===1?'tâche ouverte':'tâches ouvertes'}</span></div><div class="grid">${Object.entries(byMonth).sort().slice(-8).map(([m,n])=>`<div><div class="metric-line"><span>${esc(m)}</span><strong>${n} RDV</strong></div><div class="bar"><span style="width:${Math.round(n/max*100)}%"></span></div></div>`).join('')||'<div class="empty">Pas assez de données.</div>'}</div></section>`;
   }
 
   function renderIntegrations(){
@@ -635,7 +658,7 @@
   function renderDiagnostic(){const avg=S.perf.length?Math.round(S.perf.reduce((a,b)=>a+b.ms,0)/S.perf.length):0;$('#page').innerHTML=pageHead('Diagnostic','Mesures réelles des appels Supabase dans cette session.')+`<div class="grid grid3"><div class="card stat"><div class="label">Moyenne</div><div class="value">${avg} ms</div></div><div class="card stat"><div class="label">Appels mesurés</div><div class="value">${S.perf.length}</div></div><div class="card stat"><div class="label">Backend</div><div class="value" style="font-size:22px">Supabase</div></div></div><section class="card" style="margin-top:16px"><div class="list">${S.perf.map(x=>`<div class="row-item"><div class="grow"><strong>${esc(x.label)}</strong><div class="meta">${x.at.toLocaleTimeString('fr-FR')}</div></div><span class="badge ${x.ms<250?'ok':x.ms<800?'warn':'danger'}">${x.ms} ms</span></div>`).join('')||'<div class="empty">Aucune mesure.</div>'}</div></section>`;}
 
   let modalReturnFocus=null;
-  function modal(title,html,onReady){modalReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;$('#modalRoot').innerHTML=`<div class="modal-backdrop" id="modalBg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><h2 id="modalTitle">${esc(title)}</h2><button class="icon-btn" id="modalClose" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>${html}</div></div>`;$('#modalClose').onclick=closeModal;$('#modalBg').onclick=e=>{if(e.target.id==='modalBg')closeModal();};onReady?.();requestAnimationFrame(()=>{$('#modalClose')?.focus();});}
+  function modal(title,html,onReady){modalReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;$('#modalRoot').innerHTML=`<div class="modal-backdrop" id="modalBg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><h2 id="modalTitle">${esc(title)}</h2><button class="icon-btn" id="modalClose" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>${html}</div></div>`;$('#modalClose').onclick=closeModal;$('#modalBg').onclick=e=>{if(e.target.id==='modalBg')closeModal();};enhanceFieldLabels($('#modalRoot'));onReady?.();requestAnimationFrame(()=>{$('#modalClose')?.focus();});}
   function closeModal(){const m=$('#modalRoot');if(m)m.innerHTML='';const target=modalReturnFocus;modalReturnFocus=null;if(target&&document.contains(target))requestAnimationFrame(()=>target.focus());}
 
   function openPatientModal(p=null){if(!canManagePatients())return toast('Ton rôle ne permet pas de modifier les patients.','error');const defCountry=p?.phone_country||S.commSettings?.default_country||'FR';modal(p?'Modifier le patient':'Nouveau patient',`<form id="patientForm" class="form-grid"><div class="field"><label>Prénom</label><input name="first_name" required value="${esc(p?.first_name||'')}"></div><div class="field"><label>Nom</label><input name="last_name" required value="${esc(p?.last_name||'')}"></div><div class="field"><label>Pays du téléphone</label><select name="phone_country">${countryOptions(defCountry)}</select></div><div class="field"><label>Téléphone</label><input name="phone" type="tel" placeholder="052-123-4567" value="${esc(p?.phone||'')}"><div class="help">Demédico l’enregistre automatiquement au format international.</div></div><div class="field"><label>Email</label><input name="email" type="email" value="${esc(p?.email||'')}"></div><div class="field"><label>Canal préféré</label><select name="preferred_channel"><option value="">Aucun</option><option value="WHATSAPP" ${p?.preferred_channel==='WHATSAPP'?'selected':''}>WhatsApp</option><option value="SMS" ${p?.preferred_channel==='SMS'?'selected':''}>SMS</option><option value="EMAIL" ${p?.preferred_channel==='EMAIL'?'selected':''}>Email</option></select></div><div class="field"><label>Date de naissance</label><input name="birth_date" type="date" value="${esc(p?.birth_date||'')}"></div><div class="field full"><label>Information importante</label><textarea name="important_info">${esc(p?.important_info||'')}</textarea></div><div class="full actions"><button class="btn primary">${p?'Enregistrer':'Créer'}</button></div></form>`,()=>{$('#patientForm').onsubmit=async(e)=>{e.preventDefault();const fd=new FormData(e.target);let phone='';try{phone=fd.get('phone')?normalizePhone(fd.get('phone'),fd.get('phone_country')):'';}catch(err){return fail(err);}const row={organization_id:S.org.id,first_name:fd.get('first_name').trim(),last_name:fd.get('last_name').trim(),phone:phone||null,phone_country:fd.get('phone_country')||null,preferred_channel:fd.get('preferred_channel')||null,email:fd.get('email').trim()||null,birth_date:fd.get('birth_date')||null,important_info:fd.get('important_info').trim()||null,updated_at:nowIso()};const q=p?S.sb.from('patients').update(row).eq('id',p.id):S.sb.from('patients').insert(row);const {error}=await q;if(error)return fail(error);await loadPatients();closeModal();toast(p?'Patient mis à jour.':'Patient créé.');render();};});}
