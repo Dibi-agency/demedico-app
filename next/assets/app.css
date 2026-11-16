@@ -3433,3 +3433,21 @@ body[data-route="patients"] .top-actions .global-search {
   }
 
 }
+
+/* DEMÉDICO · Mot de passe visible, accessible et réversible */
+.auth-card .password-control {position:relative;width:100%;min-width:0}
+.auth-card .password-control > input {
+  width:100%;min-width:0;padding-right:118px!important;padding-inline-end:118px!important;font-size:16px
+}
+.auth-card .password-toggle {
+  position:absolute;right:5px;top:50%;transform:translateY(-50%);
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  width:108px;min-height:44px;padding:0 8px;border:0;border-radius:11px;
+  background:transparent;color:#355A5C;font-size:13px;font-weight:750;
+  white-space:nowrap;cursor:pointer;transition:background-color .16s,color .16s;
+  -webkit-tap-highlight-color:transparent
+}
+.auth-card .password-toggle:hover {background:#E8F3F1;color:#133239}
+.auth-card .password-toggle:focus-visible {outline:3px solid #248780;outline-offset:-3px;background:#E8F3F1}
+.auth-card .password-toggle-icon,.auth-card .password-toggle-icon svg {display:block;width:18px;height:18px;flex:0 0 18px}
+@media(prefers-reduced-motion:reduce){.auth-card .password-toggle{transition:none}}
