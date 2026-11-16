@@ -204,9 +204,47 @@
   }
   function go(route, opts={}){ if(document.body.classList.contains('menu-open'))toggleMenu(false); S.route=route; if(opts.patientId!==undefined) S.patientId=opts.patientId; if(opts.patientTab) S.patientTab=opts.patientTab; markNav(); render(); window.scrollTo({top:0,behavior:'instant'}); }
 
+
+  /* Afficher / masquer : fonction UI commune aux champs de connexion et de récupération. */
+  function setupPasswordToggles(scope=document){
+    $('input[type="password"]',scope).forEach(input=>{
+      if(input.closest('.password-control'))return;
+      const label=input.closest('.field')?.querySelector('label')?.textContent?.trim()||'Mot de passe';
+      const wrapper=document.createElement('div');
+      wrapper.className='password-control';
+      input.parentNode.insertBefore(wrapper,input);
+      wrapper.appendChild(input);
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='password-toggle';
+      button.setAttribute('aria-controls',input.id);
+      const icon=document.createElement('span');
+      icon.className='password-toggle-icon';
+      icon.setAttribute('aria-hidden','true');
+      const caption=document.createElement('span');
+      button.append(icon,caption);
+      const update=(visible)=>{
+        caption.textContent=visible?'Masquer':'Afficher';
+        button.setAttribute('aria-label',(visible?'Masquer : ':'Afficher : ')+label);
+        button.title=(visible?'Masquer ':'Afficher ')+label.toLowerCase();
+        icon.innerHTML=visible
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.1 0 9.9 7 9.9 7a16.7 16.7 0 0 1-3.2 4"/><path d="M6 6.3A16.4 16.4 0 0 0 2.1 12s3.8 7 9.9 7a10.7 10.7 0 0 0 5.3-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.1 12s3.8-7 9.9-7 9.9 7 9.9 7-3.8 7-9.9 7-9.9-7-9.9-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+      };
+      update(false);
+      button.addEventListener('click',()=>{
+        const visible=input.type==='password';
+        input.type=visible?'text':'password';
+        update(visible);
+      });
+      wrapper.appendChild(button);
+    });
+  }
+
   function authView(message='') {
     root.innerHTML=`<section class="auth"><div class="auth-card"><img class="logo" src="${LOGO}" alt="Demédico"><div><span class="eyebrow">Espace professionnel</span><h1>Connexion</h1><p class="muted">Accède à ton espace Demédico.</p></div>${message?`<p class="danger-text">${esc(message)}</p>`:''}<form id="loginForm" class="grid"><div class="field"><label>Email</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label>Mot de passe</label><input id="password" type="password" autocomplete="current-password" required></div><button class="btn primary" type="submit">Se connecter</button></form><button class="link" id="forgotBtn">Mot de passe oublié ?</button><p class="tiny muted">Version de test. Utilise uniquement des données fictives.</p></div></section><div id="toasts" class="toasts"></div>`;
     enhanceFieldLabels(root);
+    setupPasswordToggles(root);
     $('#loginForm').onsubmit=async(e)=>{e.preventDefault();const btn=$('button[type=submit]',e.target);btn.disabled=true;try{const {error}=await timed('Connexion',()=>S.sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#password').value}));if(error)throw error;const active=document.activeElement;if(active&&typeof active.blur==='function')active.blur();window.scrollTo(0,0);await new Promise(r=>setTimeout(r,120));await boot();}catch(err){fail(err)}finally{btn.disabled=false;}};
     $('#forgotBtn').onclick=async()=>{const email=$('#email').value.trim();if(!email)return toast('Entre ton email d’abord.','error');const {error}=await S.sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});toast(error?frErr(error):'Email de réinitialisation envoyé.',error?'error':'');};
   }
@@ -214,6 +252,7 @@
   function passwordRecoveryView(message='') {
     root.innerHTML=`<section class="auth"><div class="auth-card recovery-card"><img class="logo" src="${LOGO}" alt="Demédico"><div><span class="eyebrow">Sécurité du compte</span><h1>Nouveau mot de passe</h1><p class="muted">Choisis un nouveau mot de passe pour terminer la récupération de ton compte.</p></div>${message?`<p class="danger-text" role="alert">${esc(message)}</p>`:''}<form id="recoveryForm" class="grid" novalidate><div class="field"><label for="newPassword">Nouveau mot de passe</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" required aria-describedby="passwordRule"></div><div class="field"><label for="confirmPassword">Confirmer le mot de passe</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" required></div><p id="passwordRule" class="password-rule">12 caractères minimum.</p><button class="btn primary" type="submit">Modifier mon mot de passe</button></form><button class="link recovery-cancel" id="recoveryCancel" type="button">Annuler et revenir à la connexion</button><p class="tiny muted">Le lien de récupération est temporaire. Demédico ne t’affichera jamais son jeton de sécurité.</p></div></section><div id="toasts" class="toasts"></div>`;
     enhanceFieldLabels(root);
+    setupPasswordToggles(root);
     $('#recoveryForm').onsubmit=async(e)=>{
       e.preventDefault();
       const btn=$('button[type=submit]',e.target),password=$('#newPassword').value,confirm=$('#confirmPassword').value;
