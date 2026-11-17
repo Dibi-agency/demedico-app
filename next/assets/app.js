@@ -207,7 +207,7 @@
 
   /* Afficher / masquer : fonction UI commune aux champs de connexion et de récupération. */
   function setupPasswordToggles(scope=document){
-    $('input[type="password"]',scope).forEach(input=>{
+    $$('input[type="password"]',scope).forEach(input=>{
       if(input.closest('.password-control'))return;
       const label=input.closest('.field')?.querySelector('label')?.textContent?.trim()||'Mot de passe';
       const wrapper=document.createElement('div');
@@ -318,7 +318,7 @@
       S.member=data[0]; S.org={id:data[0].organization_id,...(data[0].organizations||{})};
       await Promise.all([loadPatients(),loadAppointments(),loadTasks(),loadMembers(),loadSubscription(),loadCommSettings(),loadPlanRequests()]);
       appShell(); render();
-    }catch(e){console.error(e);authView(frErr(e));}
+    }catch(e){console.error(e);const m=String(e?.message||'');authView(/Ce compte n’est rattaché à aucun cabinet/i.test(m)?'Ce compte n’est rattaché à aucun cabinet.':'Impossible de charger Demédico pour le moment. Réessaie ou contacte le support.');}
   }
 
   async function loadPatients(){const {data,error}=await timed('Patients',()=>S.sb.from('patients').select('*').eq('organization_id',S.org.id).is('archived_at',null).order('last_name'));if(error)throw error;S.patients=data||[];}
